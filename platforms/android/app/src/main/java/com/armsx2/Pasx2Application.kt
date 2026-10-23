@@ -32,6 +32,7 @@ class Pasx2Application : Application(), ImageLoaderFactory {
 	override fun onCreate() {
 		super.onCreate()
 		installCrashLogging()
+		com.armsx2.nevoa.theme.NevoaPalette.applyLegacyColors()
 	}
 
 	override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {

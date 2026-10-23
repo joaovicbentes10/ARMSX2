@@ -591,8 +591,8 @@ fun Armsx2Theme(content: @Composable () -> Unit) {
         runCatching { com.armsx2.SecondScreen.rebuild() }
     }
     MaterialTheme(
-        colorScheme = resolved,
-        typography = ArmsTypography,
+        colorScheme = com.armsx2.nevoa.theme.NevoaPalette.scheme,
+        typography = com.armsx2.nevoa.theme.NevoaPalette.typography,
         content = content,
     )
 }
