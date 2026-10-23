@@ -519,6 +519,61 @@ fun AppTab() {
                     ) { Text(str("app.bootIntro.reset")) }
                 }
             }
+            // Sound for the bundled intro (ignored when a custom intro video is set).
+            val soundScope = rememberCoroutineScope()
+            var soundSet by remember { mutableStateOf(com.armsx2.nevoa.intro.IntroSound.exists(appContext)) }
+            var soundBusy by remember { mutableStateOf(false) }
+            val soundPicker = rememberLauncherForActivityResult(
+                ActivityResultContracts.OpenDocument()
+            ) { uri ->
+                if (uri != null && !soundBusy) {
+                    soundBusy = true
+                    soundScope.launch {
+                        val err = withContext(Dispatchers.IO) {
+                            com.armsx2.nevoa.intro.IntroSound.import(appContext, uri)
+                        }
+                        soundBusy = false
+                        soundSet = com.armsx2.nevoa.intro.IntroSound.exists(appContext)
+                        android.widget.Toast.makeText(
+                            appContext, err ?: "Som da abertura definido.", android.widget.Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                }
+            }
+            Text(
+                when {
+                    soundBusy -> "Importando som..."
+                    soundSet -> "Som da abertura: personalizado"
+                    else -> "Som da abertura: nenhum"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+            )
+            FlowRow(
+                Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val pickSound = { if (!soundBusy) soundPicker.launch(arrayOf("audio/*")) }
+                OutlinedButton(
+                    onClick = pickSound,
+                    enabled = !soundBusy,
+                    modifier = Modifier.controllerFocusable("app.introSound.choose", onConfirm = pickSound),
+                ) { Text("Escolher som da abertura") }
+                if (soundSet) {
+                    val removeSound = {
+                        if (!soundBusy) {
+                            com.armsx2.nevoa.intro.IntroSound.clear(appContext)
+                            soundSet = false
+                        }
+                    }
+                    OutlinedButton(
+                        onClick = removeSound,
+                        enabled = !soundBusy,
+                        modifier = Modifier.controllerFocusable("app.introSound.reset", onConfirm = removeSound),
+                    ) { Text("Remover som") }
+                }
+            }
         }
 
         BackupRestoreRows()

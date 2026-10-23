@@ -29,6 +29,7 @@ class BootSplashActivity : ComponentActivity() {
     private val timeoutRunnable = Runnable { launchMainAndFinish() }
     // True while a user-chosen intro is the one playing. Cleared if it fails and we fall back.
     private var playingCustom = false
+    private var introSound: android.media.MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // The manifest theme (Theme.ARMSX2.Boot) already paints the window black,
@@ -83,6 +84,8 @@ class BootSplashActivity : ComponentActivity() {
                     rootView?.postDelayed(timeoutRunnable, runFor)
                 }
                 videoView.start()
+                // Sound only accompanies the bundled (silent) intro.
+                if (!playingCustom && !launchedMain && introSound == null) introSound = com.armsx2.nevoa.intro.IntroSound.start(this)
             }
             videoView.setOnCompletionListener { launchMainAndFinish() }
             videoView.setOnErrorListener { _, _, _ ->
@@ -105,7 +108,13 @@ class BootSplashActivity : ComponentActivity() {
         }
     }
 
+    private fun stopIntroSound() {
+        introSound?.let { runCatching { it.stop() }; runCatching { it.release() } }
+        introSound = null
+    }
+
     override fun onDestroy() {
+        stopIntroSound()
         rootView?.removeCallbacks(timeoutRunnable)
         super.onDestroy()
     }
@@ -126,6 +135,7 @@ class BootSplashActivity : ComponentActivity() {
     private fun launchMainAndFinish() {
         if (launchedMain) return
         launchedMain = true
+        stopIntroSound()
         rootView?.removeCallbacks(timeoutRunnable)
         if (preview) {
             // Main is already running underneath; closing returns to App settings.
