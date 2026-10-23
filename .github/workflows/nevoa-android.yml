@@ -65,17 +65,28 @@ jobs:
       - name: Test and build release APK
         run: |
           set -o pipefail
-          ./gradlew :app:testGithubReleaseUnitTest :app:assembleGithubRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" --stacktrace 2>&1 | tee gradle.log
+          ./gradlew :app:testGithubReleaseUnitTest :app:assembleGithubRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" 2>&1 | tee gradle.log
 
       # Job logs need auth; annotations are public.
       - name: Expose gradle error
         if: failure()
         run: |
-          msg=$(tail -n 60 gradle.log 2>/dev/null || echo "gradle.log missing")
-          msg=${msg//'%'/'%25'}
-          msg=${msg//$'\r'/'%0D'}
-          msg=${msg//$'\n'/'%0A'}
-          echo "::error title=gradle::$msg"
+          if [ ! -f gradle.log ]; then
+            echo "::error title=gradle::gradle.log missing"
+            exit 0
+          fi
+          grep -n -E -A12 "What went wrong|^e: |error:|FAILURE:|> Task .* FAILED|Could not|not found" gradle.log | head -n 150 > excerpt.txt || true
+          [ -s excerpt.txt ] || tail -n 60 gradle.log > excerpt.txt
+          head -n 160 excerpt.txt | split -l 40 - chunk_
+          n=0
+          for f in chunk_*; do
+            n=$((n+1)); [ "$n" -gt 4 ] && break
+            msg=$(cat "$f")
+            msg=${msg//'%'/'%25'}
+            msg=${msg//$'\r'/'%0D'}
+            msg=${msg//$'\n'/'%0A'}
+            echo "::error title=gradle (part $n)::$msg"
+          done
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
