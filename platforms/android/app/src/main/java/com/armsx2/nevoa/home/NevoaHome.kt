@@ -22,6 +22,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,6 +40,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import com.armsx2.EmuState
 import com.armsx2.GameInfo
 import com.armsx2.MenuSfx
 import com.armsx2.navigation.UiNavigator
@@ -87,7 +91,7 @@ fun NevoaHome(
     } else {
         NevoaRow(
             games = games,
-            onPlay = { MenuSfx.play(MenuSfx.Event.SELECT); viewModel.launch(it) },
+            onLaunch = { viewModel.launch(it) },
             onOpenGameSettings = onOpenGameSettings,
             onOpenClassic = { classicRequested = true },
             onOpenMenu = onOpenMenu,
@@ -98,7 +102,7 @@ fun NevoaHome(
 @Composable
 private fun NevoaRow(
     games: List<GameInfo>,
-    onPlay: (GameInfo) -> Unit,
+    onLaunch: (GameInfo) -> Unit,
     onOpenGameSettings: (GameInfo) -> Unit,
     onOpenClassic: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -107,6 +111,25 @@ private fun NevoaRow(
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     val index = indexOfKey(games.map { it.uri.toString() }, selectedKey)
     val game = games[index]
+    // Every launch path goes through the gate, then the burst; the game starts when the burst ends.
+    val gate = remember { LaunchGate() }
+    var pending by remember { mutableStateOf<GameInfo?>(null) }
+    var launched by remember { mutableStateOf(false) }
+    fun onPlay(g: GameInfo) {
+        if (gate.tryStart()) {
+            MenuSfx.play(MenuSfx.Event.SELECT)
+            pending = g
+        }
+    }
+    // Reopen the gate once the emulator is back to STOPPED. If the launch never left STOPPED
+    // (it failed), the 3 s timeout reopens it instead of leaving the button dead.
+    LaunchedEffect(launched) {
+        if (!launched) return@LaunchedEffect
+        withTimeoutOrNull(3000) { snapshotFlow { MainActivityRuntime.eState.value }.first { it != EmuState.STOPPED } }
+        snapshotFlow { MainActivityRuntime.eState.value }.first { it == EmuState.STOPPED }
+        gate.reset()
+        launched = false
+    }
     fun move(delta: Int) {
         val next = moveSelection(index, delta, games.size)
         if (next != index) {
@@ -211,5 +234,10 @@ private fun NevoaRow(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
         )
+        LaunchBurst(active = pending != null) {
+            pending?.let(onLaunch)
+            pending = null
+            launched = true
+        }
     }
 }
