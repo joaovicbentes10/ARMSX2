@@ -25,7 +25,7 @@ import com.armsx2.ui.controls.ControllerManagerScreen
 import com.armsx2.ui.about.AboutScreen
 import com.armsx2.ui.friends.FriendsScreen
 import com.armsx2.ui.news.NewsScreen
-import com.armsx2.ui.home.HomeScreen
+import com.armsx2.nevoa.home.NevoaHome
 import com.armsx2.ui.memorycards.MemoryCardScreen
 import com.armsx2.ui.language.LanguageScreen
 import com.armsx2.ui.patches.PatchManagerScreen
@@ -83,7 +83,7 @@ fun AppNavigation() {
             label = "app-route",
         ) { destination ->
             when (destination) {
-                AppRoute.Home -> HomeScreen(
+                AppRoute.Home -> NevoaHome(
                     onOpenMenu = { UiNavigator.drawerOpen.value = true },
                     onOpenGameSettings = { UiNavigator.navigate(AppRoute.Settings(game = it)) },
                 )
