@@ -72,17 +72,13 @@ class BootSplashActivity : ComponentActivity() {
             }
             videoView.setOnPreparedListener { mp ->
                 mp.isLooping = false
-                if (playingCustom) {
-                    // A chosen intro may run longer than the bundled one, and the hard timeout
-                    // would cut it off mid-play. That timeout exists to catch a decode that never
-                    // starts; once prepared, playback is proven, so give the video its own length
-                    // (capped, in case a file misreports it) before the backstop fires. The
-                    // bundled path is left exactly as it was.
-                    rootView?.removeCallbacks(timeoutRunnable)
-                    val runFor = (mp.duration.toLong().coerceAtLeast(0L) + 2_000L)
-                        .coerceIn(HARD_TIMEOUT_MS, CUSTOM_MAX_MS)
-                    rootView?.postDelayed(timeoutRunnable, runFor)
-                }
+                // An intro may run longer than the hard timeout, which exists only to catch a
+                // decode that never starts; once prepared, give the video its own length (capped,
+                // in case a file misreports it). Névoa's bundled intro is 8 s, so this applies to it too.
+                rootView?.removeCallbacks(timeoutRunnable)
+                val runFor = (mp.duration.toLong().coerceAtLeast(0L) + 2_000L)
+                    .coerceIn(HARD_TIMEOUT_MS, CUSTOM_MAX_MS)
+                rootView?.postDelayed(timeoutRunnable, runFor)
                 videoView.start()
                 // Sound only accompanies the bundled (silent) intro.
                 if (!playingCustom && !launchedMain && introSound == null) introSound = com.armsx2.nevoa.intro.IntroSound.start(this)
