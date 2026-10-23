@@ -63,7 +63,19 @@ jobs:
           } > armsx2_keystore.properties
 
       - name: Test and build release APK
-        run: ./gradlew :app:testReleaseUnitTest :app:assembleRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :app:testGithubReleaseUnitTest :app:assembleGithubRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" --stacktrace 2>&1 | tee gradle.log
+
+      # Job logs need auth; annotations are public.
+      - name: Expose gradle error
+        if: failure()
+        run: |
+          msg=$(tail -n 60 gradle.log 2>/dev/null || echo "gradle.log missing")
+          msg=${msg//'%'/'%25'}
+          msg=${msg//$'\r'/'%0D'}
+          msg=${msg//$'\n'/'%0A'}
+          echo "::error title=gradle::$msg"
 
       - name: Upload APK
         uses: actions/upload-artifact@v7
