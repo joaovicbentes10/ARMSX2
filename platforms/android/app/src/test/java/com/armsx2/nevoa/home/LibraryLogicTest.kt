@@ -16,4 +16,7 @@ class LibraryLogicTest {
     @Test fun coverLabel_fallsBackToTitle() = assertEquals("Scooby", coverLabel("  Scooby ", "x.iso"))
     @Test fun coverLabel_fallsBackToFileName() = assertEquals("x", coverLabel(" ", "x.iso"))
     @Test fun coverLabel_nothingAtAll() = assertEquals("?", coverLabel("", null))
+    @Test fun indexOfKey_findsMovedGame() = assertEquals(1, indexOfKey(listOf("b", "a", "c"), "a"))
+    @Test fun indexOfKey_missingFallsBackToZero() = assertEquals(0, indexOfKey(listOf("b", "a", "c"), "z"))
+    @Test fun indexOfKey_nullIsZero() = assertEquals(0, indexOfKey(listOf("b", "a", "c"), null))
 }

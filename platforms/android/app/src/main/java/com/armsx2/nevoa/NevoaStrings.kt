@@ -8,4 +8,5 @@ object NevoaStrings {
     const val FullLibrary = "Biblioteca completa"
     const val Played = "Jogado"
     const val NeverPlayed = "Nunca jogado"
+    const val Menu = "Menu"
 }

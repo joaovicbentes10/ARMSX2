@@ -22,3 +22,6 @@ fun coverLabel(title: String, fileName: String?): String =
     title.trim().ifEmpty {
         fileName?.substringAfterLast('/')?.substringAfterLast(':')?.substringBeforeLast('.')?.trim()?.ifEmpty { null } ?: "?"
     }
+
+/** Position of [key] in [keys], or 0 when it is null or no longer there. */
+fun indexOfKey(keys: List<String>, key: String?): Int = keys.indexOf(key).coerceAtLeast(0)

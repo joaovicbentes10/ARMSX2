@@ -22,7 +22,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -54,6 +53,7 @@ import com.armsx2.ui.settings.SettingsControllerNav
 private const val RowId = "nevoa.library"
 private const val ConfigureId = "nevoa.configure"
 private const val FullLibraryId = "nevoa.full-library"
+private const val MenuId = "nevoa.menu"
 
 /** PS5-style library: one row of cases over the fog. Falls back to the classic HomeScreen when
  *  there is nothing to show, or when the user asks for it (△ or the Full Library button). */
@@ -90,6 +90,7 @@ fun NevoaHome(
             onPlay = { MenuSfx.play(MenuSfx.Event.SELECT); viewModel.launch(it) },
             onOpenGameSettings = onOpenGameSettings,
             onOpenClassic = { classicRequested = true },
+            onOpenMenu = onOpenMenu,
         )
     }
 }
@@ -100,14 +101,16 @@ private fun NevoaRow(
     onPlay: (GameInfo) -> Unit,
     onOpenGameSettings: (GameInfo) -> Unit,
     onOpenClassic: () -> Unit,
+    onOpenMenu: () -> Unit,
 ) {
-    var selected by rememberSaveable { mutableIntStateOf(0) }
-    val index = selected.coerceIn(0, games.lastIndex)
+    // Held by game, not position: launching a game moves it to the front of the recents.
+    var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val index = indexOfKey(games.map { it.uri.toString() }, selectedKey)
     val game = games[index]
     fun move(delta: Int) {
         val next = moveSelection(index, delta, games.size)
         if (next != index) {
-            selected = next
+            selectedKey = games[next].uri.toString()
             MenuSfx.play(MenuSfx.Event.NAV)
         }
     }
@@ -154,6 +157,12 @@ private fun NevoaRow(
     ) {
         NevoaBackground(Modifier.fillMaxSize())
         GlassButton(
+            NevoaStrings.Menu,
+            onOpenMenu,
+            Modifier.align(Alignment.TopStart).padding(16.dp),
+            controllerId = if (drawerOpen) null else MenuId,
+        )
+        GlassButton(
             NevoaStrings.FullLibrary,
             onOpenClassic,
             Modifier.align(Alignment.TopEnd).padding(16.dp),
@@ -180,7 +189,7 @@ private fun NevoaRow(
                         selected = i == index,
                         onClick = {
                             if (i == index) onPlay(g) else {
-                                selected = i
+                                selectedKey = g.uri.toString()
                                 MenuSfx.play(MenuSfx.Event.NAV)
                             }
                         },
