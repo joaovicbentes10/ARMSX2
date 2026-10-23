@@ -2,6 +2,7 @@ package com.armsx2.nevoa.background
 
 import android.graphics.RuntimeShader
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -31,27 +32,39 @@ fun shaderSeconds(nowNanos: Long, startNanos: Long, wrapSeconds: Float = 600f): 
     return ((nowNanos - startNanos) % wrapNanos) / 1e9f
 }
 
+/** Frame throttle: true once [minIntervalNanos] passed since [lastNanos]; [Long.MIN_VALUE] means no frame yet. */
+fun shouldAdvance(nowNanos: Long, lastNanos: Long, minIntervalNanos: Long = 33_000_000L): Boolean =
+    lastNanos == Long.MIN_VALUE || nowNanos - lastNanos >= minIntervalNanos
+
 /** The animated "Névoa da BIOS" backdrop. [calm] halves speed and brightness. */
 @Composable
 fun NevoaBackground(modifier: Modifier = Modifier, calm: Boolean = false) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        AnimatedNevoa(modifier, calm)
-    } else {
-        Box(modifier.background(Brush.verticalGradient(listOf(NevoaPalette.Background, NevoaPalette.Fog.copy(alpha = 0.35f).compositeOver(NevoaPalette.Background)))))
-    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AnimatedNevoa(modifier, calm) else StaticNevoa(modifier)
+}
+
+@Composable
+private fun StaticNevoa(modifier: Modifier) {
+    Box(modifier.background(Brush.verticalGradient(listOf(NevoaPalette.Background, NevoaPalette.Fog.copy(alpha = 0.35f).compositeOver(NevoaPalette.Background)))))
 }
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 private fun AnimatedNevoa(modifier: Modifier, calm: Boolean) {
+    // A device whose AGSL compiler rejects the shader gets the static backdrop instead of a crash.
     val shader = remember {
-        RuntimeShader(NEVOA_AGSL).apply {
-            setColorUniform("cSky", NevoaPalette.Background.toArgb())
-            setColorUniform("cFog", NevoaPalette.Fog.toArgb())
-            setColorUniform("cBlue", NevoaPalette.TowerBlue.toArgb())
-            setColorUniform("cViolet", NevoaPalette.TowerViolet.toArgb())
-            setColorUniform("cCyan", NevoaPalette.TowerCyan.toArgb())
-        }
+        runCatching {
+            RuntimeShader(NEVOA_AGSL).apply {
+                setColorUniform("cSky", NevoaPalette.Background.toArgb())
+                setColorUniform("cFog", NevoaPalette.Fog.toArgb())
+                setColorUniform("cBlue", NevoaPalette.TowerBlue.toArgb())
+                setColorUniform("cViolet", NevoaPalette.TowerViolet.toArgb())
+                setColorUniform("cCyan", NevoaPalette.TowerCyan.toArgb())
+            }
+        }.onFailure { Log.w("Nevoa", "AGSL shader failed to compile", it) }.getOrNull()
+    }
+    if (shader == null) {
+        StaticNevoa(modifier)
+        return
     }
     val brush = remember(shader) { ShaderBrush(shader) }
     var seconds by remember { mutableFloatStateOf(0f) }
@@ -63,7 +76,14 @@ private fun AnimatedNevoa(modifier: Modifier, calm: Boolean) {
         // Resume from where the clock stopped instead of jumping ahead.
         val base = seconds
         val start = withFrameNanos { it }
-        while (true) withFrameNanos { seconds = (base + shaderSeconds(it, start)) % 600f }
+        // The motion is slow; ~30 fps halves the full-screen shader passes on 120 Hz panels.
+        var last = Long.MIN_VALUE
+        while (true) withFrameNanos {
+            if (shouldAdvance(it, last)) {
+                last = it
+                seconds = (base + shaderSeconds(it, start)) % 600f
+            }
+        }
     }
     Box(
         modifier.drawBehind {
