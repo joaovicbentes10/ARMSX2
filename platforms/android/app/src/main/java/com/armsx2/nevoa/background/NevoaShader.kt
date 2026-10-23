@@ -41,23 +41,6 @@ float fbm(float2 p) {
     return v;
 }
 
-// A tower seen as a lit prism: bright left face, shaded right face, a glowing front edge and a soft halo.
-// sx is the horizontal offset in tower half-widths.
-float towerLight(float sx) {
-    float body = 1.0 - smoothstep(0.85, 1.0, abs(sx));
-    float face = mix(1.0, 0.6, smoothstep(-0.08, 0.08, sx));
-    float edge = exp(-sx * sx / 0.004) * 0.5;
-    float halo = exp(-max(abs(sx) - 1.0, 0.0) * 3.0) * 0.18 * (1.0 - body);
-    return body * (face + edge) + halo;
-}
-
-// Brightness along the tower (hh: 0 at the base, 1 at the top): brighter upward, a lit cap, a crisp top.
-float towerProfile(float hh) {
-    float inside = step(0.0, hh) * (1.0 - smoothstep(0.985, 1.0, hh));
-    float c = (hh - 0.975) / 0.02;
-    return (0.45 + 0.55 * clamp(hh, 0.0, 1.0)) * inside + exp(-c * c) * 0.6;
-}
-
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
     float aspect = iResolution.x / iResolution.y;
@@ -69,14 +52,15 @@ half4 main(float2 fragCoord) {
     for (int i = 0; i < 12; i++) {
         float fi = float(i);
         float x = (fi + 0.5) / 12.0 + (hash1(fi * 7.13) - 0.5) * 0.06;
-        float w = 0.012 + hash1(fi * 3.7) * 0.014;
+        float w = 0.0025 + hash1(fi * 3.7) * 0.004;
         float top = 0.35 + hash1(fi * 1.91) * 0.4;
-        float light = towerLight((uv.x - x) * aspect / w);
-        float prof = towerProfile(h / top);
-        float pulse = 0.75 + 0.25 * sin(t * 0.6 + fi * 1.7);
+        float dx = abs(uv.x - x) * aspect;
+        float shape = (1.0 - smoothstep(w * 0.3, w, dx)) + exp(-dx / (w * 6.0)) * 0.25;
+        float fade = pow(clamp(1.0 - h / top, 0.0, 1.0), 1.5);
+        float pulse = 0.6 + 0.4 * sin(t * 0.6 + fi * 1.7);
         float k = mod(fi, 3.0);
         float3 tc = k < 0.5 ? float3(cBlue.rgb) : (k < 1.5 ? float3(cViolet.rgb) : float3(cCyan.rgb));
-        col += mix(tc, float3(1.0), 0.25) * light * prof * pulse * 0.6 * glow;
+        col += tc * shape * fade * pulse * 0.55 * glow;
     }
 
     for (int j = 0; j < 2; j++) {

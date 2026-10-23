@@ -40,19 +40,6 @@ float noise(vec2 p) {
 }
 float fbm(vec2 p) { float v = 0.0; float a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; } return v; }
 vec3 towerColor(float i) { float k = mod(i, 3.0); return k < 0.5 ? cBlue : (k < 1.5 ? cViolet : cCyan); }
-// Same as NevoaShader.kt: a lit prism (sx in half-widths) and its brightness along the height (hh 0..1).
-float towerLight(float sx) {
-  float body = 1.0 - smoothstep(0.85, 1.0, abs(sx));
-  float face = mix(1.0, 0.6, smoothstep(-0.08, 0.08, sx));
-  float edge = exp(-sx * sx / 0.004) * 0.5;
-  float halo = exp(-max(abs(sx) - 1.0, 0.0) * 3.0) * 0.18 * (1.0 - body);
-  return body * (face + edge) + halo;
-}
-float towerProfile(float hh) {
-  float inside = step(0.0, hh) * (1.0 - smoothstep(0.985, 1.0, hh));
-  float c = (hh - 0.975) / 0.02;
-  return (0.45 + 0.55 * clamp(hh, 0.0, 1.0)) * inside + exp(-c * c) * 0.6;
-}
 `;
 
 // Straight port of NevoaShader.kt (calm = 0); only used by selfCheck().
@@ -65,12 +52,13 @@ void main() {
   for (int i = 0; i < 12; i++) {
     float fi = float(i);
     float x = (fi + 0.5) / 12.0 + (hash1(fi * 7.13) - 0.5) * 0.06;
-    float w = 0.012 + hash1(fi * 3.7) * 0.014;
+    float w = 0.0025 + hash1(fi * 3.7) * 0.004;
     float top = 0.35 + hash1(fi * 1.91) * 0.4;
-    float light = towerLight((uv.x - x) * aspect / w);
-    float prof = towerProfile(h / top);
-    float pulse = 0.75 + 0.25 * sin(t * 0.6 + fi * 1.7);
-    col += mix(towerColor(fi), vec3(1.0), 0.25) * light * prof * pulse * 0.6;
+    float dx = abs(uv.x - x) * aspect;
+    float shape = (1.0 - smoothstep(w * 0.3, w, dx)) + exp(-dx / (w * 6.0)) * 0.25;
+    float fade = pow(clamp(1.0 - h / top, 0.0, 1.0), 1.5);
+    float pulse = 0.6 + 0.4 * sin(t * 0.6 + fi * 1.7);
+    col += towerColor(fi) * shape * fade * pulse * 0.55;
   }
   for (int j = 0; j < 2; j++) {
     float fj = float(j);
@@ -106,26 +94,25 @@ void main() {
     if (i < 12) { // far row: same GPU hashes as NevoaShader (float sin differs from JS), scaled by perspective
       float fi = float(i);
       float x0 = (fi + 0.5) / 12.0 + (hash1(fi * 7.13) - 0.5) * 0.06;
-      float w0 = 0.012 + hash1(fi * 3.7) * 0.014;
+      float w0 = 0.0025 + hash1(fi * 3.7) * 0.004;
       float top0 = 0.35 + hash1(fi * 1.91) * 0.4;
       a = farK == 1.0 ? vec4(x0, w0, 0.0, top0) : vec4(0.5 + (x0 - 0.5) * farK, w0 * farK, 0.5 - 0.5 * farK, 0.5 + (top0 - 0.5) * farK);
     }
-    float sx = (uv.x - a.x) * aspect / a.y;
-    float light = towerLight(sx);
-    float body = 1.0 - smoothstep(0.85, 1.0, abs(sx));
+    float w = a.y;
+    float dx = abs(uv.x - a.x) * aspect;
+    float shape = (1.0 - smoothstep(w * 0.3, w, dx)) + exp(-dx / (w * 6.0)) * 0.25;
     float span = a.w - a.z;
     float hh = (h - a.z) / span;
-    float risen = clamp(b.x, 1e-3, 1.0); // the tower grows with its lit cap riding on top
-    float up = towerProfile(hh / risen);
-    float refl = pow(clamp(1.0 + hh * 5.0, 0.0, 1.0), 2.0) * 0.12 * risen; // faint floor reflection
+    float up = pow(clamp(1.0 - hh, 0.0, 1.0), 1.5) * (1.0 - smoothstep(b.x - 0.08, b.x, hh));
+    float refl = pow(clamp(1.0 + hh * 5.0, 0.0, 1.0), 2.0) * 0.12 * min(b.x, 1.0); // faint floor reflection
     float soft = 0.025 * halo + 1e-5; // base melts into the floor during the intro; exact cut at rest
     float fade = mix(refl, up, smoothstep(-soft, soft, h - a.z));
-    float pulse = 0.75 + 0.25 * sin(t * 0.6 + b.z * 1.7);
+    float pulse = 0.6 + 0.4 * sin(t * 0.6 + b.z * 1.7);
     vec3 tc = towerColor(b.z);
-    col += mix(tc, vec3(1.0), 0.25) * light * fade * pulse * 0.6 * b.y;
-    col += tc * exp(-abs(sx) / 8.0) * fade * pulse * 0.07 * halo * b.y; // volumetric bloom, intro only
-    float dh = (hh - risen) * span;
-    col += mix(tc, vec3(1.0), 0.6) * body * exp(-dh * dh / 0.00015) * b.w * b.y;
+    col += tc * shape * fade * pulse * 0.55 * b.y;
+    col += tc * exp(-dx / (w * 40.0)) * fade * pulse * 0.07 * halo * b.y; // volumetric bloom, intro only
+    float dh = (hh - b.x) * span;
+    col += mix(tc, vec3(1.0), 0.6) * shape * exp(-dh * dh / 0.00015) * b.w * b.y;
   }
   for (int i = 0; i < NP; i++) {
     vec4 p = pA[i];
@@ -202,16 +189,16 @@ function camDist(t) {
 // Far row: the shader's 12 towers placed in 3D so that, seen from D_END, they project exactly onto it.
 const towers = [];
 for (let i = 0; i < 12; i++) {
-  const x = (i + 0.5) / 12 + (hash1(i * 7.13) - 0.5) * 0.06, w = 0.012 + hash1(i * 3.7) * 0.014, top = 0.35 + hash1(i * 1.91) * 0.4;
+  const x = (i + 0.5) / 12 + (hash1(i * 7.13) - 0.5) * 0.06, w = 0.0025 + hash1(i * 3.7) * 0.004, top = 0.35 + hash1(i * 1.91) * 0.4;
   towers.push({ X: (x - 0.5) * ASPECT * D_END, Z: 0, Hh: CAM_Y + (top - 0.5) * D_END, Wd: w * D_END, idx: i, kind: 'far' });
 }
 // Flanking towers the camera flies past (all end up behind it), and a deep row that dissolves into the fog.
 for (let j = 0; j < 10; j++) {
   const side = j % 2 ? 1 : -1;
-  towers.push({ X: side * (2.4 + rnd() * 7.5), Z: -16.6 + j * 0.5 + rnd() * 0.4, Hh: 3.5 + rnd() * 5, Wd: (0.025 + rnd() * 0.03) * 4, idx: 12 + j, kind: 'near' });
+  towers.push({ X: side * (2.4 + rnd() * 7.5), Z: -16.6 + j * 0.5 + rnd() * 0.4, Hh: 3.5 + rnd() * 5, Wd: 0.025 + rnd() * 0.03, idx: 12 + j, kind: 'near' });
 }
 for (let j = 0; j < 14; j++) {
-  towers.push({ X: (j / 13 - 0.5) * 64 + (rnd() - 0.5) * 3, Z: 14 + rnd() * 26, Hh: 5 + rnd() * 9, Wd: (0.05 + rnd() * 0.05) * 4, idx: 22 + j, kind: 'deep' });
+  towers.push({ X: (j / 13 - 0.5) * 64 + (rnd() - 0.5) * 3, Z: 14 + rnd() * 26, Hh: 5 + rnd() * 9, Wd: 0.05 + rnd() * 0.05, idx: 22 + j, kind: 'deep' });
 }
 // Rise order: from the centre of the frame outwards, one after another.
 const proj0 = tw => Math.abs(tw.X / (tw.Z + camDist(3.5)) / ASPECT);
