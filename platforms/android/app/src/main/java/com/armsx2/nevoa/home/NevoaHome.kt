@@ -39,9 +39,14 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.flow
 import com.armsx2.EmuState
 import com.armsx2.GameInfo
 import com.armsx2.MenuSfx
@@ -121,16 +126,38 @@ private fun NevoaRow(
             pending = g
         }
     }
-    // Reopen the gate once the emulator is back to STOPPED. If the launch never left STOPPED
-    // (it failed), the 3 s timeout reopens it instead of leaving the button dead.
+    // While the burst plays every action below is a no-op (touch, pad and Y alike).
+    val busy = pending != null
+    val openMenu = { if (!busy) onOpenMenu() }
+    val openClassic = { if (!busy) onOpenClassic() }
+    val openSettings = { g: GameInfo -> if (!busy) onOpenGameSettings(g) }
+    // Reopen the gate only on a real signal: eState went non-STOPPED and came back, or the
+    // launch never left STOPPED for a long time (failed). Ticker re-evaluates the timeout.
     LaunchedEffect(launched) {
         if (!launched) return@LaunchedEffect
-        withTimeoutOrNull(3000) { snapshotFlow { MainActivityRuntime.eState.value }.first { it != EmuState.STOPPED } }
-        snapshotFlow { MainActivityRuntime.eState.value }.first { it == EmuState.STOPPED }
+        val start = System.currentTimeMillis()
+        var sawNonStopped = false
+        val ticker = flow { while (true) { emit(Unit); delay(500) } }
+        snapshotFlow { MainActivityRuntime.eState.value }.combine(ticker) { s, _ -> s }.first { s ->
+            if (s != EmuState.STOPPED) sawNonStopped = true
+            shouldReopenGate(sawNonStopped, s == EmuState.STOPPED, System.currentTimeMillis() - start)
+        }
         gate.reset()
         launched = false
     }
+    // Coming back to the screen with the emulator stopped and no launch in flight.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && pending == null && !launched &&
+                MainActivityRuntime.eState.value == EmuState.STOPPED
+            ) gate.reset()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     fun move(delta: Int) {
+        if (busy) return
         val next = moveSelection(index, delta, games.size)
         if (next != index) {
             selectedKey = games[next].uri.toString()
@@ -168,8 +195,9 @@ private fun NevoaRow(
             .background(NevoaPalette.Background)
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown && event.key.nativeKeyCode == AndroidKeyEvent.KEYCODE_BUTTON_Y) {
+                    if (busy) return@onPreviewKeyEvent true
                     MenuSfx.play(MenuSfx.Event.SELECT)
-                    onOpenClassic()
+                    openClassic()
                     true
                 } else {
                     false
@@ -181,13 +209,13 @@ private fun NevoaRow(
         NevoaBackground(Modifier.fillMaxSize())
         GlassButton(
             NevoaStrings.Menu,
-            onOpenMenu,
+            openMenu,
             Modifier.align(Alignment.TopStart).padding(16.dp),
             controllerId = if (drawerOpen) null else MenuId,
         )
         GlassButton(
             NevoaStrings.FullLibrary,
-            onOpenClassic,
+            openClassic,
             Modifier.align(Alignment.TopEnd).padding(16.dp),
             controllerId = if (drawerOpen) null else FullLibraryId,
         )
@@ -221,7 +249,7 @@ private fun NevoaRow(
                         GameDetailsPanel(
                             g,
                             onPlay = { onPlay(g) },
-                            onConfigure = { onOpenGameSettings(g) },
+                            onConfigure = { openSettings(g) },
                             configureControllerId = if (drawerOpen) null else ConfigureId,
                         )
                     }

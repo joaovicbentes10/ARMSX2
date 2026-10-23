@@ -35,6 +35,14 @@ class LaunchGate {
     }
 }
 
+/** True when the gate may reopen: the game ran and ended, or the launch never started (failed). */
+fun shouldReopenGate(
+    sawNonStopped: Boolean,
+    nowStopped: Boolean,
+    elapsedMs: Long,
+    failureTimeoutMs: Long = 15_000L,
+): Boolean = nowStopped && (sawNonStopped || elapsedMs >= failureTimeoutMs)
+
 private const val BurstMillis = 700
 private const val FadeMillis = 150
 private const val ParticleCount = 40
