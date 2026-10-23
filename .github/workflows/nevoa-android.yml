@@ -65,7 +65,7 @@ jobs:
       - name: Test and build release APK
         run: |
           set -o pipefail
-          ./gradlew :app:testGithubReleaseUnitTest :app:assembleGithubRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" 2>&1 | tee gradle.log
+          ./gradlew :app:testGithubDebugUnitTest :app:assembleGithubRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" 2>&1 | tee gradle.log
 
       # Job logs need auth; annotations are public.
       - name: Expose gradle error
