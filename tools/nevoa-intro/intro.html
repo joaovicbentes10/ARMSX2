@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ARMSX2 Névoa — abertura</title>
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050812; }
+  canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  #wm {
+    position: absolute; left: 50%; top: 50%;
+    font-family: "Segoe UI Light", "Segoe UI", "Helvetica Neue", sans-serif;
+    font-weight: 200; font-size: 124px; line-height: 1; white-space: nowrap;
+    color: #E8EEFF; opacity: 0; will-change: transform, opacity, filter;
+    text-shadow: 0 0 28px rgba(156, 195, 255, 0.45), 0 0 90px rgba(90, 140, 255, 0.35);
+  }
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="wm">ARMSX2</div>
+<script>
+// Colors: NevoaPalette (Global Constraints).
+const SKY = '#050812', FOG = '#5A8CFF', BLUE = '#9CC3FF', VIOLET = '#B9A3FF', CYAN = '#7FE0FF';
+
+const W = 1920, H = 1080, ASPECT = W / H, FPS = 30, FRAMES = 240;
+const T_END = (FRAMES - 1) / FPS;      // last frame == NevoaBackground at iTime 0
+const CAM_Y = 5, D_END = 10, D_START = 22, DRIFT = 0.35, T_FLY = 6.0;
+const NT = 36, NP = 96;
+
+const COMMON = `#version 300 es
+precision highp float;
+uniform vec2 iResolution;
+uniform vec3 cSky, cFog, cBlue, cViolet, cCyan;
+out vec4 o;
+float hash2(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float hash1(float n) { return fract(sin(n) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p); vec2 f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash2(i), hash2(i + vec2(1.0, 0.0)), u.x), mix(hash2(i + vec2(0.0, 1.0)), hash2(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) { float v = 0.0; float a = 0.5; for (int i = 0; i < 4; i++) { v += a * noise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; } return v; }
+vec3 towerColor(float i) { float k = mod(i, 3.0); return k < 0.5 ? cBlue : (k < 1.5 ? cViolet : cCyan); }
+`;
+
+// Straight port of NevoaShader.kt (calm = 0); only used by selfCheck().
+const REF_FS = COMMON + `
+uniform float iTime;
+void main() {
+  vec2 fragCoord = vec2(gl_FragCoord.x, iResolution.y - gl_FragCoord.y);
+  vec2 uv = fragCoord / iResolution; float aspect = iResolution.x / iResolution.y; float h = 1.0 - uv.y; float t = iTime;
+  vec3 col = cSky;
+  for (int i = 0; i < 12; i++) {
+    float fi = float(i);
+    float x = (fi + 0.5) / 12.0 + (hash1(fi * 7.13) - 0.5) * 0.06;
+    float w = 0.0025 + hash1(fi * 3.7) * 0.004;
+    float top = 0.35 + hash1(fi * 1.91) * 0.4;
+    float dx = abs(uv.x - x) * aspect;
+    float shape = (1.0 - smoothstep(w * 0.3, w, dx)) + exp(-dx / (w * 6.0)) * 0.25;
+    float fade = pow(clamp(1.0 - h / top, 0.0, 1.0), 1.5);
+    float pulse = 0.6 + 0.4 * sin(t * 0.6 + fi * 1.7);
+    col += towerColor(fi) * shape * fade * pulse * 0.55;
+  }
+  for (int j = 0; j < 2; j++) {
+    float fj = float(j);
+    float y = 0.55 + 0.12 * sin(uv.x * (3.0 + fj * 1.2) + t * 0.15 * (fj + 1.0) + fj * 2.0);
+    float d = h - y;
+    col += cFog * exp(-d * d / 0.0008) * (0.5 + 0.5 * sin(uv.x * 2.0 - t * 0.1 + fj * 3.0)) * 0.35;
+  }
+  float f = fbm(vec2(uv.x * aspect * 1.6 + t * 0.02, h * 2.5 - t * 0.06));
+  col = mix(col, cFog, f * (1.0 - smoothstep(0.0, 0.75, h)) * 0.55);
+  vec2 grid = vec2(10.0, 6.0); vec2 cell = floor(uv * grid); float r = hash2(cell);
+  vec2 pos = 0.2 + 0.6 * vec2(hash2(cell + 3.1), hash2(cell + 7.7));
+  pos.y += 0.1 * sin(t * 0.2 + r * 6.28);
+  vec2 dp = (fract(uv * grid) - pos) * (iResolution / grid);
+  col += cCyan * exp(-dot(dp, dp) / 4.0) * pow(0.5 + 0.5 * sin(t * (0.8 + r * 1.5) + r * 30.0), 4.0) * 0.8;
+  o = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+// Same composition as REF_FS, with every intro-only term driven by uniforms that reach their library value at T_END.
+const INTRO_FS = COMMON + `
+#define NT ${NT}
+#define NP ${NP}
+uniform float st, fogA, fogH, ribA, moteA, zoom, farK, halo, horizonA, frame, dither;
+uniform vec4 tA[NT]; // screen x, width, base h, top h
+uniform vec4 tB[NT]; // risen fraction (1.1 = done), intensity, index, head glow
+uniform vec4 pA[NP]; // px x, px y (from top), radius px, brightness
+void main() {
+  vec2 fc = vec2(gl_FragCoord.x, iResolution.y - gl_FragCoord.y);
+  vec2 uv = fc / iResolution; float aspect = iResolution.x / iResolution.y; float h = 1.0 - uv.y; float t = st;
+  vec3 col = cSky;
+  for (int i = 0; i < NT; i++) {
+    vec4 a = tA[i]; vec4 b = tB[i];
+    if (b.y <= 0.0) continue;
+    if (i < 12) { // far row: same GPU hashes as NevoaShader (float sin differs from JS), scaled by perspective
+      float fi = float(i);
+      float x0 = (fi + 0.5) / 12.0 + (hash1(fi * 7.13) - 0.5) * 0.06;
+      float w0 = 0.0025 + hash1(fi * 3.7) * 0.004;
+      float top0 = 0.35 + hash1(fi * 1.91) * 0.4;
+      a = farK == 1.0 ? vec4(x0, w0, 0.0, top0) : vec4(0.5 + (x0 - 0.5) * farK, w0 * farK, 0.5 - 0.5 * farK, 0.5 + (top0 - 0.5) * farK);
+    }
+    float w = a.y;
+    float dx = abs(uv.x - a.x) * aspect;
+    float shape = (1.0 - smoothstep(w * 0.3, w, dx)) + exp(-dx / (w * 6.0)) * 0.25;
+    float span = a.w - a.z;
+    float hh = (h - a.z) / span;
+    float up = pow(clamp(1.0 - hh, 0.0, 1.0), 1.5) * (1.0 - smoothstep(b.x - 0.08, b.x, hh));
+    float refl = pow(clamp(1.0 + hh * 5.0, 0.0, 1.0), 2.0) * 0.12 * min(b.x, 1.0); // faint floor reflection
+    float soft = 0.025 * halo + 1e-5; // base melts into the floor during the intro; exact cut at rest
+    float fade = mix(refl, up, smoothstep(-soft, soft, h - a.z));
+    float pulse = 0.6 + 0.4 * sin(t * 0.6 + b.z * 1.7);
+    vec3 tc = towerColor(b.z);
+    col += tc * shape * fade * pulse * 0.55 * b.y;
+    col += tc * exp(-dx / (w * 40.0)) * fade * pulse * 0.07 * halo * b.y; // volumetric bloom, intro only
+    float dh = (hh - b.x) * span;
+    col += mix(tc, vec3(1.0), 0.6) * shape * exp(-dh * dh / 0.00015) * b.w * b.y;
+  }
+  for (int i = 0; i < NP; i++) {
+    vec4 p = pA[i];
+    if (p.w <= 0.0) continue;
+    vec2 d = fc - p.xy;
+    float d2 = dot(d, d);
+    col += mix(cCyan, vec3(0.88, 0.93, 1.0), hash1(float(i) * 5.31)) * (exp(-d2 / (p.z * p.z)) + 0.18 * exp(-sqrt(d2) / (p.z * 2.2))) * p.w;
+  }
+  float hz = h - (0.5 - 0.5 * farK); // the floor line under the far row
+  col += cFog * (exp(-hz * hz / 0.006) * 0.13 + exp(-hz * hz / 0.04) * 0.09) * (1.0 - 0.5 * abs(uv.x - 0.5)) * horizonA;
+  for (int j = 0; j < 2; j++) {
+    float fj = float(j);
+    float y = 0.55 + 0.12 * sin(uv.x * (3.0 + fj * 1.2) + t * 0.15 * (fj + 1.0) + fj * 2.0);
+    float d = h - y;
+    col += cFog * exp(-d * d / 0.0008) * (0.5 + 0.5 * sin(uv.x * 2.0 - t * 0.1 + fj * 3.0)) * 0.35 * ribA;
+  }
+  vec2 q = zoom == 1.0 ? vec2(uv.x, h) : 0.5 + (vec2(uv.x, h) - 0.5) / zoom;
+  float f = fbm(vec2(q.x * aspect * 1.6 + t * 0.02, q.y * 2.5 - t * 0.06));
+  col = mix(col, cFog, f * (1.0 - smoothstep(0.0, fogH, h)) * fogA);
+  vec2 grid = vec2(10.0, 6.0); vec2 cell = floor(uv * grid); float r = hash2(cell);
+  vec2 pos = 0.2 + 0.6 * vec2(hash2(cell + 3.1), hash2(cell + 7.7));
+  pos.y += 0.1 * sin(t * 0.2 + r * 6.28);
+  vec2 dp = (fract(uv * grid) - pos) * (iResolution / grid);
+  col += cCyan * exp(-dot(dp, dp) / 4.0) * pow(0.5 + 0.5 * sin(t * (0.8 + r * 1.5) + r * 30.0), 4.0) * 0.8 * moteA;
+  col += (hash2(fc + frame * 1.37) - 0.5) * dither / 255.0; // breaks banding in the dark gradients
+  o = vec4(clamp(col, 0.0, 1.0), 1.0);
+}`;
+
+// ---------- GL setup ----------
+const gl = document.getElementById('c').getContext('webgl2', { preserveDrawingBuffer: true, antialias: false });
+if (!gl) throw new Error('WebGL2 unavailable');
+const VS = `#version 300 es
+in vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }`;
+function program(fs) {
+  const mk = (type, src) => {
+    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const pr = gl.createProgram();
+  gl.attachShader(pr, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, mk(gl.FRAGMENT_SHADER, fs));
+  gl.bindAttribLocation(pr, 0, 'p'); gl.linkProgram(pr);
+  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+  const u = {};
+  const n = gl.getProgramParameter(pr, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(pr, i).name.replace('[0]', ''); u[name] = gl.getUniformLocation(pr, name); }
+  gl.useProgram(pr);
+  const rgb = hex => [1, 3, 5].map(k => parseInt(hex.slice(k, k + 2), 16) / 255);
+  gl.uniform2f(u.iResolution, W, H);
+  [['cSky', SKY], ['cFog', FOG], ['cBlue', BLUE], ['cViolet', VIOLET], ['cCyan', CYAN]].forEach(([k, v]) => gl.uniform3fv(u[k], rgb(v)));
+  return { pr, u };
+}
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+gl.viewport(0, 0, W, H);
+const INTRO = program(INTRO_FS), REF = program(REF_FS);
+
+// ---------- deterministic scene ----------
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rnd = mulberry32(0x4E564F41);
+const clamp01 = x => Math.min(1, Math.max(0, x));
+const smooth = (a, b, x) => { const s = clamp01((x - a) / (b - a)); return s * s * (3 - 2 * s); };
+const easeOut = s => 1 - Math.pow(1 - clamp01(s), 3);
+const hash1 = n => { const v = Math.sin(n) * 43758.5453; return v - Math.floor(v); };
+
+// Camera distance to the far row: slow drift, then a Hermite glide that lands at rest on D_END.
+function camDist(t) {
+  if (t <= T_FLY) return D_START - DRIFT * t;
+  const T = T_END - T_FLY, s = clamp01((t - T_FLY) / T), p0 = D_START - DRIFT * T_FLY, m0 = -DRIFT * T;
+  return (2 * s ** 3 - 3 * s * s + 1) * p0 + (s ** 3 - 2 * s * s + s) * m0 + (-2 * s ** 3 + 3 * s * s) * D_END;
+}
+
+// Far row: the shader's 12 towers placed in 3D so that, seen from D_END, they project exactly onto it.
+const towers = [];
+for (let i = 0; i < 12; i++) {
+  const x = (i + 0.5) / 12 + (hash1(i * 7.13) - 0.5) * 0.06, w = 0.0025 + hash1(i * 3.7) * 0.004, top = 0.35 + hash1(i * 1.91) * 0.4;
+  towers.push({ X: (x - 0.5) * ASPECT * D_END, Z: 0, Hh: CAM_Y + (top - 0.5) * D_END, Wd: w * D_END, idx: i, kind: 'far' });
+}
+// Flanking towers the camera flies past (all end up behind it), and a deep row that dissolves into the fog.
+for (let j = 0; j < 10; j++) {
+  const side = j % 2 ? 1 : -1;
+  towers.push({ X: side * (2.4 + rnd() * 7.5), Z: -16.6 + j * 0.5 + rnd() * 0.4, Hh: 3.5 + rnd() * 5, Wd: 0.025 + rnd() * 0.03, idx: 12 + j, kind: 'near' });
+}
+for (let j = 0; j < 14; j++) {
+  towers.push({ X: (j / 13 - 0.5) * 64 + (rnd() - 0.5) * 3, Z: 14 + rnd() * 26, Hh: 5 + rnd() * 9, Wd: 0.05 + rnd() * 0.05, idx: 22 + j, kind: 'deep' });
+}
+// Rise order: from the centre of the frame outwards, one after another.
+const proj0 = tw => Math.abs(tw.X / (tw.Z + camDist(3.5)) / ASPECT);
+[...towers].sort((a, b) => proj0(a) - proj0(b)).forEach((tw, k) => { tw.start = 2.4 + 1.5 * k / (NT - 1); tw.dur = 0.9; });
+
+const motes = [];
+for (let j = 0; j < NP; j++) {
+  motes.push({ X: (rnd() - 0.5) * 34, Y: 0.4 + rnd() * 11, Z: -26 + rnd() * 52, on: 0.1 + Math.pow(rnd(), 1.4) * 1.6, ph: rnd() * 6.283, sp: 0.6 + rnd() * 1.2 });
+}
+
+const tA = new Float32Array(NT * 4), tB = new Float32Array(NT * 4), pA = new Float32Array(NP * 4);
+const wm = document.getElementById('wm');
+
+window.renderFrame = function (t) {
+  const d = camDist(t), camZ = -d;
+  towers.forEach((tw, i) => {
+    const dz = tw.Z - camZ, o = i * 4;
+    const e = easeOut((t - tw.start) / tw.dur), lin = clamp01((t - tw.start) / tw.dur);
+    let k = tw.kind === 'far' ? 1 : tw.kind === 'near' ? 0.9 * smooth(0.4, 3.0, dz) : 0.5 * (1 - smooth(6.4, T_END, t));
+    if (lin <= 0 || dz < 0.2) k = 0;
+    tA[o] = 0.5 + tw.X / dz / ASPECT; tA[o + 1] = tw.Wd / dz;
+    tA[o + 2] = 0.5 - CAM_Y / dz; tA[o + 3] = 0.5 + (tw.Hh - CAM_Y) / dz;
+    tB[o] = 1.1 * e; tB[o + 1] = k; tB[o + 2] = tw.idx; tB[o + 3] = 1.1 * (1 - e) * smooth(0, 0.08, lin);
+  });
+  motes.forEach((m, i) => {
+    const Y = m.Y + 0.05 * t, X = m.X + 0.25 * Math.sin(0.3 * t + m.ph), dz = m.Z - camZ, o = i * 4;
+    if (dz < 0.25) { pA[o + 3] = 0; return; }
+    const tw = 0.6 + 0.4 * Math.sin(t * m.sp + m.ph * 3);
+    pA[o] = (0.5 + X / dz / ASPECT) * W; pA[o + 1] = (0.5 - (Y - CAM_Y) / dz) * H;
+    pA[o + 2] = Math.min(6, Math.max(1.5, 30 / dz));
+    const lit = t - m.on; // a brief spark as each mote lights up, then it settles
+    pA[o + 3] = 1.1 * smooth(0, 0.25, lit) * (1 + 1.5 * Math.exp(-Math.max(0, lit) * 3)) * tw * smooth(0.25, 2.5, dz) * Math.min(1, Math.max(0.3, 9 / dz)) * (1 - smooth(7.0, T_END, t));
+  });
+
+  const { u } = INTRO; gl.useProgram(INTRO.pr);
+  gl.uniform1f(u.st, t - T_END);
+  gl.uniform1f(u.fogA, 0.55 * smooth(1.2, 2.6, t));
+  gl.uniform1f(u.fogH, t < T_FLY ? 0.02 + 0.53 * easeOut((t - 1.2) / 1.8) : 0.55 + 0.2 * smooth(T_FLY, T_END, t));
+  gl.uniform1f(u.ribA, smooth(6.3, T_END, t));
+  gl.uniform1f(u.moteA, smooth(6.8, T_END, t));
+  gl.uniform1f(u.zoom, Math.sqrt(D_END / d));
+  gl.uniform1f(u.farK, D_END / d);
+  gl.uniform1f(u.halo, 1 - smooth(6.6, T_END, t));
+  gl.uniform1f(u.horizonA, smooth(1.4, 4.2, t) * (1 - smooth(6.2, 7.5, t)));
+  gl.uniform1f(u.frame, Math.round(t * FPS));
+  gl.uniform1f(u.dither, 1);
+  gl.uniform4fv(u.tA, tA); gl.uniform4fv(u.tB, tB); gl.uniform4fv(u.pA, pA);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  // Wordmark: tightens while it fades in, then drifts toward the camera and dissolves.
+  const a = smooth(4.8, 6.0, t), out = smooth(6.25, 7.2, t), grow = easeOut((t - 4.8) / 1.5);
+  const ls = 1.05 - 0.67 * grow;
+  wm.style.opacity = (a * (1 - out)).toFixed(4);
+  wm.style.letterSpacing = ls.toFixed(4) + 'em';
+  wm.style.paddingLeft = ls.toFixed(4) + 'em'; // balances the trailing letter-spacing
+  wm.style.filter = `blur(${(9 * (1 - grow) + 7 * out * out).toFixed(2)}px)`;
+  wm.style.transform = `translate(-50%, -50%) scale(${(0.985 + 0.015 * grow + 0.22 * out * out).toFixed(4)})`;
+};
+
+// Max per-channel difference (0-255) between the last intro frame and the library shader at iTime 0.
+window.selfCheck = function () {
+  const px = () => { const b = new Uint8Array(W * H * 4); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, b); return b; };
+  renderFrame(T_END); const a = px();
+  gl.useProgram(REF.pr); gl.uniform1f(REF.u.iTime, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); const b = px();
+  let max = 0, at = -1, over = 0;
+  for (let i = 0; i < a.length; i++) { const v = Math.abs(a[i] - b[i]); if (v > 3) over++; if (v > max) { max = v; at = i >> 2; } }
+  return { maxDiff: max, pixelsOver3: over, worstAt: [at % W, H - 1 - Math.floor(at / W)], wordmarkOpacity: +wm.style.opacity };
+};
+window.FRAMES = FRAMES; window.FPS = FPS;
+</script>
+</body>
+</html>

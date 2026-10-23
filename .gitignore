@@ -173,3 +173,7 @@ platforms/android/app/src/main/cpp/3rdparty/discord/include/
 # Névoa signing
 platforms/android/armsx2_keystore.properties
 *.jks
+
+# Névoa intro tool
+tools/nevoa-intro/node_modules/
+tools/nevoa-intro/out/

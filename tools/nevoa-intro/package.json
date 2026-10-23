@@ -1,0 +1,11 @@
+{
+  "name": "nevoa-intro",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "puppeteer": "^25.16.0"
+  }
+}
