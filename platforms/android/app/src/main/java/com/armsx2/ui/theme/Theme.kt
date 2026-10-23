@@ -294,9 +294,9 @@ object LibraryBackgroundColorPreferences {
 object LauncherOrientationPreferences {
     private const val Key = "ui.launcherOrientation"
 
-    val mode = mutableStateOf(0)  // 0 = Device (system default) — preserves prior behavior
+    val mode = mutableStateOf(1)  // Névoa: landscape by default (0 = Device, 1 = Landscape, 2 = Portrait, 3 = Auto)
 
-    fun load() { mode.value = MainActivityRuntime.prefs.getInt(Key, 0).coerceIn(0, 3) }
+    fun load() { mode.value = MainActivityRuntime.prefs.getInt(Key, 1).coerceIn(0, 3) }
 
     fun set(value: Int) {
         val v = value.coerceIn(0, 3)

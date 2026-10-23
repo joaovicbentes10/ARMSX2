@@ -73,7 +73,7 @@ fun GameDetailsPanel(
             style = MaterialTheme.typography.bodyMedium,
         )
         if (played.isNotEmpty()) {
-            Text(played, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+            Text("${NevoaStrings.PlayTime}: $played", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GlassButton(NevoaStrings.Play, onPlay, primary = true)

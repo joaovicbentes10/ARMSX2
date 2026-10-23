@@ -75,19 +75,22 @@ fun DvdCase(game: GameInfo, selected: Boolean, onClick: () -> Unit, modifier: Mo
             .background(NevoaPalette.Background)
             .clickable(onClick = onClick),
     ) {
-        Box(
-            Modifier.fillMaxWidth().weight(0.09f).background(CaseBand),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Text(
-                "PlayStation 2",
-                color = NevoaPalette.Text,
-                fontSize = 7.sp,
-                maxLines = 1,
-                modifier = Modifier.padding(horizontal = 6.dp),
-            )
+        // Real PS2 cover scans already carry the case band, so only the fallback draws one.
+        if (!hasCover) {
+            Box(
+                Modifier.fillMaxWidth().weight(0.09f).background(CaseBand),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Text(
+                    "PlayStation 2",
+                    color = NevoaPalette.Text,
+                    fontSize = 7.sp,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                )
+            }
         }
-        Box(Modifier.fillMaxWidth().weight(0.91f), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().weight(if (hasCover) 1f else 0.91f), contentAlignment = Alignment.Center) {
             if (hasCover) {
                 GameCoverArt(game, Modifier.fillMaxSize())
             } else {
