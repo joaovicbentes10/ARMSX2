@@ -169,3 +169,7 @@ platforms/android/.kotlin/
 **/discord_partner_sdk.jar
 platforms/android/app/src/main/cpp/3rdparty/discord/include/
 .superpowers/
+
+# Névoa signing
+platforms/android/armsx2_keystore.properties
+*.jks

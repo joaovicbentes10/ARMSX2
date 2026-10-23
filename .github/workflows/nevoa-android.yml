@@ -1,0 +1,73 @@
+name: Nevoa Android
+
+on:
+  push:
+    branches: [nevoa]
+  workflow_dispatch:
+
+jobs:
+  android:
+    name: Android APK (Névoa)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: platforms/android
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # The action's default is "tools platform-tools"; Google removed the
+          # legacy "tools" package, so installing it fails the whole job.
+          packages: platform-tools
+
+      # NDK matches the default pinned in build.gradle.kts; cmake 3.31.6 matches the pin in
+      # build.gradle.kts. 3.22.1 (AGP's default) is the shaderc deps' exact
+      # cmake_minimum_required floor and fails to configure spirv-tools.
+      - name: Install NDK + CMake
+        run: yes | sdkmanager "ndk;29.0.14206865" "cmake;3.31.6" >/dev/null || true
+
+      # shaderc's SPIRV-Tools/glslang/etc. are fetched on demand (not vendored,
+      # not submodules), so `submodules: recursive` above does not provide them.
+      - name: Fetch shaderc third-party deps
+        run: python3 app/src/main/cpp/3rdparty/shaderc/utils/git-sync-deps
+
+      # librashader is built by cargo for the Android target; the runner's
+      # rustup only ships the host std, so the cargo step dies with
+      # "error[E0463]: can't find crate for `core`" without this.
+      - name: Install Rust Android target
+        run: rustup target add aarch64-linux-android
+
+      - name: Write signing key
+        env:
+          KS_B64: ${{ secrets.NEVOA_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.NEVOA_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.NEVOA_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.NEVOA_KEY_PASSWORD }}
+        run: |
+          echo "$KS_B64" | base64 -d > nevoa.jks
+          {
+            echo "storeFile=nevoa.jks"
+            echo "storePassword=$KS_PASS"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=$KEY_PASS"
+          } > armsx2_keystore.properties
+
+      - name: Test and build release APK
+        run: ./gradlew :app:testReleaseUnitTest :app:assembleRelease -Parmsx2.applicationId=com.armsx2.nevoa "-Parmsx2.appLabel=ARMSX2 Névoa" --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: armsx2-nevoa-android
+          path: platforms/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
