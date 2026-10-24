@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -72,6 +73,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.armsx2.i18n.str
+import com.armsx2.CustomCovers
 import com.armsx2.runtime.MainActivityRuntime
 import com.armsx2.ui.InGameOverlay
 import com.armsx2.ui.achievements.AchievementItem
@@ -81,7 +83,6 @@ import com.armsx2.ui.settings.overrideMarker
 import com.armsx2.ui.settings.CollapsibleSection
 import com.armsx2.ui.touch.TouchControls
 import com.armsx2.ui.theme.Danger
-import com.armsx2.ui.common.StatusChip
 import com.armsx2.ui.theme.Success
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -575,11 +576,15 @@ private fun MenuHeader(
     onOpenFriends: () -> Unit,
 ) {
     val game = MainActivityRuntime.currentGame.value
+    val context = LocalContext.current
+    val hasCover = remember(game?.uri, CustomCovers.version.value) {
+        game?.let { it.coverUrl != null || CustomCovers.fileFor(context, it) != null } ?: false
+    }
     Row(
         Modifier.fillMaxWidth().padding(horizontal = if (compact) 12.dp else 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (game != null && !compact) {
+        if (game != null && !compact && hasCover) {
             GameCoverArt(game, Modifier.width(44.dp).height(60.dp))
             Spacer(Modifier.width(11.dp))
         }
@@ -597,12 +602,6 @@ private fun MenuHeader(
                 if (hardcore) {
                     Spacer(Modifier.width(8.dp))
                     HardcoreBadge()
-                }
-                // File-type chip after the HC badge (ISO / CHD / …), mirroring the library
-                // list view so the pause/RA header shows the same at-a-glance file info.
-                if (!compact) game?.let { g ->
-                    Spacer(Modifier.width(6.dp))
-                    com.armsx2.ui.common.StatusChip(g.extension.ifBlank { g.platform.key.uppercase() })
                 }
             }
             // Serial and CRC together: a PNACH is named <SERIAL>_<CRC>.pnach, so the two values
