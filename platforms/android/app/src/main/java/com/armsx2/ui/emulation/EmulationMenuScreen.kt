@@ -694,10 +694,10 @@ private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
         idPrefix = "primary",
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CompactAction(str("savestate.title.save"), "↥", Modifier.weight(1f)) {
+        CompactAction("Salvar", "↥", Modifier.weight(1f)) {
             com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.SaveState)
         }
-        CompactAction(str("touch.stateAction.load"), "↧", Modifier.weight(1f)) {
+        CompactAction("Carregar", "↧", Modifier.weight(1f)) {
             com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.LoadState)
         }
     }
