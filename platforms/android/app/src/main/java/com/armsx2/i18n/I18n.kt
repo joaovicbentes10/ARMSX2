@@ -1732,6 +1732,7 @@ private val BASE_EN: Map<String, String> = mapOf(
     "ui.otherOptions" to "More options",
     "controls.section.buttonsShort" to "Buttons",
     "controls.section.profilesShort" to "Profiles",
+    "app.bgOptions" to "Library background",
     "textures.online.subtitle" to "Community packs. Installs to the pack's own game; no need to launch it first.",
     "textures.online.loading" to "Loading catalog\u2026",
     "textures.online.failed" to "Could not reach the texture catalog. Check your connection and try again.",

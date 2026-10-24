@@ -1745,6 +1745,7 @@
  "ui.otherOptions": "Outras opções",
  "controls.section.buttonsShort": "Botões",
  "controls.section.profilesShort": "Perfis",
+ "app.bgOptions": "Fundo da biblioteca",
  "textures.online.subtitle": "Pacotes comunitários. Instala no próprio jogo do pacote. Não há necessidade de iniciá-lo primeiro.",
  "textures.online.loading": "Carregando catálogo…",
  "textures.online.failed": "Não foi possível acessar o catálogo de texturas. Verifique sua conexão e tente novamente.",

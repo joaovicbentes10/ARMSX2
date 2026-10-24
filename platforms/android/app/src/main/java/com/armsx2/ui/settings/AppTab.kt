@@ -81,27 +81,16 @@ fun AppTab() {
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.46f)),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Surface(
-                    modifier = Modifier.size(46.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                        Text("◎", color = MaterialTheme.colorScheme.primary, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
+                Text(str("app.language"), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text(
+                    if (I18n.selected == I18n.SYSTEM_CODE) str("app.language.system") else currentLanguage?.nativeName ?: "English",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(str("app.language"), style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        if (I18n.selected == I18n.SYSTEM_CODE) str("app.language.system") else currentLanguage?.nativeName ?: "English",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
                 Text("›", color = MaterialTheme.colorScheme.primary, fontSize = 26.sp)
             }
         }
@@ -203,6 +192,7 @@ fun AppTab() {
         // the UI chrome; this recolors the animated backdrop itself, with the white waves riding
         // over it. Unset = the built-in blue. Live: XmbGlView's GL thread reads the new color on
         // its next frame (~33ms), so the backdrop updates as the sliders move.
+        CollapsibleSection(str("app.bgOptions")) {
         Column(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
             Text(str("app.bgColor"), style = MaterialTheme.typography.titleMedium)
             Text(
@@ -442,6 +432,7 @@ fun AppTab() {
                 ) { Text(str("action.reset")) }
             }
             }
+        }
         }
 
         ToggleRow(

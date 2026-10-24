@@ -31,7 +31,8 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `ui/achievements/AchievementsScreen.kt` | login centralizado em paisagem; ajustes secundários recolhidos |
 | `i18n/I18n.kt` | textos padrão dos novos controles da Parte 2 |
 | `ui/theme/Theme.kt` | esquema de cores/tipografia Névoa; horizontal como padrão |
-| `ui/settings/AppTab.kt` | linha "Som da abertura" |
+| `ui/settings/AppTab.kt` | som da abertura; idioma compacto e ajustes do fundo recolhidos |
+| `ui/settingshub/SettingsSearchIndex.kt` | busca abre o grupo recolhido do fundo da biblioteca |
 | `ui/common/ArmsComponents.kt` | fundo Névoa calmo e componentes de vidro compartilhados |
 | `ui/common/SettingControls.kt` | linha de opção com vidro Névoa |
 | `ui/settings/SettingsWidgets.kt` | linhas de opções compactas; descrições abertas pelo ícone de informação |
