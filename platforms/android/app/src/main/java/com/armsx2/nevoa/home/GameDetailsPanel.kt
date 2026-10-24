@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.armsx2.GameInfo
@@ -23,7 +24,7 @@ import com.armsx2.nevoa.NevoaStrings
 import com.armsx2.nevoa.theme.NevoaPalette
 import com.armsx2.ui.settings.controllerFocusable
 
-private val ButtonShape = RoundedCornerShape(14.dp)
+private val ButtonShape = RoundedCornerShape(8.dp)
 
 /** Frosted-glass button. [controllerId] registers it with the pad's nav registry. */
 @Composable
@@ -32,18 +33,31 @@ internal fun GlassButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     primary: Boolean = false,
+    quiet: Boolean = false,
     controllerId: String? = null,
 ) {
     Box(
         modifier
             .controllerFocusable(controllerId, ButtonShape, onConfirm = onClick)
             .clip(ButtonShape)
-            .background(if (primary) NevoaPalette.Selected.copy(alpha = 0.22f) else NevoaPalette.Glass)
-            .border(1.dp, if (primary) NevoaPalette.Selected else NevoaPalette.GlassBorder, ButtonShape)
+            .background(
+                when {
+                    primary -> NevoaPalette.Selected.copy(alpha = 0.22f)
+                    quiet -> Color.Transparent
+                    else -> NevoaPalette.Glass
+                },
+            )
+            .then(
+                if (quiet) Modifier else Modifier.border(
+                    1.dp,
+                    if (primary) NevoaPalette.Selected else NevoaPalette.GlassBorder,
+                    ButtonShape,
+                ),
+            )
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = if (quiet) 12.dp else 20.dp, vertical = 10.dp),
     ) {
-        Text(text, color = NevoaPalette.Text, style = MaterialTheme.typography.labelLarge)
+        Text(text, color = if (quiet) NevoaPalette.TextDim else NevoaPalette.Text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
@@ -67,17 +81,15 @@ fun GameDetailsPanel(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            if (last.isEmpty()) NevoaStrings.NeverPlayed else "${NevoaStrings.Played}: $last",
-            color = NevoaPalette.TextDim,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        if (last.isNotEmpty()) {
+            Text("${NevoaStrings.Played}: $last", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+        }
         if (played.isNotEmpty()) {
             Text("${NevoaStrings.PlayTime}: $played", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
         }
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GlassButton(NevoaStrings.Play, onPlay, primary = true)
-            GlassButton(NevoaStrings.Configure, onConfigure, controllerId = configureControllerId)
+            GlassButton(NevoaStrings.Configure, onConfigure, quiet = true, controllerId = configureControllerId)
         }
     }
 }

@@ -50,6 +50,8 @@ Implementados em código: menu lateral, BIOS, cartões de memória, estado vazio
 
 Revisar a composição dos botões superiores e do painel para reduzir elementos com aparência genérica, preservando a névoa e as torres aprovadas. Integrar busca, ordenação e categorias ao visual Névoa, hoje acessíveis pela biblioteca clássica. Mostrar os saves do memory card no painel do jogo quando houver dados confiáveis para aquele título.
 
+Primeiro ajuste aplicado em código: Menu, Biblioteca completa e Configurar viraram ações tipográficas discretas; Jogar permanece como ação principal. A indicação redundante de X no rodapé e o texto “Nunca jogado” foram retirados. Busca, ordenação, categorias e saves por jogo continuam pendentes.
+
 ### 5. Validação
 
 - Build: `:app:testGithubDebugUnitTest` e `:app:assembleGithubRelease` no workflow Névoa.

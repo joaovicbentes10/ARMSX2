@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -246,12 +244,14 @@ private fun NevoaRow(
             NevoaStrings.Menu,
             openMenu,
             Modifier.align(Alignment.TopStart).padding(16.dp).enter(progress, 0f, 0.45f, dy = -14f),
+            quiet = true,
             controllerId = if (drawerOpen) null else MenuId,
         )
         GlassButton(
             NevoaStrings.FullLibrary,
             openClassic,
             Modifier.align(Alignment.TopEnd).padding(16.dp).enter(progress, 0f, 0.45f, dy = -14f),
+            quiet = true,
             controllerId = if (drawerOpen) null else FullLibraryId,
         )
         LazyRow(
@@ -297,12 +297,6 @@ private fun NevoaRow(
                 }
             }
         }
-        Text(
-            NevoaStrings.PressToStart,
-            color = NevoaPalette.TextDim,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).enter(progress, 0.6f, 1f, dy = 10f),
-        )
         LaunchBurst(active = pending != null) {
             pending?.let(onLaunch)
             pending = null

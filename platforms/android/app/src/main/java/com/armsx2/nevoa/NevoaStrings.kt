@@ -4,10 +4,8 @@ package com.armsx2.nevoa
 object NevoaStrings {
     const val Play = "Jogar"
     const val Configure = "Configurar"
-    const val PressToStart = "Pressione ✕ para Iniciar"
     const val FullLibrary = "Biblioteca completa"
     const val Played = "Última vez"
     const val PlayTime = "Tempo de jogo"
-    const val NeverPlayed = "Nunca jogado"
     const val Menu = "Menu"
 }
