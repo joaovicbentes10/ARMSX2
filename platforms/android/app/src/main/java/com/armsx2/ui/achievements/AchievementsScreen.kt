@@ -165,7 +165,7 @@ private fun AchievementAccount(
     GlassPanel(modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SectionTitle(state.userName.ifBlank { str("ra.account.signedIn") }, str("ra.options.header"), Modifier.weight(1f))
+                SectionTitle(state.userName.ifBlank { str("ra.account.signedIn") }, modifier = Modifier.weight(1f))
                 StatusChip("${state.items.count { it.unlocked }} / ${state.items.size}")
             }
             LibraryProgressSection()
@@ -211,6 +211,7 @@ private fun AchievementAccount(
                     onConfirm = { viewModel.requestToggleHardcore() },
                 ),
             )
+            CollapsibleSection(str("ra.options.header")) {
             SettingSwitchRow(
                 title = str("ra.options.unlockNotifications"),
                 description = str("ra.options.unlockNotifications.desc"),
@@ -399,6 +400,7 @@ private fun AchievementAccount(
                         Text("›", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                     }
                 }
+            }
             }
             TextButton(
                 onClick = viewModel::logout,
