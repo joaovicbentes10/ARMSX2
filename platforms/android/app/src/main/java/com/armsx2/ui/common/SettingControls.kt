@@ -48,7 +48,7 @@ fun SettingSwitchRow(
         border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
     ) {
         Row(
-            Modifier.defaultMinSize(minHeight = 78.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+            Modifier.defaultMinSize(minHeight = 60.dp).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -59,7 +59,6 @@ fun SettingSwitchRow(
                     // app's settings rows — and silently, since both looked identical closed.
                     com.armsx2.ui.settings.InfoHint(title, description)
                 }
-                Text(description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Spacer(Modifier.width(16.dp))
             Switch(checked = checked, onCheckedChange = emit)

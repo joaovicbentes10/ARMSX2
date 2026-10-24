@@ -25,6 +25,7 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `ui/settings/AppTab.kt` | linha "Som da abertura" |
 | `ui/common/ArmsComponents.kt` | fundo Névoa calmo e componentes de vidro compartilhados |
 | `ui/common/SettingControls.kt` | linha de opção com vidro Névoa |
+| `ui/settings/SettingsWidgets.kt` | linhas de opções compactas; descrições abertas pelo ícone de informação |
 | `ui/settingshub/SettingsScreen.kt` | painel de configurações translúcido |
 | `res/values/themes.xml` | estilo `Theme.ARMSX2.Nevoa` |
 | `res/layout/activity_boot_splash.xml` | `FillVideoView` no lugar de `VideoView` |

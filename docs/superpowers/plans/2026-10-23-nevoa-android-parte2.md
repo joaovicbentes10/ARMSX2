@@ -21,6 +21,7 @@ Fundo escuro `#050812`, névoa azul suave, torres finas e translúcidas, linhas 
 
 - Aplicar o fundo Névoa calmo a `ArmsBackdrop`, respeitando um `backgroundLayer` explícito.
 - Adaptar `ArmsTopBar`, `GlassPanel` e controles compartilhados para superfícies translúcidas, bordas finas e foco visível, sem usar sombras coloridas de `Modifier.shadow`.
+- Reduzir a informação visível por padrão: linhas mostram nome e controle; descrições longas ficam no ícone de informação já existente. Manter todas as ações e valores.
 - Fazer `ThemeBridge.scheme` usar a mesma paleta Névoa da tela principal e ocultar o seletor de tema antigo no app Névoa.
 - Verificar telas globais e por jogo, foco por controle, contraste e rolagem em paisagem.
 

@@ -68,7 +68,9 @@ fun AppTab() {
         // UpdaterEntry is a no-op stub and IN_APP_UPDATER is false, so no updater code or
         // REQUEST_INSTALL_PACKAGES ships in the AAB (build-play-aab.sh also fails closed).
         if (com.armsx2.BuildConfig.IN_APP_UPDATER) {
-            com.armsx2.update.UpdaterEntry()
+            CollapsibleSection(str("update.title")) {
+                com.armsx2.update.UpdaterEntry()
+            }
         }
         Surface(
             onClick = { UiNavigator.navigate(AppRoute.Language) },

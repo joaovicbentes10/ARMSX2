@@ -769,7 +769,7 @@ fun ToggleRow(
         onClick = { emit(!value) },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
+            .padding(vertical = 4.dp)
             .controllerFocusable(
                 controllerId = "toggle:$label",
                 // Only A flips it: Left/Right are for moving, and on a switch they flipped it by
@@ -784,24 +784,13 @@ fun ToggleRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = if (description == null) 64.dp else 78.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .defaultMinSize(minHeight = 60.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).overrideMarker(tint, 23.sp))
                     if (description != null) InfoHint(label, description)
-                }
-                if (description != null) {
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        description,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp,
-                        lineHeight = 19.sp,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                    )
                 }
             }
             Spacer(Modifier.width(12.dp))
@@ -848,7 +837,7 @@ fun IntSliderRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
+            .padding(vertical = 4.dp)
             .controllerFocusable(
                 controllerId = sliderId,
                 onConfirm = onResetSfx,
@@ -862,25 +851,14 @@ fun IntSliderRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = if (description == null) 76.dp else 94.dp)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .defaultMinSize(minHeight = 72.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).overrideMarker(tint, 23.sp))
                         if (description != null) InfoHint(label, description)
-                    }
-                    if (description != null) {
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            description,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp,
-                            lineHeight = 19.sp,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
                     }
                 }
                 Text(
@@ -1140,7 +1118,7 @@ fun SegmentedRow(
     Box(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
+            .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(22.dp))
             .background(tint.container)
             .border(1.dp, tint.border, RoundedCornerShape(22.dp))
@@ -1159,7 +1137,7 @@ fun SegmentedRow(
                         emit((selectedIndex + 1).coerceAtMost(options.lastIndex))
                 },
             )
-            .padding(vertical = 14.dp),
+            .padding(vertical = 10.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         Column {
@@ -1170,19 +1148,7 @@ fun SegmentedRow(
                 Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).overrideMarker(tint, 23.sp))
                 if (description != null) InfoHint(label, description)
             }
-            if (description != null) {
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    description,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    lineHeight = 19.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-            }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1232,7 +1198,7 @@ fun SegmentedGridRow(
     Box(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
+            .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(22.dp))
             .background(tint.container)
             .border(1.dp, tint.border, RoundedCornerShape(22.dp))
@@ -1251,7 +1217,7 @@ fun SegmentedGridRow(
                         onChange((selectedIndex + 1).coerceAtMost(options.lastIndex))
                 },
             )
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         Column {
@@ -1259,18 +1225,7 @@ fun SegmentedGridRow(
                 Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, lineHeight = 23.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f).overrideMarker(tint, 23.sp))
                 if (description != null) InfoHint(label, description)
             }
-            if (description != null) {
-                Spacer(Modifier.height(3.dp))
-                Text(
-                    description,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    lineHeight = 19.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             val visibleColumns = columns.coerceIn(1, 3)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 options.chunked(visibleColumns).forEachIndexed { rowIndex, rowOptions ->
