@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
 /**
- * A small transient banner in the TOP-LEFT — currently the "Welcome Back!" note shown on wake.
+ * A small transient banner at the top center, away from the library Menu and game Pause buttons.
  * Android Toasts can't be reliably positioned on API 30+ (setGravity is ignored), so this is a
  * Compose overlay mounted once in [WindowImpl] so it floats above any screen (in-game or library).
  */
@@ -47,9 +48,10 @@ fun WelcomeBannerOverlay(scope: BoxScope) {
     with(scope) {
         Surface(
             modifier = Modifier
-                .align(Alignment.TopStart)
+                .align(Alignment.TopCenter)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(start = 14.dp, top = 12.dp),
+                .padding(top = 12.dp)
+                .widthIn(max = 520.dp),
             shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
