@@ -6,17 +6,14 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +29,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,18 +41,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.armsx2.i18n.str
 import com.armsx2.ui.common.ArmsBackdrop
 import com.armsx2.ui.common.ArmsTopBar
-import com.armsx2.ui.common.EmptyState
-import com.armsx2.ui.common.GlassPanel
 import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.common.SettingSwitchRow
+import com.armsx2.ui.settings.CollapsibleSection
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel = viewModel()) {
     val state = viewModel.state.value
     val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri -> uri?.let(viewModel::importFolder) }
     val archivePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let(viewModel::importArchive) }
+    var actionsOpen by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { viewModel.refresh() }
     // Options on the left, packs on the right: the controller keeps to a column and crosses with
     // Left/Right.
@@ -66,8 +68,7 @@ fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel 
     ArmsBackdrop {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             ArmsTopBar(
-                title = str("renderer.section.texturePacks"),
-                subtitle = state.activeSerial ?: str("games.info.perGameSettings.body"),
+                title = str("textures.manager.title"),
                 // Reachable by the controller, so Up from the first control comes back to the top of
                 // the screen, which no control above it used to let it scroll to.
                 leading = { RoundAction("←", str("action.back"), onBack, controllerId = "textureMgr.top.back") },
@@ -75,8 +76,7 @@ fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel 
                     // Providers label .tar.zst inconsistently (application/zstd, octet-stream, or
                     // nothing), so offer every file and let the installer read the format.
                     RoundAction("＋", str("action.import"), { archivePicker.launch(arrayOf("*/*")) }, controllerId = "textureMgr.top.import")
-                    RoundAction("🗀", str("action.importFolder"), { folderPicker.launch(null) }, controllerId = "textureMgr.top.folder")
-                    RoundAction("↻", str("games.card.refresh"), viewModel::refresh, controllerId = "textureMgr.top.refresh")
+                    RoundAction("⋮", str("games.toolbar.more"), { actionsOpen = true }, selected = actionsOpen, controllerId = "textureMgr.top.more")
                 },
             )
             BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -85,11 +85,8 @@ fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel 
                     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
                         TextureOptions(state, viewModel, Modifier.fillMaxWidth())
                         Spacer(Modifier.padding(top = 10.dp))
-                        TextureOnlineSection(catalogSerial(state), librarySerials(state), ownedSerials(state), Modifier.fillMaxWidth()) {
-                            viewModel.onPackInstalled()
-                        }
-                        Spacer(Modifier.padding(top = 10.dp))
                         TexturePacks(state, viewModel, Modifier.fillMaxWidth(), onBack)
+                        TextureOnlineSection(catalogSerial(state), librarySerials(state), ownedSerials(state), Modifier.fillMaxWidth()) { viewModel.onPackInstalled() }
                     }
                 } else {
                     Row(
@@ -98,13 +95,27 @@ fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel 
                     ) {
                         TextureOptions(state, viewModel, Modifier.width(310.dp))
                         Column(Modifier.weight(1f)) {
-                            TextureOnlineSection(catalogSerial(state), librarySerials(state), ownedSerials(state), Modifier.fillMaxWidth()) {
-                                viewModel.onPackInstalled()
-                            }
-                            Spacer(Modifier.padding(top = 10.dp))
                             TexturePacks(state, viewModel, Modifier.fillMaxWidth(), onBack)
+                            TextureOnlineSection(catalogSerial(state), librarySerials(state), ownedSerials(state), Modifier.fillMaxWidth()) { viewModel.onPackInstalled() }
                         }
                     }
+                }
+            }
+        }
+    }
+    if (actionsOpen) {
+        com.armsx2.ui.common.PadModal(key = "textures-actions", onDismiss = { actionsOpen = false }) {
+            Surface(
+                modifier = Modifier.padding(24.dp).widthIn(max = 320.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = NevoaPalette.Background,
+                border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    val folder = { actionsOpen = false; folderPicker.launch(null) }
+                    val refresh = { actionsOpen = false; viewModel.refresh() }
+                    TextButton(onClick = folder, modifier = Modifier.controllerFocusable("textures.actions.folder", onConfirm = folder)) { Text(str("action.importFolder")) }
+                    TextButton(onClick = refresh, modifier = Modifier.controllerFocusable("textures.actions.refresh", onConfirm = refresh)) { Text(str("games.card.refresh")) }
                 }
             }
         }
@@ -121,9 +132,7 @@ fun TextureManagerScreen(onBack: () -> Unit, viewModel: TextureManagerViewModel 
 
 @Composable
 private fun TextureOptions(state: TextureManagerUiState, viewModel: TextureManagerViewModel, modifier: Modifier) {
-    GlassPanel(modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            SectionTitle(str("renderer.section.texturePacks"), str("scope.global"))
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
             SettingSwitchRow(
                 str("renderer.loadTexturePacks.label"),
                 str("renderer.loadTexturePacks.description"),
@@ -135,36 +144,37 @@ private fun TextureOptions(state: TextureManagerUiState, viewModel: TextureManag
                     onConfirm = { viewModel.update { it.copy(graphics = it.graphics.copy(loadTextureReplacements = !state.settings.graphics.loadTextureReplacements)) } },
                 ),
             )
-            SettingSwitchRow(
-                str("renderer.asyncTextureLoading.label"),
-                str("renderer.asyncTextureLoading.description"),
-                state.settings.graphics.loadTextureReplacementsAsync,
-                onCheckedChange = { value -> viewModel.update { it.copy(graphics = it.graphics.copy(loadTextureReplacementsAsync = value)) } },
-                modifier = Modifier.controllerFocusable(
-                    "textureMgr.opt.asyncLoading",
-                    RoundedCornerShape(22.dp),
-                    onConfirm = { viewModel.update { it.copy(graphics = it.graphics.copy(loadTextureReplacementsAsync = !state.settings.graphics.loadTextureReplacementsAsync)) } },
-                ),
-            )
-            SettingSwitchRow(
-                str("renderer.precacheTexturePacks.label"),
-                str("renderer.precacheTexturePacks.description"),
-                state.settings.graphics.precacheTextureReplacements,
-                onCheckedChange = { value -> viewModel.update { it.copy(graphics = it.graphics.copy(precacheTextureReplacements = value)) } },
-                modifier = Modifier.controllerFocusable(
-                    "textureMgr.opt.precache",
-                    RoundedCornerShape(22.dp),
-                    onConfirm = { viewModel.update { it.copy(graphics = it.graphics.copy(precacheTextureReplacements = !state.settings.graphics.precacheTextureReplacements)) } },
-                ),
-            )
-        }
+            CollapsibleSection(str("textures.manager.loadingOptions")) {
+                SettingSwitchRow(
+                    str("renderer.asyncTextureLoading.label"),
+                    str("renderer.asyncTextureLoading.description"),
+                    state.settings.graphics.loadTextureReplacementsAsync,
+                    onCheckedChange = { value -> viewModel.update { it.copy(graphics = it.graphics.copy(loadTextureReplacementsAsync = value)) } },
+                    modifier = Modifier.controllerFocusable(
+                        "textureMgr.opt.asyncLoading",
+                        RoundedCornerShape(22.dp),
+                        onConfirm = { viewModel.update { it.copy(graphics = it.graphics.copy(loadTextureReplacementsAsync = !state.settings.graphics.loadTextureReplacementsAsync)) } },
+                    ),
+                )
+                SettingSwitchRow(
+                    str("renderer.precacheTexturePacks.label"),
+                    str("renderer.precacheTexturePacks.description"),
+                    state.settings.graphics.precacheTextureReplacements,
+                    onCheckedChange = { value -> viewModel.update { it.copy(graphics = it.graphics.copy(precacheTextureReplacements = value)) } },
+                    modifier = Modifier.controllerFocusable(
+                        "textureMgr.opt.precache",
+                        RoundedCornerShape(22.dp),
+                        onConfirm = { viewModel.update { it.copy(graphics = it.graphics.copy(precacheTextureReplacements = !state.settings.graphics.precacheTextureReplacements)) } },
+                    ),
+                )
+            }
     }
 }
 
 @Composable
 private fun TexturePacks(state: TextureManagerUiState, viewModel: TextureManagerViewModel, modifier: Modifier, onBack: () -> Unit) {
     Column(modifier) {
-        SectionTitle(str("renderer.section.texturePacks"), state.packs.size.toString())
+        if (state.packs.isNotEmpty()) SectionTitle(str("textures.browser.installed"), state.packs.size.toString())
         // A pack is thousands of files over SAF, so show the running count next to the
         // spinner — a bare spinner on a multi-minute copy is indistinguishable from a hang.
         if (state.busy) {
@@ -196,10 +206,11 @@ private fun TexturePacks(state: TextureManagerUiState, viewModel: TextureManager
             }
         }
         if (state.packs.isEmpty()) {
-            EmptyState(
-                str("renderer.section.texturePacks"),
-                str("renderer.loadTexturePacks.description"),
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp).height(220.dp),
+            Text(
+                str("textures.manager.empty"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 18.dp),
             )
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

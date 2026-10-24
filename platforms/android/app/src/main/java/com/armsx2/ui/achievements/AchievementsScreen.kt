@@ -63,6 +63,7 @@ import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.common.SettingSwitchRow
 import com.armsx2.ui.common.StatusChip
+import com.armsx2.ui.settings.CollapsibleSection
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.theme.Danger
 import androidx.compose.ui.graphics.Color
@@ -694,9 +695,9 @@ private fun LoginPanel(loading: Boolean, onLogin: (String, String) -> Unit, modi
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Box(modifier, contentAlignment = Alignment.Center) {
-        GlassPanel(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp).widthIn(max = 460.dp)) {
+        GlassPanel(Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp)) {
             Column {
-                SectionTitle(str("ralogin.title"), str("ra.status.notSignedIn.body"))
+                SectionTitle(str("ralogin.title"))
                 Spacer(Modifier.height(16.dp))
                 OutlinedTextField(
                     username,
@@ -729,33 +730,25 @@ private fun LoginPanel(loading: Boolean, onLogin: (String, String) -> Unit, modi
                     }
                     Text(if (loading) str("ralogin.signingIn") else str("ralogin.signIn"))
                 }
-                // Escape hatch for a stuck custom/offline RA server override ([Achievements] Host,
-                // set by loopback-proxy tools via RetroAchievementsHostOverrideReceiver). With the
-                // proxy gone, every request dies with "No response" and there was no in-app way
-                // out. Clearing an absent override is a harmless no-op.
-                Spacer(Modifier.height(6.dp))
-                TextButton(
-                    onClick = { runCatching { kr.co.iefriends.pcsx2.NativeApp.clearAchievementsHostOverride() } },
-                    modifier = Modifier.fillMaxWidth().controllerFocusable(
-                        "ra.serverReset",
-                        onConfirm = { runCatching { kr.co.iefriends.pcsx2.NativeApp.clearAchievementsHostOverride() } },
-                    ),
-                ) { Text(str("ra.server.reset")) }
-                Text(
-                    str("ra.server.reset.desc"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
                 // An account cannot be created from here — RA exposes no signup API — so somebody
                 // without one reaches this screen and has nowhere to go. Link the site out.
-                Spacer(Modifier.height(10.dp))
                 val openSite = { runCatching { uriHandler.openUri(RA_SITE_URL) }.let {} }
                 TextButton(
                     onClick = openSite,
-                    modifier = Modifier.fillMaxWidth().controllerFocusable(
+                    modifier = Modifier.controllerFocusable(
                         "ra.website", onConfirm = openSite,
                     ),
                 ) { Text(str("ra.website.open")) }
+                // Keep the recovery action for custom/offline host overrides, but out of the
+                // main sign-in path. Clearing an absent override is a harmless no-op.
+                CollapsibleSection(str("ra.login.advanced")) {
+                    val resetServer = { runCatching { kr.co.iefriends.pcsx2.NativeApp.clearAchievementsHostOverride() }.let {} }
+                    TextButton(
+                        onClick = resetServer,
+                        modifier = Modifier.controllerFocusable("ra.serverReset", onConfirm = resetServer),
+                    ) { Text(str("ra.server.reset")) }
+                    Text(str("ra.server.reset.desc"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }
