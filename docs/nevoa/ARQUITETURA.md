@@ -1,0 +1,106 @@
+# Arquitetura e mapa do código
+
+[Índice do Névoa](../NEVOA.md)
+
+## Camadas e fluxo
+
+O Névoa aplica sua experiência sobre a interface Android em Jetpack Compose. Não adiciona outro núcleo, repositório de jogos ou serviço remoto próprio.
+
+```mermaid
+flowchart TD
+    A[BootSplashActivity] --> B[Main e AppNavigation]
+    B --> C[NevoaHome]
+    C --> D[HomeViewModel]
+    D --> E[GameLibraryRepository]
+    C --> F[HomeScreen clássica]
+    C --> G[LaunchGate e LaunchBurst]
+    G --> H[HomeViewModel.launch]
+    H --> I[MainActivityRuntime e núcleo ARMSX2]
+    B --> J[Configurações e telas auxiliares]
+    J --> K[Componentes comuns e tema Névoa]
+```
+
+### Abertura
+
+`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. O áudio próprio só acompanha o vídeo padrão e é liberado na conclusão ou destruição da Activity.
+
+`Main` abre sem animação de troca. Seu tema já mostra `nevoa_last_frame.webp`. Durante a carga inicial, `NevoaHome` mantém o fundo; ao receber os jogos, apresenta a fileira. A entrada visual dos elementos toca uma vez por processo.
+
+### Biblioteca
+
+`NevoaHome` chama o carregamento e observa os sinais de atualização existentes. Usa diretamente `HomeViewModel.state.visibleGames`, já filtrado e ordenado. Não concatenar recentes depois desse processamento: isso recolocaria jogos excluídos pela busca e alteraria a ordem escolhida.
+
+Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`, renderizado pela infraestrutura do runtime. A tela clássica atende preparação da biblioteca e abertura explícita. Consultas sem resultados permanecem em Névoa; a fileira aceita lista vazia sem acesso a índice inexistente.
+
+| Estado | Responsável |
+|---|---|
+| Jogos, scan, consulta e ordem | `HomeViewModel` e repositório original |
+| Seleção | URI em `rememberSaveable` na fileira |
+| Pedido de biblioteca clássica | Estado salvo de `NevoaHome` |
+| Entrada visual já tocada | Marcador por processo `NevoaEntrance` |
+| Início pendente | `LaunchGate`, item pendente e estado de emulação |
+
+### Início de jogo
+
+`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 700 ms, com fade final de 150 ms. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime.
+
+O gate usa o estado de emulação e um timeout para reabrir. A preservação integral da transição durante recriação de Activity continua pendente.
+
+### Fundo e ciclo de vida
+
+Android 13 ou superior usa `RuntimeShader`/AGSL. Versões anteriores e falhas de compilação usam gradiente estático. O relógio só avança com o ciclo de vida em `RESUMED` e fora de emulação `RUNNING` ou `PAUSED`.
+
+O intervalo mínimo atual é 30.000.000 ns; o vsync determina a cadência efetiva. O tempo tem wrap de 600 segundos. O modo `calm` reduz movimento e brilho nas telas de trabalho.
+
+### Controle e foco
+
+O caminho principal é `MainActivityRuntime.dispatchKeyEvent` → `SettingsControllerNav`. A fileira registra confirmar e movimentos horizontais; botões usam `controllerFocusable` e posições medidas para navegação espacial. O teclado tem prioridade quando visível. Não depender apenas do foco Android/Compose.
+
+Usar `PadModal`, `ConfirmOverlay` e `NotifyOverlay` para overlays. A tarefa `checkNoWindowModals`, ligada a `preBuild`, bloqueia os padrões de janelas Compose que roubam a entrada do gamepad.
+
+## Implementações Névoa
+
+Base dos caminhos: `platforms/android/app/src/main/java/com/armsx2/nevoa/`.
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `NevoaStrings.kt` | Textos PT-BR fixos do Névoa |
+| `theme/NevoaPalette.kt` | Paleta, ColorScheme, tipografia e cores legadas |
+| `theme/Contrast.kt` | Cálculos de contraste |
+| `background/NevoaBackground.kt` | Relógio, modo calmo e fallback |
+| `background/NevoaShader.kt` | Cena AGSL |
+| `home/NevoaHome.kt` | Tela, fileira, busca, ordem e integração de entrada |
+| `home/LibraryLogic.kt` | Seleção, fallback e rótulos |
+| `home/DvdCase.kt` | Caixa, capa, seleção e brilho |
+| `home/GameDetailsPanel.kt` | Dados e ações do jogo; botões compartilhados da biblioteca |
+| `home/LaunchBurst.kt` | Gate e transição de início |
+| `intro/FillVideoView.kt` | Preenchimento do vídeo |
+| `intro/IntroSound.kt` | Validação, cópia e reprodução de áudio |
+| `settings/SettingsGroups.kt` | Agrupamento das categorias existentes |
+
+## Integrações alteradas no ARMSX2
+
+Base dos caminhos Kotlin: `platforms/android/app/src/main/java/com/armsx2/`.
+
+| Área | Arquivos principais |
+|---|---|
+| Entrada | `BootSplashActivity.kt`, `Pasx2Application.kt`, `navigation/AppNavigation.kt` |
+| Gaveta | `navigation/NavigationDrawer.kt` |
+| Tema | `ui/theme/Theme.kt` |
+| Componentes | `ui/common/ArmsComponents.kt`, `ui/common/SettingControls.kt`, `ui/settings/SettingsWidgets.kt` |
+| Configurações | `ui/settings/AppTab.kt`, `ui/settingshub/SettingsScreen.kt`, `ui/settingshub/SettingsSearchIndex.kt` |
+| BIOS, cartões e saves | `ui/bios/BiosManagerScreen.kt`, `ui/memorycards/MemoryCardScreen.kt`, `ui/saves/SaveManagerScreen.kt` |
+| Controles | `ui/controls/ControllerManagerScreen.kt` |
+| Patches e texturas | `ui/patches/PatchManagerScreen.kt`, `ui/textures/TextureManagerScreen.kt`, `ui/textures/TextureOnlineSection.kt` |
+| Conquistas e pausa | `ui/achievements/AchievementsScreen.kt`, `ui/emulation/EmulationMenuScreen.kt` |
+| Mensagens | `ui/WelcomeBanner.kt`, `i18n/I18n.kt` |
+
+Também foram alterados `AndroidManifest.xml`, `assets/i18n/pt-BR.json`, `res/values/themes.xml`, `res/layout/activity_boot_splash.xml`, `res/raw/boot_intro.mp4`, `res/drawable-nodpi/nevoa_last_frame.webp` e `res/drawable/nevoa_window_bg.xml`.
+
+Após novos incrementos, o diff contra a base fornece a lista exata. Mudanças nos componentes comuns podem atingir várias telas; a verificação deve acompanhar esse alcance.
+
+## Dados
+
+Jogos, permissões, configurações, histórico, conquistas e saves permanecem na infraestrutura original. O áudio importado fica em `filesDir/nevoa_intro_sound`, e o vídeo personalizado em `filesDir/bootintro/intro`. São cópias privadas: não dependem do URI de origem após a importação e são removidas se o armazenamento do app for apagado.
+
+O namespace é `com.armsx2`, mas o application ID é `com.armsx2.nevoa`. Por isso, a Activity de abertura via ADB é `com.armsx2.nevoa/com.armsx2.BootSplashActivity`.

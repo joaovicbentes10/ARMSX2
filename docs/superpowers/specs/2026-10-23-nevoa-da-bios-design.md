@@ -1,5 +1,7 @@
 # Névoa da BIOS — design
 
+> Documento histórico de intenção. Para o estado atual, consulte o [índice do Névoa](../../NEVOA.md). Correções posteriores: o Poco F6 Pro usa Snapdragon 8 Gen 2/SM8550; o workflow dedicado é `nevoa-android.yml`; busca e ordenação já foram integradas; o rodapé redundante de X foi removido. Regras operacionais posteriores registradas na passagem de contexto e nos guias substituem as orientações iniciais abaixo.
+
 Data: 2026-10-23
 Base: ARMSX2 (`github.com/ARMSX2/ARMSX2`, commit `90126bd`, GPLv3) no Android; PCSX2 oficial no Windows.
 

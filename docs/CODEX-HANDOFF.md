@@ -1,5 +1,7 @@
 # Prompt de passagem para o Codex — ARMSX2 Névoa
 
+Documentação de referência: [índice do projeto](NEVOA.md), [desenvolvimento](nevoa/DESENVOLVIMENTO.md) e [validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md). Esta passagem resume a operação; os guias detalham o estado atual.
+
 > Cole tudo abaixo no Codex.
 
 ---
@@ -20,6 +22,7 @@ Você vai assumir o projeto **ARMSX2 Névoa**, uma versão pessoal do emulador d
 3. Textos novos da interface em **PT-BR**.
 4. O usuário prefere que o trabalho seja feito direto, sem ficar delegando.
 5. Mostre resultados visuais (prints, quadros de vídeo) antes de considerar algo visual "pronto" — ele avalia pelo olho e pede ajustes finos.
+6. Faça verificação proporcional no aparelho: apenas a tela alterada e seus estados relevantes. Não percorrer todo o app nem repetir capturas sem necessidade; o usuário pediu economia de tokens para chegar até a entrega. Executar uma função por vez, ou duas quando uma for simples.
 
 ## Repositório
 
@@ -54,14 +57,14 @@ Você vai assumir o projeto **ARMSX2 Névoa**, uma versão pessoal do emulador d
 - **Hash com `sin()` dá resultados diferentes na GPU do celular e no desktop** — as torres mudavam de lugar na passagem. Os dois shaders usam agora um hash só com multiplicação/soma (`hash1` em `NevoaShader.kt` e `intro.html`); mantenha os dois sincronizados.
 - Sombras coloridas (`Modifier.shadow`) viram caixas pretas em Adreno/Mali; use `drawBehind`.
 - Não use `AlertDialog`/`ModalBottomSheet`/`DropdownMenu`/`Dialog` do Compose: o build falha (roubam o foco do controle).
-- Não há Android SDK no PC do usuário por padrão; o build roda no GitHub Actions. Se você tiver SDK/NDK disponível, pode compilar localmente, mas o núcleo nativo é pesado.
+- O build oficial roda no GitHub Actions. Na sessão de 24/10, o SDK local foi encontrado em `C:\Users\joaov\AppData\Local\Android\Sdk`, com NDK 29 incompleto e NDK 30 íntegro. A interface foi compilada localmente com o núcleo do último APK verde, sem alterar o CI; veja o guia de desenvolvimento.
 
 ## Pendências e próximos passos
 
 **Detalhes menores conhecidos (Parte 1):**
 - Aviso de temperatura "O dispositivo está esquentando" fica por cima do botão Menu na tela nova.
-- Partículas (~2 px) quase invisíveis na tela de 3200 px; animação do fundo dá um pequeno salto a cada 10 min (wrap de 600 s); limite de 33 ms vira ~20 fps em telas de 60 Hz.
-- △ só pede foco uma vez (pode parar de funcionar após abrir/fechar o menu lateral); variável `resolved` sem uso em `Theme.kt`.
+- Partículas pequenas na tela de 3200 px; possível salto do fundo no wrap de 600 s. O intervalo mínimo atual do relógio é 30 ms e a cadência depende do vsync; medir antes de alterar.
+- O pedido de foco passou a reagir à gaveta e ao teclado em `3222e96576`; retestar especificamente △ após essas transições. A variável `resolved` sem uso em `Theme.kt` permanece no registro histórico de limpeza.
 - Som da abertura: `application/ogg` rejeitado; `MediaPlayer.prepare()` na thread principal; não para no `onStop`; linha continua visível quando há vídeo de abertura próprio.
 - Estado da explosão não sobrevive a recriação da Activity.
 

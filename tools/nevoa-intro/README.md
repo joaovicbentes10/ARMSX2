@@ -16,7 +16,11 @@ node render.mjs            # -> out/boot_intro.mp4 (opcional: --crf 23)
 node render.mjs --still 3.4,5.5   # quadros soltos em out/still-<t>.png
 ```
 
-Requer `ffmpeg` no PATH. Depois de aprovado, copie `out/boot_intro.mp4` para
-`platforms/android/app/src/main/res/raw/boot_intro.mp4`.
+Requer `ffmpeg` no PATH. Depois de aprovado, copie os dois arquivos (destinos relativos à raiz do repositório):
+
+- `out/boot_intro.mp4` → `platforms/android/app/src/main/res/raw/boot_intro.mp4`.
+- `out/nevoa_last_frame.webp` → `platforms/android/app/src/main/res/drawable-nodpi/nevoa_last_frame.webp`.
 
 Se mudar cores ou composição em `NevoaShader.kt`/`NevoaPalette.kt`, replique em `intro.html`.
+
+Veja também o [guia de desenvolvimento do Névoa](../../docs/nevoa/DESENVOLVIMENTO.md) e as [regras visuais](../../docs/nevoa/DESIGN.md).

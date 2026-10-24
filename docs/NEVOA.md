@@ -1,76 +1,66 @@
-# ARMSX2 Névoa — manutenção
+# ARMSX2 Névoa
 
-Versão pessoal do ARMSX2 com o visual "Névoa da BIOS" (abertura própria, biblioteca estilo PS5, fundo animado).
-O emulador em si é o do ARMSX2, sem mudanças.
+Documentação do projeto pessoal **ARMSX2 Névoa**: uma interface Android para o ARMSX2 com a direção visual “Névoa da BIOS”, organização de console moderno, fundo escuro, torres finas e translúcidas e superfícies de vidro.
 
-## Onde está cada coisa
+Referência: **24/10/2026**, código funcional até `3222e96576`. O registro de validação distingue implementação de teste no aparelho.
 
-- Código novo: `platforms/android/app/src/main/java/com/armsx2/nevoa/`
-- Testes: `platforms/android/app/src/test/java/com/armsx2/nevoa/`
-- Abertura (gerador do vídeo): `tools/nevoa-intro/` (veja o README de lá)
-- Build automático: `.github/workflows/nevoa-android.yml` (roda a cada push na branch `nevoa`)
-- Spec e plano: `docs/superpowers/`
+## Guias
 
-## Arquivos originais do ARMSX2 que foram alterados
-
-São os únicos lugares onde uma atualização do original pode dar conflito:
-
-| Arquivo | O que mudou |
+| Documento | Conteúdo |
 |---|---|
-| `AndroidManifest.xml` | abertura e tela principal travadas em horizontal; tema `Theme.ARMSX2.Nevoa` na tela principal |
-| `BootSplashActivity.kt` | vídeo usa a própria duração; som da abertura; troca para a tela principal sem animação |
-| `Pasx2Application.kt` | 1 linha: cores da paleta Névoa |
-| `navigation/AppNavigation.kt` | rota Home abre `NevoaHome` em vez de `HomeScreen` |
-| `navigation/NavigationDrawer.kt` | menu lateral compacto com ícones consistentes e seções recolhíveis |
-| `ui/bios/BiosManagerScreen.kt` | BIOS em linhas compactas; detalhes e ações abrem sob demanda |
-| `ui/memorycards/MemoryCardScreen.kt` | cartões em linhas compactas; estado vazio e ações de importação simplificados |
-| `ui/saves/SaveManagerScreen.kt` | estado vazio de saves sem cartão decorativo |
-| `ui/controls/ControllerManagerScreen.kt` | remapeamento em linhas compactas; opções secundárias recolhidas; abas curtas sem corte lateral |
-| `ui/patches/PatchManagerScreen.kt` | aviso compacto, opções secundárias recolhidas, estado vazio em texto e busca on-line apenas com jogo selecionado |
-| `ui/textures/TextureManagerScreen.kt`, `ui/textures/TextureOnlineSection.kt` | packs instalados em primeiro plano; catálogo compacto; importação por pasta e atualização no menu de ações |
-| `ui/achievements/AchievementsScreen.kt` | login centralizado em paisagem; ajustes secundários recolhidos |
-| `ui/emulation/EmulationMenuScreen.kt` | menu de pausa com ações principais à vista, opções secundárias e detalhes das conquistas recolhidos, abas com ícones consistentes |
-| `ui/WelcomeBanner.kt` | aviso temporário centralizado para não cobrir Menu nem Pausa |
-| `i18n/I18n.kt` | textos padrão dos novos controles da Parte 2 |
-| `ui/theme/Theme.kt` | esquema de cores/tipografia Névoa; horizontal como padrão |
-| `ui/settings/AppTab.kt` | som da abertura; idioma compacto e ajustes do fundo recolhidos |
-| `ui/settingshub/SettingsSearchIndex.kt` | busca abre o grupo recolhido do fundo da biblioteca |
-| `ui/common/ArmsComponents.kt` | fundo Névoa calmo e componentes de vidro compartilhados |
-| `ui/common/SettingControls.kt` | linha de opção com vidro Névoa |
-| `ui/settings/SettingsWidgets.kt` | linhas de opções compactas; descrições abertas pelo ícone de informação |
-| `ui/settingshub/SettingsScreen.kt` | painel de configurações translúcido; grupos e seções em navegação tipográfica |
-| `res/values/themes.xml` | estilo `Theme.ARMSX2.Nevoa` |
-| `res/layout/activity_boot_splash.xml` | `FillVideoView` no lugar de `VideoView` |
-| `res/raw/boot_intro.mp4` | abertura própria |
-| `assets/i18n/pt-BR.json` | rótulos mais curtos e claros nas telas auxiliares |
+| [Guia de uso](nevoa/GUIA-DE-USO.md) | Instalação, abertura, biblioteca, configurações e dúvidas |
+| [Arquitetura](nevoa/ARQUITETURA.md) | Fluxos, mapa do código, dados e integrações |
+| [Identidade visual](nevoa/DESIGN.md) | Paleta, composição, animações e regras de interação |
+| [Desenvolvimento e manutenção](nevoa/DESENVOLVIMENTO.md) | Builds, assinatura, ADB, abertura e atualização do upstream |
+| [Validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md) | Evidências, limitações, problemas conhecidos e próximos incrementos |
+| [Passagem de contexto](CODEX-HANDOFF.md) | Contexto operacional para retomar o trabalho |
 
-## Puxar as melhorias do ARMSX2 original
+## Objetivo e limites
 
-1. No GitHub, abra o seu fork (`joaovicbentes10/ARMSX2`) e clique em **Sync fork → Update branch** (isso atualiza a `master`).
-2. No PC, dentro de `C:\Projetos\armsx2-nevoa`:
+O Névoa modifica a experiência visual e a organização da interface. O núcleo de emulação, recompiladores, renderizadores e compatibilidade dos jogos continuam sendo os do ARMSX2. Componentes e ViewModels originais são reaproveitados sempre que possível.
 
-   ```bash
-   git checkout nevoa
-   git fetch upstream
-   git merge upstream/master
-   ```
+O alvo principal é o **Poco F6 Pro**, Snapdragon 8 Gen 2/SM8550, Android 16, tela de 3200 × 1440 em paisagem. Toque e gamepad precisam funcionar. Esse aparelho é a referência de validação, não uma garantia de comportamento idêntico em outros dispositivos.
 
-3. Se aparecer conflito, ele será num dos arquivos da tabela acima: mantenha a mudança do original e reaplique a linha da Névoa.
-4. `git push origin nevoa` — o GitHub gera o APK novo em ~40 min (aba **Actions → Nevoa Android → Artifacts**).
-5. Se o build quebrar depois de uma atualização, volte para o último commit que funcionava e espere o original corrigir.
+O launcher Windows é uma etapa futura, em repositório separado: mesma direção visual, abrindo o **PCSX2 oficial** no jogo escolhido. A implementação ainda não começou.
 
-## Instalar no celular
+## Identificação
 
-Baixe `armsx2-nevoa-android` em **Actions → (última execução verde) → Artifacts**, extraia o `.apk` e instale **por cima** — a chave de assinatura é fixa, então BIOS, saves e configurações continuam.
+| Item | Valor |
+|---|---|
+| Repositório | [joaovicbentes10/ARMSX2](https://github.com/joaovicbentes10/ARMSX2) |
+| Upstream | [ARMSX2/ARMSX2](https://github.com/ARMSX2/ARMSX2) |
+| Branch de trabalho | `nevoa` |
+| Base inicial | `90126bdfea` |
+| Checkout de referência | `C:\Projetos\armsx2-nevoa` |
+| Nome Android | ARMSX2 Névoa |
+| Application ID | `com.armsx2.nevoa` |
+| Namespace Kotlin/Android | `com.armsx2` |
+| Pacote das implementações Névoa | `com.armsx2.nevoa` |
+| Workflow | [nevoa-android.yml](../.github/workflows/nevoa-android.yml) |
+| Artefato | `armsx2-nevoa-android` |
+| Licença do repositório | [GPLv3](../COPYING.GPLv3) |
 
-## Chave de assinatura
+O identificador separado permite coexistir com o ARMSX2 oficial. Os aplicativos têm dados independentes; não existe migração automática entre eles.
 
-Fica em `C:\Projetos\nevoa-keystore` (fora do repositório) e nos secrets `NEVOA_*` do GitHub.
-**Mantenha um backup dessa pasta.** Sem ela não dá para instalar atualizações por cima.
+## Estado atual
 
-## Regerar a abertura
+Implementados: abertura própria com passagem contínua para a biblioteca, som escolhido pelo usuário, fundo animado com fallback estático, carrossel de capas, painel do jogo, explosão de luz ao iniciar, busca, ordenação, configurações em quatro grupos e revisão visual das principais telas auxiliares e do menu em jogo.
 
-Veja `tools/nevoa-intro/README.md`. Depois de mudar `intro.html`, rode `node tools/nevoa-intro/render.mjs`
-e copie `out/boot_intro.mp4` para `res/raw/` e `out/nevoa_last_frame.webp` para `res/drawable-nodpi/`.
-Se mudar o desenho das torres, mude igual em `nevoa/background/NevoaShader.kt` — o script recusa gerar o
-vídeo se o último quadro não bater com o fundo da biblioteca.
+Pendentes: categorias na biblioteca Névoa, saves no painel do jogo, revisão dos controles de toque e validações adicionais com jogo real e conta de RetroAchievements autenticada. Ajustes técnicos menores estão no registro de pendências.
+
+## Regras permanentes
+
+- Textos novos da interface em português do Brasil.
+- Abertura e identidade próprias, sem assets da Sony; áudio fornecido pelo usuário.
+- Preservar as funções do ARMSX2 e a navegação por controle.
+- Preferir código isolado no pacote Névoa e mudanças pequenas nas integrações originais.
+- Validar mudanças visuais com capturas pontuais da área alterada.
+- Trabalhar diretamente, sem delegação, conforme a preferência do responsável pelo projeto.
+- Commits com a identidade configurada de João Victor, sem trailers `Co-Authored-By` ou atribuições de geração automática.
+- Nunca versionar ou expor senhas, keystores ou outros segredos.
+
+## Histórico e atualização desta documentação
+
+A [especificação inicial](superpowers/specs/2026-10-23-nevoa-da-bios-design.md), o [plano da Parte 1](superpowers/plans/2026-10-23-nevoa-android-parte1.md) e o [plano da Parte 2](superpowers/plans/2026-10-23-nevoa-android-parte2.md) preservam decisões antigas. Alguns trechos descrevem intenções superadas; para manutenção, priorize estes guias e o código.
+
+Ao entregar um incremento, atualize o registro de validação, os guias afetados e a passagem de contexto. Não apresente resultados antigos como testes recém-executados.

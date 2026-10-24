@@ -1,4 +1,7 @@
 # ARMSX2 — Native ARM64 JIT Fork of PCSX2
+
+> **ARMSX2 Névoa:** esta branch contém a interface pessoal Android “Névoa da BIOS”. Consulte a [documentação do Névoa](docs/NEVOA.md) para uso, arquitetura, identidade visual, build, manutenção e pendências. O conteúdo abaixo apresenta o ARMSX2 de origem.
+
 [![All Platforms](https://img.shields.io/github/actions/workflow/status/ARMSX2/ARMSX2/build-all.yml?branch=master&label=All%20Platforms)](https://github.com/ARMSX2/ARMSX2/actions/workflows/build-all.yml)
 
 ARMSX2 is a free and open-source PlayStation 2 (PS2) emulator based on PCSX2. Its purpose is to emulate the PS2's hardware, using a combination of MIPS CPU [Interpreters](<https://en.wikipedia.org/wiki/Interpreter_(computing)>), [Recompilers](https://en.wikipedia.org/wiki/Dynamic_recompilation) and a [Virtual Machine](https://en.wikipedia.org/wiki/Virtual_machine) which manages hardware states and PS2 system memory. This allows you to play PS2 games on your phone, PC, or gaming handheld, with many additional features and benefits.
