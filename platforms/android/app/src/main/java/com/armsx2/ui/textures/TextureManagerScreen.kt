@@ -187,7 +187,7 @@ private fun TexturePacks(state: TextureManagerUiState, viewModel: TextureManager
         // matches this exactly, and for a raw .ELF boot that is the ELF's filename rather
         // than the disc serial — a mismatch that is otherwise completely invisible and
         // looks identical to "texture packs are broken".
-        state.activeSerial?.takeIf(String::isNotBlank)?.let { serial ->
+        state.activeSerial?.takeIf { it.isNotBlank() && state.packs.isNotEmpty() }?.let { serial ->
             val matched = state.packs.any { it.serial.equals(serial, ignoreCase = true) }
             Text(
                 str("renderer.texturePacks.activeSerial").format(serial),
