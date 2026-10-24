@@ -44,7 +44,7 @@ Exibir somente seções válidas para o escopo atual. Um resultado de busca deve
 
 Restilizar primeiro o menu lateral, trocando emojis por ícones consistentes e recolhendo destinos secundários. Depois, verificar nessa ordem: BIOS e memory cards; saves; controles; patches e texturas; conquistas; menu durante o jogo e controles de toque. Reutilizar ViewModels e ações existentes. Cada tela deve passar por verificação visual e de navegação antes da próxima.
 
-Implementados em código: menu lateral, BIOS, cartões de memória, estado vazio de saves, gerenciador de controles, patches, texturas e a entrada de conquistas. Os detalhes das listas foram colocados sob demanda. A compilação do commit `87fd899a43` passou e foi instalada no F6 Pro; essa inspeção revelou abas cortadas em controles e excesso de superfície no estado vazio de patches, corrigidos nos commits seguintes. A versão dessas últimas correções ainda requer nova compilação e inspeção.
+Implementados em código: menu lateral, BIOS, cartões de memória, estado vazio de saves, gerenciador de controles, patches, texturas e a entrada de conquistas. Os detalhes das listas foram colocados sob demanda. O APK do commit `7c71555d6c` passou no CI e foi instalado no F6 Pro; a inspeção confirmou abas inteiras em Controles, estados vazios compactos em Patches e Texturas e o login centralizado em Retroconquistas. O menu durante o jogo está em revisão: ações essenciais visíveis, ajustes técnicos recolhidos e abas com ícones de uma família única. Esta última mudança ainda requer compilação e inspeção no aparelho.
 
 ### 4. Biblioteca
 

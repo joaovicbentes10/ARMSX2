@@ -29,6 +29,7 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `ui/patches/PatchManagerScreen.kt` | aviso compacto, opções secundárias recolhidas, estado vazio em texto e busca on-line apenas com jogo selecionado |
 | `ui/textures/TextureManagerScreen.kt`, `ui/textures/TextureOnlineSection.kt` | packs instalados em primeiro plano; catálogo compacto; importação por pasta e atualização no menu de ações |
 | `ui/achievements/AchievementsScreen.kt` | login centralizado em paisagem; ajustes secundários recolhidos |
+| `ui/emulation/EmulationMenuScreen.kt` | menu de pausa com ações principais à vista, opções secundárias recolhidas e abas com ícones consistentes |
 | `i18n/I18n.kt` | textos padrão dos novos controles da Parte 2 |
 | `ui/theme/Theme.kt` | esquema de cores/tipografia Névoa; horizontal como padrão |
 | `ui/settings/AppTab.kt` | som da abertura; idioma compacto e ajustes do fundo recolhidos |

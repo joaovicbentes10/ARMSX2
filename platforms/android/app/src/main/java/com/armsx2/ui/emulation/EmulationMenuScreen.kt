@@ -41,6 +41,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -59,6 +60,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
@@ -76,6 +78,7 @@ import com.armsx2.ui.achievements.AchievementItem
 import com.armsx2.ui.common.GameCoverArt
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.settings.overrideMarker
+import com.armsx2.ui.settings.CollapsibleSection
 import com.armsx2.ui.touch.TouchControls
 import com.armsx2.ui.theme.Danger
 import com.armsx2.ui.common.StatusChip
@@ -84,6 +87,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import compose.icons.LineAwesomeIcons
+import compose.icons.lineawesomeicons.CogSolid
+import compose.icons.lineawesomeicons.GamepadSolid
+import compose.icons.lineawesomeicons.InfoCircleSolid
+import compose.icons.lineawesomeicons.PlayCircle
+import compose.icons.lineawesomeicons.ThLargeSolid
+import compose.icons.lineawesomeicons.TrophySolid
+import compose.icons.lineawesomeicons.WrenchSolid
 
 /** The Friends panel's nav layer: only its controls answer the pad while it is open. */
 private const val FRIENDS_NAV_LAYER = "menu.friends"
@@ -402,7 +413,8 @@ private fun MenuPage(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 // Only the panes with rows that take a mark; the others would show a key to nothing.
-                if (state.tab != EmulationMenuTab.Controls && state.tab != EmulationMenuTab.Achievements) {
+                if (state.tab == EmulationMenuTab.Graphics || state.tab == EmulationMenuTab.Fixes ||
+                    state.tab == EmulationMenuTab.Performance || state.tab == EmulationMenuTab.Options) {
                     com.armsx2.ui.settings.OverrideLegend(inset = 4.dp)
                 }
                 when (state.tab) {
@@ -478,11 +490,11 @@ private fun MenuRailTab(tab: EmulationMenuTab, active: Boolean, onSelect: (Emula
         ),
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = tabGlyph(tab),
-                fontSize = 23.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            Icon(
+                imageVector = tabIcon(tab),
+                contentDescription = null,
+                modifier = Modifier.size(25.dp),
+                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -524,11 +536,11 @@ private fun MenuTab(tab: EmulationMenuTab, active: Boolean, onSelect: (Emulation
                 else MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = tabGlyph(tab),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    Icon(
+                        imageVector = tabIcon(tab),
+                        contentDescription = null,
+                        modifier = Modifier.size(19.dp),
+                        tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -544,19 +556,14 @@ private fun MenuTab(tab: EmulationMenuTab, active: Boolean, onSelect: (Emulation
     }
 }
 
-// Rail tab icons. No monochrome Unicode exists for gamepad/wrench/trophy/display, so those
-// use color emoji (Android's own emoji font draws them); Session keeps its clean text
-// glyph. Performance uses the high-voltage emoji so it reads as a yellow lightning bolt.
-// Options carries the settings gear; the full-settings shortcut below the rail divider uses
-// a distinct "open" glyph so there aren't two gears.
-private fun tabGlyph(tab: EmulationMenuTab): String = when (tab) {
-    EmulationMenuTab.Session -> "☰"
-    EmulationMenuTab.Graphics -> "🖥️"
-    EmulationMenuTab.Fixes -> "🔧"
-    EmulationMenuTab.Performance -> "⚡"
-    EmulationMenuTab.Controls -> "🎮"
-    EmulationMenuTab.Options -> "⚙"
-    EmulationMenuTab.Achievements -> "🏆"
+private fun tabIcon(tab: EmulationMenuTab): ImageVector = when (tab) {
+    EmulationMenuTab.Session -> LineAwesomeIcons.PlayCircle
+    EmulationMenuTab.Graphics -> LineAwesomeIcons.ThLargeSolid
+    EmulationMenuTab.Fixes -> LineAwesomeIcons.WrenchSolid
+    EmulationMenuTab.Performance -> LineAwesomeIcons.InfoCircleSolid
+    EmulationMenuTab.Controls -> LineAwesomeIcons.GamepadSolid
+    EmulationMenuTab.Options -> LineAwesomeIcons.CogSolid
+    EmulationMenuTab.Achievements -> LineAwesomeIcons.TrophySolid
 }
 
 @Composable
@@ -572,8 +579,8 @@ private fun MenuHeader(
         Modifier.fillMaxWidth().padding(horizontal = if (compact) 12.dp else 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (game != null) {
-            GameCoverArt(game, Modifier.width(if (compact) 38.dp else 44.dp).height(if (compact) 52.dp else 60.dp))
+        if (game != null && !compact) {
+            GameCoverArt(game, Modifier.width(44.dp).height(60.dp))
             Spacer(Modifier.width(11.dp))
         }
         Column(Modifier.weight(1f)) {
@@ -593,7 +600,7 @@ private fun MenuHeader(
                 }
                 // File-type chip after the HC badge (ISO / CHD / …), mirroring the library
                 // list view so the pause/RA header shows the same at-a-glance file info.
-                game?.let { g ->
+                if (!compact) game?.let { g ->
                     Spacer(Modifier.width(6.dp))
                     com.armsx2.ui.common.StatusChip(g.extension.ifBlank { g.platform.key.uppercase() })
                 }
@@ -615,7 +622,7 @@ private fun MenuHeader(
                 game?.serial?.takeIf { it.isNotBlank() }?.let(::add)
                 resolvedCRC.takeIf { it.isNotBlank() }?.let { add("CRC $it") }
             }.joinToString("  ·  ")
-            if (identity.isNotBlank()) {
+            if (identity.isNotBlank() && !compact) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     identity,
@@ -676,33 +683,47 @@ private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
     val gsDumpQueued = str("gsdump.quick.queued")
     ActionGrid(
         actions = listOf(
-            MenuAction(str("action.resume"), str("action.play"), "▶", Success, viewModel::resume),
+            MenuAction(str("action.resume"), "", "▶", Success, viewModel::resume),
             MenuAction(
                 str("action.fastForward"),
                 if (MainActivityRuntime.fastForwardToggleActive) str("action.fastForward.on") else str("action.fastForward.detail"),
-                "⏩",
+                "≫",
                 if (MainActivityRuntime.fastForwardToggleActive) Success else null,
             ) { MainActivityRuntime.instance?.toggleFastForward(); viewModel.resume() },
-            MenuAction(str("memcard.restart"), str("action.reset"), "↻", null, MainActivityRuntime::restart),
-            MenuAction(str("action.swapDisc"), str("action.swapDisc.detail"), "⏏", null, MainActivityRuntime::promptSwapDisc),
-            // Here and not only in Settings > Renderer, where it sat at the bottom of a long page:
-            // a GS dump is what gets asked for when someone reports a graphics bug, and this is
-            // one tap from the game. It also resumes, because the dump is of the NEXT frame the GS
-            // draws, and none is drawn while this menu holds the game paused.
-            MenuAction(str("renderer.gsDump.label"), str("gsdump.quick.detail"), "⧉", null) {
-                runCatching { kr.co.iefriends.pcsx2.NativeApp.captureGsDump(1) }
-                android.widget.Toast.makeText(context, gsDumpQueued, android.widget.Toast.LENGTH_LONG).show()
-                viewModel.resume()
-            },
-        ) + arcadeActions(viewModel) + listOf(
-            MenuAction(str("action.close"), MainActivityRuntime.currentGame.value?.title.orEmpty(), "■", Danger) {
-                MainActivityRuntime.closeGame()
-            },
         ),
+        idPrefix = "primary",
     )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CompactAction(str("savestate.title.save"), "↥", Modifier.weight(1f)) {
+            com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.SaveState)
+        }
+        CompactAction(str("touch.stateAction.load"), "↧", Modifier.weight(1f)) {
+            com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.LoadState)
+        }
+    }
+    CollapsibleSection("Mais ações") {
+        ActionGrid(
+            actions = listOf(
+                MenuAction(str("memcard.restart"), str("action.reset"), "↻", null, MainActivityRuntime::restart),
+                MenuAction(str("action.swapDisc"), str("action.swapDisc.detail"), "⏏", null, MainActivityRuntime::promptSwapDisc),
+                // Capture resumes because the dump records the next rendered frame.
+                MenuAction(str("renderer.gsDump.label"), str("gsdump.quick.detail"), "⧉", null) {
+                    runCatching { kr.co.iefriends.pcsx2.NativeApp.captureGsDump(1) }
+                    android.widget.Toast.makeText(context, gsDumpQueued, android.widget.Toast.LENGTH_LONG).show()
+                    viewModel.resume()
+                },
+            ) + arcadeActions(viewModel) + listOf(
+                MenuAction(str("action.close"), MainActivityRuntime.currentGame.value?.title.orEmpty(), "■", Danger) {
+                    MainActivityRuntime.closeGame()
+                },
+            ),
+            idPrefix = "secondary",
+        )
+    }
     // On-screen display — a single universal on/off (old-UI style); the per-stat
     // toggles live in All Settings. Plus a frame-limit switch so fast-forward is one
     // tap away.
+    CollapsibleSection("Exibição e atalhos") {
     SectionCard(str("tab.overlay")) {
         // #357: the pause button replaced the settings cog, so it's front-and-centre here. This is
         // "tap to reveal", NOT show/hide: on = the glyph stays hidden until you tap its top-right
@@ -792,7 +813,9 @@ private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
             valueLabel = str(if (menuSide) "overlay.quickMenuSide.left" else "overlay.quickMenuSide.right"),
         ) { _ -> com.armsx2.ui.QuickMenuSide.set(!menuSide) }
     }
-    SectionCard(str("savestate.title.loadManage")) {
+    }
+    CollapsibleSection("Slot rápido") {
+    SectionCard("Seleção de slot") {
         // When each slot was last written. Ten chips numbered 1..10 say nothing about which
         // hold anything or how old they are, so picking a slot to overwrite after a long
         // session was guesswork -- the Save Manager has had the dates all along, but the quick
@@ -855,18 +878,7 @@ private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
                 )
             }
         }
-        Spacer(Modifier.height(9.dp))
-        // Save / Load open the rich slot picker (thumbnails + autosave + the
-        // auto-save/-load toggles), matching the old UI. The slot chips above stay
-        // the quick-slot selector used by the on-screen / hotkey quick-save.
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CompactAction(str("savestate.title.save"), "↥", Modifier.weight(1f)) {
-                com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.SaveState)
-            }
-            CompactAction(str("touch.stateAction.load"), "↧", Modifier.weight(1f)) {
-                com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.LoadState)
-            }
-        }
+    }
     }
 }
 
@@ -1714,10 +1726,10 @@ private data class MenuAction(
 )
 
 @Composable
-private fun ActionGrid(actions: List<MenuAction>) {
+private fun ActionGrid(actions: List<MenuAction>, idPrefix: String) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         actions.forEachIndexed { index, item ->
-            val id = "pause.action.$index"
+            val id = "pause.action.$idPrefix.$index"
             // The registry is the ONE source of truth for which row is selected. The tint used
             // to come from a separate index in the view model that advanced only when a row was
             // ACTIVATED, while the D-pad moved the registry — so the menu drew one selection and
@@ -1727,8 +1739,9 @@ private fun ActionGrid(actions: List<MenuAction>) {
                 onClick = item.action,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics { contentDescription = listOf(item.title, item.detail).filter { it.isNotBlank() }.joinToString(". ") }
                     .controllerFocusable(id, onConfirm = item.action),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                 else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.48f),
                 border = BorderStroke(
@@ -1737,7 +1750,7 @@ private fun ActionGrid(actions: List<MenuAction>) {
                     else MaterialTheme.colorScheme.outline.copy(alpha = 0.34f),
                 ),
             ) {
-                Row(Modifier.padding(horizontal = 13.dp, vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.padding(horizontal = 13.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         item.glyph,
                         color = item.accent ?: MaterialTheme.colorScheme.primary,
@@ -1745,18 +1758,8 @@ private fun ActionGrid(actions: List<MenuAction>) {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.width(30.dp),
                     )
-                    Column(Modifier.weight(1f)) {
-                        Text(item.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-                        if (item.detail.isNotBlank()) {
-                            Text(
-                                item.detail,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
+                    Text(item.title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
