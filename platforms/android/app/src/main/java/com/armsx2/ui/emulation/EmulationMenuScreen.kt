@@ -78,6 +78,7 @@ import com.armsx2.runtime.MainActivityRuntime
 import com.armsx2.ui.InGameOverlay
 import com.armsx2.ui.achievements.AchievementItem
 import com.armsx2.ui.common.GameCoverArt
+import com.armsx2.ui.common.StatusChip
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.settings.overrideMarker
 import com.armsx2.ui.settings.CollapsibleSection
