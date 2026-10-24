@@ -25,8 +25,11 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `ui/bios/BiosManagerScreen.kt` | BIOS em linhas compactas; detalhes e ações abrem sob demanda |
 | `ui/memorycards/MemoryCardScreen.kt` | cartões em linhas compactas; estado vazio e ações de importação simplificados |
 | `ui/saves/SaveManagerScreen.kt` | estado vazio de saves sem cartão decorativo |
-| `ui/controls/ControllerManagerScreen.kt` | remapeamento em linhas compactas; opções secundárias recolhidas |
-| `ui/patches/PatchManagerScreen.kt` | aviso compacto, ações secundárias recolhidas, busca on-line apenas com jogo selecionado |
+| `ui/controls/ControllerManagerScreen.kt` | remapeamento em linhas compactas; opções secundárias recolhidas; abas curtas sem corte lateral |
+| `ui/patches/PatchManagerScreen.kt` | aviso compacto, opções secundárias recolhidas, estado vazio em texto e busca on-line apenas com jogo selecionado |
+| `ui/textures/TextureManagerScreen.kt`, `ui/textures/TextureOnlineSection.kt` | packs instalados em primeiro plano; catálogo compacto; importação por pasta e atualização no menu de ações |
+| `ui/achievements/AchievementsScreen.kt` | login centralizado em paisagem; ajustes secundários recolhidos |
+| `i18n/I18n.kt` | textos padrão dos novos controles da Parte 2 |
 | `ui/theme/Theme.kt` | esquema de cores/tipografia Névoa; horizontal como padrão |
 | `ui/settings/AppTab.kt` | linha "Som da abertura" |
 | `ui/common/ArmsComponents.kt` | fundo Névoa calmo e componentes de vidro compartilhados |
@@ -36,7 +39,7 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `res/values/themes.xml` | estilo `Theme.ARMSX2.Nevoa` |
 | `res/layout/activity_boot_splash.xml` | `FillVideoView` no lugar de `VideoView` |
 | `res/raw/boot_intro.mp4` | abertura própria |
-| `assets/i18n/pt-BR.json` | textos de cartões de memória e estado vazio de saves mais claros |
+| `assets/i18n/pt-BR.json` | rótulos mais curtos e claros nas telas auxiliares |
 
 ## Puxar as melhorias do ARMSX2 original
 
