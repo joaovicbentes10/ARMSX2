@@ -18,8 +18,13 @@ float hash2(float2 p) {
     return fract(p.x * p.y);
 }
 
+// Multiply/add only: a sin()-based hash gives different values on phone GPUs than on the desktop
+// that renders the intro, which moved the towers at the hand-off. Keep in sync with intro.html.
 float hash1(float n) {
-    return fract(sin(n) * 43758.5453);
+    n = fract(n * 0.1031);
+    n *= n + 33.33;
+    n *= n + n;
+    return fract(n);
 }
 
 float noise(float2 p) {
