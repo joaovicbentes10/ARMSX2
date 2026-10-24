@@ -336,9 +336,7 @@ fun PatchesSettingsTab(game: GameInfo? = null, viewModel: PatchManagerViewModel 
 
 @Composable
 private fun PatchOptions(state: PatchManagerUiState, viewModel: PatchManagerViewModel, modifier: Modifier) {
-    GlassPanel(modifier) {
-        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            SectionTitle(str("ra.options.header"), str("scope.global"))
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
             SettingSwitchRow(
                 str("patches.cheats.label"), str("patches.pasteImportHint"), state.settings.emuCore.enableCheats,
                 onCheckedChange = { value -> viewModel.update { it.copy(emuCore = it.emuCore.copy(enableCheats = value)) } },
@@ -358,6 +356,7 @@ private fun PatchOptions(state: PatchManagerUiState, viewModel: PatchManagerView
                     onConfirm = { viewModel.update { it.copy(emuCore = it.emuCore.copy(enableWideScreenPatches = !state.settings.emuCore.enableWideScreenPatches)) } },
                 ),
             )
+            CollapsibleSection(str("ui.otherOptions")) {
             SettingSwitchRow(
                 str("patches.noInterlacing.label"), str("patches.applyAtBoot"), state.settings.emuCore.enableNoInterlacingPatches,
                 onCheckedChange = { value -> viewModel.update { it.copy(emuCore = it.emuCore.copy(enableNoInterlacingPatches = value)) } },
@@ -388,7 +387,7 @@ private fun PatchOptions(state: PatchManagerUiState, viewModel: PatchManagerView
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
                 )
             }
-        }
+            }
     }
 }
 
@@ -703,48 +702,12 @@ private fun BundledPatchCard(
 
 @Composable
 private fun PatchFilesEmptyState() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.42f)),
-        tonalElevation = 1.dp,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-            ) {
-                BoxWithConstraints(
-                    modifier = Modifier.size(48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "✦",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                }
-            }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = str("patches.noFilesInstalled"),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = str("patches.pasteImportHint"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
+    Text(
+        str("patches.noFilesInstalled"),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 18.dp),
+    )
 }
 
 @Composable

@@ -743,7 +743,7 @@ private fun LoginPanel(loading: Boolean, onLogin: (String, String) -> Unit, modi
                 ) { Text(str("ra.website.open")) }
                 // Keep the recovery action for custom/offline host overrides, but out of the
                 // main sign-in path. Clearing an absent override is a harmless no-op.
-                CollapsibleSection(str("ra.login.advanced")) {
+                CollapsibleSection(str("ui.otherOptions")) {
                     val resetServer = { runCatching { kr.co.iefriends.pcsx2.NativeApp.clearAchievementsHostOverride() }.let {} }
                     TextButton(
                         onClick = resetServer,

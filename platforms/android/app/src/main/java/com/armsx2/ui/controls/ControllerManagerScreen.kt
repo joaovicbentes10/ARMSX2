@@ -72,7 +72,7 @@ fun ControllerManagerScreen(onBack: () -> Unit, viewModel: ControllerManagerView
                 val compact = maxWidth < 840.dp
                 if (compact) {
                     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
-                        ControllerOptions(state, viewModel, Modifier.fillMaxWidth(), compact = true)
+                        ControllerOptions(state, viewModel, Modifier.fillMaxWidth())
                         Spacer(Modifier.padding(top = 10.dp))
                         ControllerBindings(state, viewModel, Modifier.fillMaxWidth())
                     }
@@ -81,7 +81,7 @@ fun ControllerManagerScreen(onBack: () -> Unit, viewModel: ControllerManagerView
                         Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        ControllerOptions(state, viewModel, Modifier.width(286.dp), compact = false)
+                        ControllerOptions(state, viewModel, Modifier.width(286.dp))
                         ControllerBindings(state, viewModel, Modifier.weight(1f))
                     }
                 }
@@ -101,25 +101,19 @@ private fun ControllerOptions(
     state: ControllerManagerUiState,
     viewModel: ControllerManagerViewModel,
     modifier: Modifier,
-    compact: Boolean,
 ) {
     GlassPanel(modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            if (!compact) SectionTitle("Jogador")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 ChoiceRow(str("pad.player1"), state.player == 0, { viewModel.setPlayer(0) }, Modifier.weight(1f).controllerFocusable("controls.player1", RoundedCornerShape(14.dp), onConfirm = { viewModel.setPlayer(0) }))
                 ChoiceRow(str("pad.player2"), state.player == 1, { viewModel.setPlayer(1) }, Modifier.weight(1f).controllerFocusable("controls.player2", RoundedCornerShape(14.dp), onConfirm = { viewModel.setPlayer(1) }))
             }
-            // Scrolls like a long chip row should: three sections do not fit side by side everywhere.
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-            ) {
-                ChoiceRow(str("pad.section.buttonMapping"), state.section == ControllerSection.Buttons, { viewModel.setSection(ControllerSection.Buttons) }, Modifier.controllerFocusable("controls.section.buttons", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Buttons) }))
-                ChoiceRow(str("pad.section.padProfiles"), state.section == ControllerSection.Profiles, { viewModel.setSection(ControllerSection.Profiles) }, Modifier.controllerFocusable("controls.section.profiles", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Profiles) }))
-                ChoiceRow(str("tab.hotkeys"), state.section == ControllerSection.Hotkeys, { viewModel.setSection(ControllerSection.Hotkeys) }, Modifier.controllerFocusable("controls.section.hotkeys", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Hotkeys) }))
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                ChoiceRow(str("controls.section.buttonsShort"), state.section == ControllerSection.Buttons, { viewModel.setSection(ControllerSection.Buttons) }, Modifier.weight(1f).controllerFocusable("controls.section.buttons", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Buttons) }))
+                ChoiceRow(str("controls.section.profilesShort"), state.section == ControllerSection.Profiles, { viewModel.setSection(ControllerSection.Profiles) }, Modifier.weight(1f).controllerFocusable("controls.section.profiles", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Profiles) }))
+                ChoiceRow(str("tab.hotkeys"), state.section == ControllerSection.Hotkeys, { viewModel.setSection(ControllerSection.Hotkeys) }, Modifier.weight(1f).controllerFocusable("controls.section.hotkeys", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Hotkeys) }))
             }
-            CollapsibleSection("Outras opções") {
+            CollapsibleSection(str("ui.otherOptions")) {
             SettingSwitchRow(
                 str("pad.rumble.label"), str("pad.rumble.description"), state.rumble, viewModel::setRumble,
                 modifier = Modifier.controllerFocusable(
@@ -343,17 +337,17 @@ private fun BindingRow(controllerId: String, label: String, binding: String, cap
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text(
-                if (capturing) str("hotkeys.capturePrompt") else binding.ifBlank { str("hotkeys.notSet") },
-                style = MaterialTheme.typography.bodySmall,
-                color = if (capturing) NevoaPalette.Selected else NevoaPalette.TextDim,
-                maxLines = 1,
-            )
+            if (capturing || binding != label) {
+                Text(
+                    if (capturing) str("hotkeys.capturePrompt") else binding.ifBlank { str("hotkeys.notSet") },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (capturing) NevoaPalette.Selected else NevoaPalette.TextDim,
+                    maxLines = 1,
+                )
+            }
             if (binding.isNotBlank() && !capturing) {
-                TextButton(
-                    onClick = onClear,
-                    modifier = Modifier.controllerFocusable("$controllerId.clear", onConfirm = onClear),
-                ) { Text(str("pad.action.clear")) }
+                Spacer(Modifier.width(8.dp))
+                RoundAction("×", str("pad.action.clear"), onClear, framed = false, buttonSize = 32.dp, controllerId = "$controllerId.clear")
             }
         }
     }
