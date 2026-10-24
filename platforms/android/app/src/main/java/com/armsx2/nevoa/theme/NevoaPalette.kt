@@ -22,11 +22,21 @@ object NevoaPalette {
     val Glass = Color.White.copy(alpha = 0.08f)
     val GlassBorder = Color.White.copy(alpha = 0.20f)
     val Selected = TowerBlue
+    val SelectedSurface = Color(0xFF213A69)
 
     val scheme: ColorScheme = darkColorScheme(
         primary = Selected,
+        onPrimary = Background,
+        primaryContainer = SelectedSurface,
+        onPrimaryContainer = Text,
         secondary = TowerViolet,
+        onSecondary = Background,
+        secondaryContainer = Color(0xFF30284D),
+        onSecondaryContainer = Text,
         tertiary = TowerCyan,
+        onTertiary = Background,
+        tertiaryContainer = Color(0xFF173D49),
+        onTertiaryContainer = Text,
         background = Background,
         surface = Background,
         onBackground = Text,
@@ -34,6 +44,8 @@ object NevoaPalette {
         onSurfaceVariant = TextDim,
         surfaceVariant = Glass.compositeOver(Background),
         outline = GlassBorder.compositeOver(Background),
+        outlineVariant = GlassBorder.compositeOver(Background),
+        surfaceTint = Selected,
     )
 
     val typography: Typography = ArmsTypography.let { t ->
