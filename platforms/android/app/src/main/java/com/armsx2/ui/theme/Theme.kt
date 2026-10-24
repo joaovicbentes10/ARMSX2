@@ -525,6 +525,12 @@ private const val RgbHueStep = 4f
 
 @Composable
 fun Armsx2Theme(content: @Composable () -> Unit) {
+    if (com.armsx2.BuildConfig.APPLICATION_ID == "com.armsx2.nevoa") {
+        val palette = com.armsx2.nevoa.theme.NevoaPalette
+        ThemeBridge.scheme = palette.scheme
+        MaterialTheme(colorScheme = palette.scheme, typography = palette.typography, content = content)
+        return
+    }
     val context = LocalContext.current
     val scheme = when (ThemePreferences.mode.value) {
         ThemeMode.System -> if (isSystemInDarkTheme()) NightScheme else DayScheme
@@ -591,8 +597,8 @@ fun Armsx2Theme(content: @Composable () -> Unit) {
         runCatching { com.armsx2.SecondScreen.rebuild() }
     }
     MaterialTheme(
-        colorScheme = com.armsx2.nevoa.theme.NevoaPalette.scheme,
-        typography = com.armsx2.nevoa.theme.NevoaPalette.typography,
+        colorScheme = resolved,
+        typography = ArmsTypography,
         content = content,
     )
 }

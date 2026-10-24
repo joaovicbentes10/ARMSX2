@@ -72,6 +72,8 @@ import com.armsx2.R
 import com.armsx2.ui.theme.ArmsBlue
 import com.armsx2.ui.theme.ArmsCyan
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.nevoa.background.NevoaBackground
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun ArmsBackdrop(
@@ -93,13 +95,15 @@ fun ArmsBackdrop(
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
-            // A full-bleed wallpaper layer (library video/image background) that
-            // deliberately ignores the safe-area insets, so it reaches every screen
+            // A full-bleed background layer that deliberately ignores the safe-area insets,
+            // so it reaches every screen
             // edge — including behind the gesture bar. Kept OUT of the inset-padded
             // content Box below; otherwise it stops short of the bottom edge and the
             // exposed strip reads as a bar (most visibly in landscape).
             if (backgroundLayer != null) {
                 Box(modifier = Modifier.fillMaxSize(), content = backgroundLayer)
+            } else {
+                NevoaBackground(Modifier.fillMaxSize(), calm = true)
             }
             Box(
                 modifier = Modifier
@@ -175,12 +179,11 @@ fun ArmsTopBar(
                 bottom = if (bottomEdge) navBarPadding + 8.dp else 4.dp,
             ),
         shape = RoundedCornerShape(26.dp),
-        // Custom bar colour when set, otherwise the theme surface (unchanged default).
-        color = com.armsx2.ui.theme.LibraryChromePreferences.barColor.value
-            .takeIf { it != 0 }?.let { Color(it) } ?: MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.38f)),
+        // Custom bar colour when set, otherwise the translucent Névoa glass.
+        color = customBar?.let { Color(it) } ?: NevoaPalette.Glass,
+        border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
         tonalElevation = 0.dp,
-        shadowElevation = 5.dp,
+        shadowElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 10.dp),
@@ -220,19 +223,18 @@ fun GlassPanel(
     content: @Composable () -> Unit,
 ) {
     val panelShape = RoundedCornerShape(28.dp)
-    val panelColor = MaterialTheme.colorScheme.surface
+    val panelColor = NevoaPalette.Glass
     Surface(
         modifier = modifier.clip(panelShape),
         shape = panelShape,
         color = panelColor,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.64f)),
-        tonalElevation = 2.dp,
-        shadowElevation = 7.dp,
+        border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
-                .background(panelColor)
                 .padding(contentPadding),
         ) { content() }
     }
@@ -262,15 +264,15 @@ fun RoundAction(
             color = when {
                 focused -> MaterialTheme.colorScheme.primary
                 selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.76f)
-                else -> MaterialTheme.colorScheme.outline.copy(alpha = if (subtleFrame) 0.30f else 0.58f)
+                else -> NevoaPalette.GlassBorder.copy(alpha = if (subtleFrame) 0.65f else 1f)
             },
         )
     } else {
         null
     }
     val actionColor = when {
-        selected -> MaterialTheme.colorScheme.primaryContainer
-        framed -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (subtleFrame) 0.58f else 1f)
+        selected -> NevoaPalette.Selected.copy(alpha = 0.20f)
+        framed -> NevoaPalette.Glass.copy(alpha = if (subtleFrame) 0.06f else 0.08f)
         else -> Color.Transparent
     }
     Surface(
@@ -362,8 +364,8 @@ fun SearchField(
         onClick = onClick,
         modifier = modifier.height(56.dp),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        color = NevoaPalette.Glass,
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) NevoaPalette.Selected else NevoaPalette.GlassBorder),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -394,9 +396,9 @@ fun EmptyState(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-        tonalElevation = 2.dp,
+        color = NevoaPalette.Glass,
+        border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
+        tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(24.dp),

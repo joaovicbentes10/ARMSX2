@@ -33,7 +33,7 @@ fun shaderSeconds(nowNanos: Long, startNanos: Long, wrapSeconds: Float = 600f): 
 }
 
 /** Frame throttle: true once [minIntervalNanos] passed since [lastNanos]; [Long.MIN_VALUE] means no frame yet. */
-fun shouldAdvance(nowNanos: Long, lastNanos: Long, minIntervalNanos: Long = 33_000_000L): Boolean =
+fun shouldAdvance(nowNanos: Long, lastNanos: Long, minIntervalNanos: Long = 30_000_000L): Boolean =
     lastNanos == Long.MIN_VALUE || nowNanos - lastNanos >= minIntervalNanos
 
 /** The animated "Névoa da BIOS" backdrop. [calm] halves speed and brightness. */

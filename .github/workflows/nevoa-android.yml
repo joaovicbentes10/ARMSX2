@@ -5,6 +5,10 @@ on:
     branches: [nevoa]
   workflow_dispatch:
 
+concurrency:
+  group: nevoa-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   android:
     name: Android APK (Névoa)

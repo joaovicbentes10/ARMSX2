@@ -347,7 +347,7 @@ private fun SettingsPanel(
     modifier: Modifier,
 ) {
     GlassPanel(modifier = modifier.padding(horizontal = 8.dp), contentPadding = 16.dp) {
-        Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
+        Column(Modifier.fillMaxWidth()) {
             SectionTitle(categoryTitle(category))
             Spacer(Modifier.height(12.dp))
             // Only the tabs that own game settings have rows that take a mark.

@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun SettingSwitchRow(
@@ -43,8 +44,8 @@ fun SettingSwitchRow(
                 onConfirm = { emit(!checked) },
             ),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.42f)),
+        color = NevoaPalette.Glass,
+        border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
     ) {
         Row(
             Modifier.defaultMinSize(minHeight = 78.dp).padding(horizontal = 16.dp, vertical = 14.dp),
