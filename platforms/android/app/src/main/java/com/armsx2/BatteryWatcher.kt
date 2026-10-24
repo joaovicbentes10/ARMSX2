@@ -9,8 +9,9 @@ import com.armsx2.i18n.I18n
 import com.armsx2.ui.WelcomeBanner
 
 /**
- * Warns once when the battery gets low or the pack gets hot during a session (requested by
+ * Watches battery readings during a session (requested by
  * BrianAR20: "low battery notification below 20%, and when battery temperature is above 35 C").
+ * Névoa keeps the low-battery banner and suppresses the visual temperature banner.
  *
  * Reads the sticky ACTION_BATTERY_CHANGED broadcast — no polling loop and no extra wakeups; the
  * system already sends this on every meaningful change. Warnings are EDGE-triggered with hysteresis
@@ -106,7 +107,7 @@ object BatteryWatcher {
             when {
                 celsius >= HOT_C && !hotWarned -> {
                     hotWarned = true
-                    WelcomeBanner.show(I18n.get("battery.hot.warn").format(celsius))
+                    // Névoa suppresses the visual heat banner; thermal handling is unchanged.
                 }
                 celsius <= HOT_REARM_C -> hotWarned = false
             }

@@ -10,7 +10,7 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 |---|---|---|
 | Abertura e passagem | Implementadas e passagem aprovada no F6 Pro no histórico | Revalidar após alterar cena, vídeo ou tema inicial |
 | Fundo e tema | AGSL, fallback, modo calmo e parada do relógio implementados | Falha real do shader e aparelhos antigos não exercitados nesta rodada |
-| Biblioteca visual | Capas, painel, seleção e destaque de Jogar conferidos no F6 Pro | Biblioteca atual contém apenas o item da BIOS |
+| Biblioteca visual | Capas, painel, seleção e destaque de Jogar conferidos no F6 Pro | Última inspeção com dois itens: BIOS e Scooby-Doo |
 | Busca e ordem | `3222e96576`, release local instalada e inspecionada | Reordenação entre vários jogos ainda sem inspeção no aparelho |
 | Configurações | Quatro grupos, descrições sob demanda e painel translúcido | Não equivale a retestar todas as opções globais e por jogo |
 | BIOS, cartões e saves | Layout compacto e estados vazios implementados | Importação/exportação de todos os tipos não reexecutada nesta rodada |
@@ -20,6 +20,29 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 | Categorias na tela Névoa | Não integradas | Recursos existentes na biblioteca clássica |
 | Saves no painel do jogo | Não implementados | Exigir associação confiável ao título |
 | Launcher Windows | Arquitetura planejada | Implementação não iniciada |
+
+## Som padrão, biblioteca completa e falhas pretas — 24/10/2026
+
+Implementado e instalado no F6 Pro:
+
+- MP3 fornecido pelo usuário (`ARMSX2_Nevoa_Suspense_V4.mp3`, 8 s, 48 kHz estéreo) incluído como `res/raw/nevoa_intro_sound.mp3`, sem alterar os bytes. É o som padrão; o arquivo personalizado tem prioridade. Log `NevoaIntroSound: Playback started: bundled` confirmou o início da faixa padrão.
+- Preparação assíncrona do player e liberação em `onStop`. A opção de reset agora restaura o som padrão.
+- Biblioteca completa com fundo Névoa Compose, cabeçalho discreto e recentes compactos. Saiu o fundo XMB/Flurry independente; imagem de fundo personalizada continua disponível. O relógio do fundo pausa enquanto o protetor de tela o cobre, preservando a composição.
+- Cobertura escura no intervalo entre o fim do burst e a inicialização assíncrona do runtime, para não reexibir a biblioteca nessa passagem.
+- Banner visual de temperatura suprimido em BatteryWatcher, sem mudar os mecanismos térmicos nativos/Android ou o aviso de bateria baixa.
+- Troca do nome da animação adiada por decisão do usuário; a marca atual foi mantida.
+
+Compilação release local e 37 testes Névoa passaram. O núcleo nativo é o do APK-base já registrado; não houve recompilação ou alteração do núcleo para este incremento.
+
+**Biblioteca:** gravação de 40 s, 1.204 quadros analisados; maior queda de luminância entre quadros de 0,0208 na escala 0–255, sem grandes áreas pretas no trecho inspecionado. Isso não comprova estabilidade de vários minutos nem cobre o wrap de 600 s.
+
+**Scooby-Doo, SLUS-21928 / CRC 38E42973:** iniciado pela Biblioteca completa conforme pedido do usuário. O caso de blocos pretos foi reproduzido na tela de carregamento usando Vulkan com `Mesa 27.0.0-devel (git-axfl2-005)`, driver personalizado `armsx2turnip-axfl2-005-turnip-axfl2-005-android`. A imagem do jogo apresentou os blocos enquanto o overlay de controles permaneceu normal; não atribuir esse caso apenas ao fundo da biblioteca.
+
+Comparação controlada: apenas o Scooby passou a ter overrides `renderer=vulkan` e `customDriverId=""`, usando o driver Vulkan Qualcomm do sistema. A configuração global permaneceu `renderer=auto` com o Turnip original. No novo vídeo de 35 s, o mesmo carregamento não apresentou o defeito nas amostras inspecionadas e o jogo avançou à animação inicial e ao título. Na região interna do carregamento, a queda instantânea máxima de luminância foi 73,47 com Turnip (550 quadros) e 0,13 com o driver do sistema (732 quadros). A análise fotométrica auxilia a comparação; não é um teste completo de compatibilidade nem substitui gameplay prolongado.
+
+O ajuste por jogo ficou aplicado no aparelho. Não é um preset de driver imposto a todos os usuários pelo APK. Se o problema reaparecer com o driver do sistema, registrar a cena e o driver efetivo antes de ampliar a investigação.
+
+Evidências locais em `.superpowers/validation/audio-library/`: `complete.png`, `idle.mp4`, `idle-contact.png`, `scooby-launch.mp4`, `scooby-artifact.png`, `scooby-system.mp4`, `scooby-system-contact.png` e `scooby-system.png`. A cópia das configurações anteriores e a de comparação ficam em `%TEMP%/nevoa-validation-search/`; são dados locais e não devem entrar no Git.
 
 ## Busca e ordenação
 
@@ -83,15 +106,15 @@ Executar uma função por vez, ou duas quando uma for simples. Não há data de 
 | Wrap do tempo a cada 600 s | Continuidade de longo prazo pendente |
 | Cadência do fundo | Intervalo atual é 30 ms; medir antes de prometer fps fixo |
 | MIME `application/ogg` | Rejeitado pela validação `audio/*` |
-| Preparação do áudio | `MediaPlayer.prepare()` síncrono |
-| Ciclo do som | Liberação em conclusão/destruição existe; tratamento explícito de `onStop` pendente |
+| Preparação do áudio | Passou a `prepareAsync()` no incremento de som padrão; validar reprodução no aparelho |
+| Ciclo do som | Liberação em conclusão, destruição e `onStop` implementada; retomada completa após interrupção ainda merece teste específico |
 | Áudio com vídeo próprio | Linha pode continuar visível, embora só toque com o vídeo padrão |
 | Recriação durante o burst | Estado pendente não é integralmente preservado |
 | Textos e tema legados | Textos Névoa fixos fora de I18n e pontos antigos de tema a limpar |
 
 O atalho Y/△ tinha registro de recuperação de foco insuficiente após a gaveta. Em `3222e96576`, o pedido de foco passou a reagir à gaveta e ao teclado. Retestar Y/△ nessas transições antes de encerrar o item; mudança no código não é comprovação de resolução.
 
-O aviso de temperatura que cobria Menu foi centralizado anteriormente. A importação do chip de status foi preservada após ajuste. São histórico de correção, não pendências atuais confirmadas.
+O aviso de temperatura foi primeiro centralizado e, depois, removido por solicitação do usuário; o aviso de bateria baixa permanece. A importação do chip de status foi preservada após ajuste. São histórico de correção, não pendências atuais confirmadas.
 
 ## Windows
 

@@ -109,6 +109,11 @@ class BootSplashActivity : ComponentActivity() {
         introSound = null
     }
 
+    override fun onStop() {
+        stopIntroSound()
+        super.onStop()
+    }
+
     override fun onDestroy() {
         stopIntroSound()
         rootView?.removeCallbacks(timeoutRunnable)

@@ -12,7 +12,7 @@ flowchart TD
     B --> C[NevoaHome]
     C --> D[HomeViewModel]
     D --> E[GameLibraryRepository]
-    C --> F[HomeScreen clássica]
+    C --> F[HomeScreen completa com visual Névoa]
     C --> G[LaunchGate e LaunchBurst]
     G --> H[HomeViewModel.launch]
     H --> I[MainActivityRuntime e núcleo ARMSX2]
@@ -22,7 +22,7 @@ flowchart TD
 
 ### Abertura
 
-`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. O áudio próprio só acompanha o vídeo padrão e é liberado na conclusão ou destruição da Activity.
+`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. A faixa Névoa Suspense acompanha o vídeo padrão, com prioridade para um áudio personalizado quando existir. A preparação é assíncrona, e o player é liberado na conclusão, em onStop ou na destruição da Activity.
 
 `Main` abre sem animação de troca. Seu tema já mostra `nevoa_last_frame.webp`. Durante a carga inicial, `NevoaHome` mantém o fundo; ao receber os jogos, apresenta a fileira. A entrada visual dos elementos toca uma vez por processo.
 
@@ -30,7 +30,7 @@ flowchart TD
 
 `NevoaHome` chama o carregamento e observa os sinais de atualização existentes. Usa diretamente `HomeViewModel.state.visibleGames`, já filtrado e ordenado. Não concatenar recentes depois desse processamento: isso recolocaria jogos excluídos pela busca e alteraria a ordem escolhida.
 
-Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`, renderizado pela infraestrutura do runtime. A tela clássica atende preparação da biblioteca e abertura explícita. Consultas sem resultados permanecem em Névoa; a fileira aceita lista vazia sem acesso a índice inexistente.
+Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`, renderizado pela infraestrutura do runtime. A tela completa, baseada em HomeScreen e agora com visual Névoa, atende preparação da biblioteca e abertura explícita. Consultas sem resultados permanecem em Névoa; a fileira aceita lista vazia sem acesso a índice inexistente.
 
 | Estado | Responsável |
 |---|---|
@@ -42,7 +42,7 @@ Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`,
 
 ### Início de jogo
 
-`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 700 ms, com fade final de 150 ms. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime.
+`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 700 ms, com fade final de 150 ms. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime. A cobertura escura final permanece enquanto a inicialização assíncrona ainda deixa o runtime em STOPPED, evitando expor a biblioteca entre animação e jogo.
 
 O gate usa o estado de emulação e um timeout para reabrir. A preservação integral da transição durante recriação de Activity continua pendente.
 
@@ -69,6 +69,7 @@ Base dos caminhos: `platforms/android/app/src/main/java/com/armsx2/nevoa/`.
 | `theme/Contrast.kt` | Cálculos de contraste |
 | `background/NevoaBackground.kt` | Relógio, modo calmo e fallback |
 | `background/NevoaShader.kt` | Cena AGSL |
+| `home/NevoaLibraryChrome.kt` | Cabeçalho e ações discretas da biblioteca completa |
 | `home/NevoaHome.kt` | Tela, fileira, busca, ordem e integração de entrada |
 | `home/LibraryLogic.kt` | Seleção, fallback e rótulos |
 | `home/DvdCase.kt` | Caixa, capa, seleção e brilho |
@@ -85,6 +86,7 @@ Base dos caminhos Kotlin: `platforms/android/app/src/main/java/com/armsx2/`.
 | Área | Arquivos principais |
 |---|---|
 | Entrada | `BootSplashActivity.kt`, `Pasx2Application.kt`, `navigation/AppNavigation.kt` |
+| Biblioteca completa | `ui/home/HomeScreen.kt` |
 | Gaveta | `navigation/NavigationDrawer.kt` |
 | Tema | `ui/theme/Theme.kt` |
 | Componentes | `ui/common/ArmsComponents.kt`, `ui/common/SettingControls.kt`, `ui/settings/SettingsWidgets.kt` |
@@ -93,9 +95,9 @@ Base dos caminhos Kotlin: `platforms/android/app/src/main/java/com/armsx2/`.
 | Controles | `ui/controls/ControllerManagerScreen.kt` |
 | Patches e texturas | `ui/patches/PatchManagerScreen.kt`, `ui/textures/TextureManagerScreen.kt`, `ui/textures/TextureOnlineSection.kt` |
 | Conquistas e pausa | `ui/achievements/AchievementsScreen.kt`, `ui/emulation/EmulationMenuScreen.kt` |
-| Mensagens | `ui/WelcomeBanner.kt`, `i18n/I18n.kt` |
+| Mensagens | `ui/WelcomeBanner.kt`, `BatteryWatcher.kt`, `i18n/I18n.kt` |
 
-Também foram alterados `AndroidManifest.xml`, `assets/i18n/pt-BR.json`, `res/values/themes.xml`, `res/layout/activity_boot_splash.xml`, `res/raw/boot_intro.mp4`, `res/drawable-nodpi/nevoa_last_frame.webp` e `res/drawable/nevoa_window_bg.xml`.
+Também foram alterados `AndroidManifest.xml`, `assets/i18n/pt-BR.json`, `res/values/themes.xml`, `res/layout/activity_boot_splash.xml`, `res/raw/boot_intro.mp4`, `res/raw/nevoa_intro_sound.mp3`, `res/drawable-nodpi/nevoa_last_frame.webp` e `res/drawable/nevoa_window_bg.xml`.
 
 Após novos incrementos, o diff contra a base fornece a lista exata. Mudanças nos componentes comuns podem atingir várias telas; a verificação deve acompanhar esse alcance.
 

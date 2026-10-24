@@ -2,7 +2,7 @@
 
 Documentação do projeto pessoal **ARMSX2 Névoa**: uma interface Android para o ARMSX2 com a direção visual “Névoa da BIOS”, organização de console moderno, fundo escuro, torres finas e translúcidas e superfícies de vidro.
 
-Referência: **24/10/2026**, código funcional até `3222e96576`. O registro de validação distingue implementação de teste no aparelho.
+Referência: **24/10/2026**, base funcional `3222e96576` e incrementos registrados em Validação e pendências. O registro de validação distingue implementação de teste no aparelho.
 
 ## Guias
 
@@ -44,7 +44,7 @@ O identificador separado permite coexistir com o ARMSX2 oficial. Os aplicativos 
 
 ## Estado atual
 
-Implementados: abertura própria com passagem contínua para a biblioteca, som escolhido pelo usuário, fundo animado com fallback estático, carrossel de capas, painel do jogo, explosão de luz ao iniciar, busca, ordenação, configurações em quatro grupos e revisão visual das principais telas auxiliares e do menu em jogo.
+Implementados: abertura própria com passagem contínua para a biblioteca, som padrão Névoa Suspense com opção de arquivo próprio, fundo animado com fallback estático, carrossel de capas, painel do jogo, explosão de luz ao iniciar, busca, ordenação, configurações em quatro grupos e revisão visual das principais telas auxiliares e do menu em jogo.
 
 Pendentes: categorias na biblioteca Névoa, saves no painel do jogo, revisão dos controles de toque e validações adicionais com jogo real e conta de RetroAchievements autenticada. Ajustes técnicos menores estão no registro de pendências.
 

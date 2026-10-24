@@ -538,7 +538,7 @@ fun AppTab() {
                 when {
                     soundBusy -> "Importando som..."
                     soundSet -> "Som da abertura: personalizado"
-                    else -> "Som da abertura: nenhum"
+                    else -> "Som da abertura: Névoa Suspense"
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -565,7 +565,7 @@ fun AppTab() {
                         onClick = removeSound,
                         enabled = !soundBusy,
                         modifier = Modifier.controllerFocusable("app.introSound.reset", onConfirm = removeSound),
-                    ) { Text("Remover som") }
+                    ) { Text("Restaurar som padrão") }
                 }
             }
         }

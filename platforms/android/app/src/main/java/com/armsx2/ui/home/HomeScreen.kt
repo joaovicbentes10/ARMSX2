@@ -123,9 +123,9 @@ import kotlinx.coroutines.withContext
 import com.armsx2.i18n.str
 import com.armsx2.runtime.MainActivityRuntime
 import com.armsx2.ui.common.ArmsBackdrop
-import com.armsx2.ui.common.ArmsTopBar
+import com.armsx2.nevoa.home.NevoaLibraryTopBar
 import com.armsx2.ui.common.EmptyState
-import com.armsx2.ui.common.RoundAction
+import com.armsx2.nevoa.home.NevoaLibraryAction
 import com.armsx2.ui.common.SearchField
 import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.common.StatusChip
@@ -276,93 +276,19 @@ fun HomeScreen(
 
     CompositionLocalProvider(LocalCustomCoverMap provides customCoverMap) {
     ArmsBackdrop(
-        // Full-bleed wallpaper: the library image + readability scrim, drawn edge-to-edge
-        // (behind the gesture bar) so it never leaves an exposed strip at the bottom —
-        // that strip was the "blue bar" in landscape.
         backgroundLayer = {
-            // Nothing of the library shows behind the screensaver, whose scrim is opaque from its
-            // first frame, so the backdrop stops while it is up: every frame the wave, Flurry or a GIF
-            // drew there still had the whole screen composited again, for nobody.
-            if (!LibraryScreensaver.showing.value) {
-                val libraryBg = LibraryBackground.uri.value
-                if (libraryBg == null) {
-                    // Default: the live PS3-XMB wave (XmbGlView — a GLES3 port of linkev's
-                    // grid-displacement mesh, matching iOS). When GL can't init — older Mali without
-                    // float-texture filtering, or any EGL failure — we fall back to LibraryWaveBackground,
-                    // a procedural PPSSPP-style animated background drawn on the hardware 2D Canvas (no
-                    // GLES3, runs anywhere) that reads the SAME colour prefs as the GL wave, so Mali users
-                    // finally get an animated, recolourable backdrop instead of the old fixed GIF. The
-                    // bundled still is the cheap floor shown during GL startup (and, once the wave is up,
-                    // sits hidden behind it). Custom backgrounds below override all of this.
-                    if (LibraryBackground.flurry.value) {
-                        // Flurry, in the same shell as the XMB wave: if GL cannot come up we fall back
-                        // to the 2D backdrop rather than leaving a hole, exactly as XmbGlView does.
-                        var flurryGl by remember { mutableStateOf<Boolean?>(null) }
-                        if (flurryGl == false) {
-                            LibraryWaveBackground(Modifier.fillMaxSize())
-                        } else {
-                            AndroidView(
-                                factory = {
-                                    // currentSpec() resolves which saver AND resolves a "random"
-                                    // preset to a concrete one — read once here, at view creation,
-                                    // so random means once per library open and not once per frame.
-                                    SaverGlView(it, LibraryBackground.currentSpec()).apply {
-                                        onGlStatus = { ok -> flurryGl = ok }
-                                    }
-                                },
-                                modifier = Modifier.fillMaxSize(),
-                                // Stops the render thread. Without it the EGL thread outlives the
-                                // composition and keeps drawing to a dead surface.
-                                onRelease = { it.stop() },
-                            )
-                        }
-                    } else if (LibraryBackground.animated2D.value) {
-                        // User opted into the lightweight 2D animated wave everywhere (#Luminz) — the same
-                        // backdrop GL-fail devices get; skip the GLES3 XmbGlView entirely.
-                        LibraryWaveBackground(Modifier.fillMaxSize())
-                    } else {
-                        var xmbGlState by remember { mutableStateOf<Boolean?>(null) } // null=starting, true=up, false=failed
-                        if (xmbGlState == false) {
-                            LibraryWaveBackground(Modifier.fillMaxSize())
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.library_bg_xmb),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                            )
-                        }
-                        AndroidView(
-                            factory = { XmbGlView(it).apply { onGlStatus = { ok -> xmbGlState = ok } } },
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                } else {
-                    // User-picked still image / GIF (Coil handles both).
-                    AsyncImage(
-                        model = ImageRequest.Builder(context).data(libraryBg).crossfade(true).build(),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-                // Scrim so covers and text stay readable over the backdrop. A user-picked image can
-                // be any brightness, so it gets the full dark scrim. The XMB is our own controlled
-                // backdrop (dark at the top where the content sits) and a heavy scrim just muddied
-                // its blue into navy — so it gets only a whisper of dimming, letting the vivid blue
-                // read through.
-                val scrimTop = if (libraryBg == null) 0.06f else 0.55f
-                val scrimBottom = if (libraryBg == null) 0.20f else 0.80f
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.background.copy(alpha = scrimTop),
-                                MaterialTheme.colorScheme.background.copy(alpha = scrimBottom),
-                            ),
-                        ),
-                    ),
+            // Keep one Compose backdrop. The old XMB/Flurry TextureViews created a
+            // separate EGL renderer and changed surfaces on idle/wake and game launch.
+            com.armsx2.nevoa.background.NevoaBackground(Modifier.fillMaxSize(), active = !LibraryScreensaver.showing.value)
+            val libraryBg = LibraryBackground.uri.value
+            if (libraryBg != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context).data(libraryBg).crossfade(false).build(),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)))
             }
         },
     ) {
@@ -471,7 +397,7 @@ fun HomeScreen(
             LaunchedEffect(toolbarBottom) { HomeInputController.setToolbarAtBottom(toolbarBottom) }
             val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
             val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-            val libraryToolbar: @Composable (Boolean) -> Unit = { bottomEdge ->
+            val libraryToolbar: @Composable (Boolean) -> Unit = { _ ->
                 // Register the toolbar button actions (left→right order) so the
                 // controller's toolbar zone can fire them, and read the highlight
                 // state so the focused button lights up.
@@ -485,8 +411,8 @@ fun HomeScreen(
                 )
                 val tb = HomeInputController.zone.value == HomeZone.Toolbar
                 val tbi = HomeInputController.toolbarIndex.intValue
-                ArmsTopBar(
-                    title = str("games.section.library"),
+                NevoaLibraryTopBar(
+                    title = "Biblioteca completa",
                     subtitle = if (state.scanning) {
                         str("games.scanningRoms")
                     } else if (com.armsx2.ArcadeOnly.enabled.value) {
@@ -497,47 +423,29 @@ fun HomeScreen(
                         "${str("games.library.totalGames")}: ${state.allGames.size}"
                     },
                     leading = {
-                        RoundAction(
-                            "☰",
+                        NevoaLibraryAction(
+                            "Voltar",
                             str("games.overflow.openNavigation"),
                             onOpenMenu,
                             selected = tb && tbi == 0,
-                            framed = true,
-                            buttonSize = 44.dp,
-                            buttonShape = RoundedCornerShape(14.dp),
-                            subtleFrame = true,
                         )
                     },
                     actions = {
-                        // Clock + battery, ahead of the buttons so it reads as status rather than
-                        // as another control. Deliberately NOT controllerFocusable — it isn't
-                        // interactive, and registering it would put a dead stop in the pad's path
-                        // through the toolbar.
-                        com.armsx2.ui.common.LibraryStatusCluster(
-                            // align(): the title block makes the bar taller than this two-line
-                            // cluster, so without it the pair sits high relative to the buttons.
-                            Modifier.align(Alignment.CenterVertically).padding(end = 6.dp),
-                            // Portrait: single compact row so the narrow bar doesn't cram it.
-                            compact = LocalConfiguration.current.orientation ==
-                                android.content.res.Configuration.ORIENTATION_PORTRAIT,
-                        )
-                        RoundAction(
-                            "↻",
+                        NevoaLibraryAction(
+                            "Atualizar",
                             str("games.card.refresh"),
                             viewModel::refresh,
                             selected = tb && tbi == 1,
-                            framed = false,
                         )
-                        RoundAction(
+                        NevoaLibraryAction(
                             when (state.layout) {
-                                LibraryLayout.Grid -> "☷"
-                                LibraryLayout.List -> "▦"
-                                LibraryLayout.Shelf -> "▤"
+                                LibraryLayout.Grid -> "Grade"
+                                LibraryLayout.List -> "Lista"
+                                LibraryLayout.Shelf -> "Estante"
                             },
                             str("games.toolbar.rows"),
                             viewModel::toggleLayout,
                             selected = tb && tbi == 2,
-                            framed = false,
                         )
                         var overflowAnchor by remember {
                             mutableStateOf(androidx.compose.ui.geometry.Offset.Zero)
@@ -552,12 +460,11 @@ fun HomeScreen(
                                 )
                             },
                         ) {
-                            RoundAction(
-                                "⋮",
+                            NevoaLibraryAction(
+                                "Mais",
                                 str("games.toolbar.more"),
                                 { overflowMenu = true },
                                 selected = overflowMenu || tb && tbi == 3,
-                                framed = false,
                             )
                             LibraryOverflowMenu(
                                 expanded = overflowMenu,
@@ -598,8 +505,6 @@ fun HomeScreen(
                             }
                         }
                     },
-                    horizontalPadding = 0.dp,
-                    bottomEdge = bottomEdge,
                 )
             }
             LazyVerticalGrid(
@@ -1729,7 +1634,7 @@ private fun LibraryOverflowMenu(
         run {
             val spin = com.armsx2.memcard.MemcardCovers.spin.value
             LibraryOverflowItem(
-                glyph = "↻",
+                glyph = "Atualizar",
                 label = str("games.overflow.iconMotion"),
                 trailing = if (spin) str("games.overflow.iconMotion.spin") else str("games.overflow.iconMotion.noSpin"),
             ) {
@@ -2050,21 +1955,26 @@ private fun GameListCard(game: GameInfo, selected: Boolean, onClick: () -> Unit,
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RecentGameCard(game: GameInfo, selected: Boolean = false, onClick: () -> Unit, onDetails: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .width(102.dp)
-            .combinedClickable(onClick = onClick, onLongClick = onDetails),
+    val palette = com.armsx2.nevoa.theme.NevoaPalette
+    Surface(
+        modifier = Modifier.width(190.dp).combinedClickable(onClick = onClick, onLongClick = onDetails),
+        shape = RoundedCornerShape(8.dp),
+        color = palette.Glass,
+        border = BorderStroke(1.dp, if (selected) palette.Selected else palette.GlassBorder),
     ) {
-        GameCover(
-            game,
-            Modifier.fillMaxWidth().aspectRatio(coverAspectRatio())
-                .coverFrame(selected, 2.5.dp, Color(0xFF3DA5FF), memcard = showsMemcardCover(game)),
-        )
-        Spacer(Modifier.height(5.dp))
-        Text(game.displayTitle(EnglishTitles.enabled.value), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            GameCover(game, Modifier.width(34.dp).height(48.dp))
+            Text(
+                game.displayTitle(EnglishTitles.enabled.value),
+                modifier = Modifier.weight(1f),
+                color = palette.Text,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
-
 @Composable
 private fun GameMetadata(game: GameInfo) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -2163,11 +2073,10 @@ private fun Modifier.coverFrame(selected: Boolean, selectedWidth: Dp, selectedCo
     // A Memory Card Cover is just the icon, so no idle outline shaped like a cover around it. The
     // selection frame stays: it is how a controller player sees where they are.
     val idle = !CoverArtStyle.use3d.value && !memcard
-    val contrast = MaterialTheme.colorScheme.inverseSurface
     return when {
         selected -> this
-            .border(selectedWidth + 2.dp, contrast, RoundedCornerShape(13.dp))
-            .border(selectedWidth, selectedColor, RoundedCornerShape(12.dp))
+            .border(selectedWidth + 1.dp, com.armsx2.nevoa.theme.NevoaPalette.GlassBorder, RoundedCornerShape(8.dp))
+            .border(selectedWidth, selectedColor, RoundedCornerShape(8.dp))
         idle -> this.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.42f), RoundedCornerShape(12.dp))
         else -> this
     }

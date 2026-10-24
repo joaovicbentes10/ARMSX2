@@ -41,6 +41,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyCode
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.style.TextOverflow
@@ -170,7 +171,7 @@ private fun NevoaRow(
         }
     }
     // While the burst plays every action below is a no-op (touch, pad and Y alike).
-    val busy = pending != null
+    val busy = pending != null || (launched && MainActivityRuntime.eState.value == EmuState.STOPPED)
     val openMenu = { if (!busy) onOpenMenu() }
     val openClassic = { if (!busy) onOpenClassic() }
     val openSettings = { g: GameInfo -> if (!busy) onOpenGameSettings(g) }
@@ -372,6 +373,18 @@ private fun NevoaRow(
             pending?.let(onLaunch)
             pending = null
             launched = true
+        }
+        // The runtime starts asynchronously. Keep the final dark frame until it owns
+        // the screen instead of exposing the library between the burst and gameplay.
+        if (launched && MainActivityRuntime.eState.value == EmuState.STOPPED) {
+            Box(
+                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black)
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) awaitPointerEvent().changes.forEach { it.consume() }
+                        }
+                    },
+            )
         }
     }
 }

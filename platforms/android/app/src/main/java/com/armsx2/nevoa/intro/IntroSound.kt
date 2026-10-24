@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
 import java.io.File
+import com.armsx2.R
 
 /**
  * User-chosen sound for the bundled (silent) boot intro. Copied into private storage like
@@ -66,15 +67,28 @@ object IntroSound {
 
     fun exists(context: Context): Boolean = file(context).length() > 0L
 
-    /** Starts playback; null (silently) if the file is missing or corrupt. Caller must release. */
+    /** User override first, otherwise the bundled Névoa track. Caller must release. */
     fun start(context: Context): MediaPlayer? {
-        if (!exists(context)) return null
+        val useCustom = exists(context)
         val mp = MediaPlayer()
         return try {
-            mp.setDataSource(file(context).absolutePath)
+            if (useCustom) {
+                mp.setDataSource(file(context).absolutePath)
+            } else {
+                mp.setDataSource(context, Uri.parse("android.resource://${context.packageName}/${R.raw.nevoa_intro_sound}"))
+            }
             mp.isLooping = false
-            mp.prepare()
-            mp.start()
+            mp.setOnPreparedListener { player ->
+                runCatching { player.start() }
+                    .onSuccess { android.util.Log.d("NevoaIntroSound", "Playback started: ${if (useCustom) "custom" else "bundled"}") }
+                    .onFailure { android.util.Log.w("NevoaIntroSound", "Could not start intro audio", it) }
+            }
+            mp.setOnErrorListener { player, what, extra ->
+                android.util.Log.w("NevoaIntroSound", "Intro audio error: $what/$extra")
+                runCatching { player.release() }
+                true
+            }
+            mp.prepareAsync()
             mp
         } catch (_: Exception) {
             runCatching { mp.release() }

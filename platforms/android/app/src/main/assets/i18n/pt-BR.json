@@ -1694,7 +1694,7 @@
  "battery.low.warn": "Bateria fraca: %d%%",
  "battery.hot.warn": "O dispositivo está esquentando: %d°C",
  "app.batteryWarnings": "Avisos de bateria",
- "app.batteryWarnings.desc": "Mostre um breve banner quando a bateria cair para 20% ou a temperatura da bateria atingir 35°C. Cada aviso aparece uma vez e é reativado após a recuperação da leitura.",
+ "app.batteryWarnings.desc": "Mostre um breve aviso quando a bateria cair para 20%. O aviso é reativado quando a carga se recupera. O aviso de temperatura não é exibido no Névoa.",
  "app.bg.flurry": "Fundo Flurry",
  "app.bg.flurry.desc": "Use o Flurry (2002), de Calum Robinson, como fundo animado da biblioteca. É uma simulação de partículas, não uma imagem estática, então custa mais que os outros fundos. Deixe desligado se a biblioteca ficar lenta.",
  "app.bg.flurry.preset": "Estilo Flurry",

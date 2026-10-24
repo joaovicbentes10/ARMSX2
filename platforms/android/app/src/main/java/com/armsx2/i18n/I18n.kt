@@ -1678,7 +1678,7 @@ private val BASE_EN: Map<String, String> = mapOf(
     "battery.low.warn" to "Battery low: %d%%",
     "battery.hot.warn" to "Device is getting hot: %d°C",
     "app.batteryWarnings" to "Battery warnings",
-    "app.batteryWarnings.desc" to "Show a brief banner when the battery drops to 20% or the battery temperature reaches 35°C. Each warning appears once and re-arms after the reading recovers.",
+    "app.batteryWarnings.desc" to "Show a brief banner when the battery drops to 20%. It re-arms after the charge recovers. The temperature banner is hidden in Névoa.",
     "renderer.landscapePosition.label" to "Landscape Render Position",
     "renderer.landscapePosition.top" to "Top",
     "renderer.landscapePosition.center" to "Center",

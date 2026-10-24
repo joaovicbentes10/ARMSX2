@@ -38,8 +38,8 @@ fun shouldAdvance(nowNanos: Long, lastNanos: Long, minIntervalNanos: Long = 30_0
 
 /** The animated "Névoa da BIOS" backdrop. [calm] halves speed and brightness. */
 @Composable
-fun NevoaBackground(modifier: Modifier = Modifier, calm: Boolean = false) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AnimatedNevoa(modifier, calm) else StaticNevoa(modifier)
+fun NevoaBackground(modifier: Modifier = Modifier, calm: Boolean = false, active: Boolean = true) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) AnimatedNevoa(modifier, calm, active) else StaticNevoa(modifier)
 }
 
 @Composable
@@ -49,7 +49,7 @@ private fun StaticNevoa(modifier: Modifier) {
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun AnimatedNevoa(modifier: Modifier, calm: Boolean) {
+private fun AnimatedNevoa(modifier: Modifier, calm: Boolean, active: Boolean) {
     // A device whose AGSL compiler rejects the shader gets the static backdrop instead of a crash.
     val shader = remember {
         runCatching {
@@ -70,7 +70,7 @@ private fun AnimatedNevoa(modifier: Modifier, calm: Boolean) {
     var seconds by remember { mutableFloatStateOf(0f) }
     val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
     val emu = MainActivityRuntime.eState.value
-    val ticking = lifecycle.isAtLeast(Lifecycle.State.RESUMED) && emu != EmuState.RUNNING && emu != EmuState.PAUSED
+    val ticking = active && lifecycle.isAtLeast(Lifecycle.State.RESUMED) && emu != EmuState.RUNNING && emu != EmuState.PAUSED
     LaunchedEffect(ticking) {
         if (!ticking) return@LaunchedEffect
         // Resume from where the clock stopped instead of jumping ahead.
