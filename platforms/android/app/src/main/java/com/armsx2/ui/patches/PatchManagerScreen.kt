@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -57,11 +58,15 @@ import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.common.SettingSwitchRow
 import com.armsx2.ui.common.StatusChip
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.ui.settings.CollapsibleSection
+import com.armsx2.ui.settings.InfoHint
+import com.armsx2.nevoa.theme.NevoaPalette
 import java.io.File
 
 @Composable
 fun PatchManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: PatchManagerViewModel = viewModel()) {
     val state = viewModel.state.value
+    val onlineGame = game ?: com.armsx2.runtime.MainActivityRuntime.currentGame.value
     // ★ Stop any online scan when this leaves the screen.
     //
     // The scan downloads and regex-scans four multi-megabyte repository trees. Left running it
@@ -78,9 +83,10 @@ fun PatchManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Pa
     val folderPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         uri?.let(viewModel::importFolder)
     }
+    var actionsOpen by remember { mutableStateOf(false) }
     // Keyed on the game (this screen shares one Activity-scoped VM with the settings tab), and
     // resets the online browser first so a previous game's fetched results don't linger here.
-    LaunchedEffect(game?.uri) { viewModel.resetOnlineForGame(); viewModel.refresh() }
+    LaunchedEffect(onlineGame?.uri) { viewModel.resetOnlineForGame(); viewModel.refresh() }
     // Options on the left, files on the right: the controller keeps to a column and crosses with
     // Left/Right.
     com.armsx2.ui.settings.ColumnControllerNav()
@@ -94,13 +100,15 @@ fun PatchManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Pa
                 leading = { RoundAction("←", str("action.back"), onBack, controllerId = "patches.top.back") },
                 actions = {
                     RoundAction("＋", str("action.import"), { picker.launch(arrayOf("text/plain", "application/octet-stream", "*/*")) }, controllerId = "patches.top.import")
-                    RoundAction("🗀", str("patches.import.folder"), { folderPicker.launch(null) }, controllerId = "patches.top.folder")
-                    RoundAction("✎", str("patches.editor.new"), viewModel::newEditor, controllerId = "patches.top.new")
-                    RoundAction("↻", str("games.card.refresh"), viewModel::refresh, controllerId = "patches.top.refresh")
+                    RoundAction("⋮", str("games.toolbar.more"), { actionsOpen = true }, selected = actionsOpen, controllerId = "patches.top.more")
                 },
             )
             PatchDisclaimer()
-            OnlineBrowser(state, viewModel, game, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp))
+            if (onlineGame != null) {
+                CollapsibleSection("Buscar on-line") {
+                    OnlineBrowser(state, viewModel, onlineGame, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp))
+                }
+            }
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val compact = maxWidth < 820.dp
                 if (compact) {
@@ -116,6 +124,31 @@ fun PatchManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Pa
                     ) {
                         PatchOptions(state, viewModel, Modifier.width(310.dp))
                         PatchFiles(state, viewModel, Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+    if (actionsOpen) {
+        com.armsx2.ui.common.PadModal(key = "patches-actions", onDismiss = { actionsOpen = false }) {
+            Surface(
+                modifier = Modifier.padding(24.dp).widthIn(max = 320.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = NevoaPalette.Background,
+                border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    val folder = { actionsOpen = false; folderPicker.launch(null) }
+                    val create = { actionsOpen = false; viewModel.newEditor() }
+                    val refresh = { actionsOpen = false; viewModel.refresh() }
+                    TextButton(onClick = folder, modifier = Modifier.controllerFocusable("patches.actions.folder", onConfirm = folder)) {
+                        Text(str("patches.import.folder"))
+                    }
+                    TextButton(onClick = create, modifier = Modifier.controllerFocusable("patches.actions.new", onConfirm = create)) {
+                        Text(str("patches.editor.new"))
+                    }
+                    TextButton(onClick = refresh, modifier = Modifier.controllerFocusable("patches.actions.refresh", onConfirm = refresh)) {
+                        Text(str("games.card.refresh"))
                     }
                 }
             }
@@ -216,20 +249,13 @@ private fun PnachEditor(state: PatchManagerUiState, viewModel: PatchManagerViewM
 // in the new version" reports — this warning sits on both patch-screen entry points.
 @Composable
 private fun PatchDisclaimer() {
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top,
-        ) {
-            Text("⚠", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Text(str("patches.disclaimer"), style = MaterialTheme.typography.bodySmall)
-        }
+        Text("Cheats antigos podem causar falhas", style = MaterialTheme.typography.bodySmall, color = NevoaPalette.TextDim)
+        InfoHint("Compatibilidade", str("patches.disclaimer"))
     }
 }
 
@@ -242,6 +268,7 @@ private fun PatchDisclaimer() {
 @Composable
 fun PatchesSettingsTab(game: GameInfo? = null, viewModel: PatchManagerViewModel = viewModel()) {
     val state = viewModel.state.value
+    val onlineGame = game ?: com.armsx2.runtime.MainActivityRuntime.currentGame.value
     // ★ Stop any online scan when this leaves the screen.
     //
     // The scan downloads and regex-scans four multi-megabyte repository trees. Left running it
@@ -258,7 +285,7 @@ fun PatchesSettingsTab(game: GameInfo? = null, viewModel: PatchManagerViewModel 
     // Unit it read once and then showed the wrong tier's values for the rest of the visit.
     // resetOnlineForGame() first, so a previous game's fetched cheats/patches don't linger in
     // this game's browser (the fetch is manual, so nothing else clears them).
-    LaunchedEffect(game?.uri) { viewModel.resetOnlineForGame(); viewModel.refresh() }
+    LaunchedEffect(onlineGame?.uri) { viewModel.resetOnlineForGame(); viewModel.refresh() }
 
     Column(Modifier.fillMaxWidth()) {
         Row(
@@ -269,7 +296,11 @@ fun PatchesSettingsTab(game: GameInfo? = null, viewModel: PatchManagerViewModel 
             RoundAction("↻", str("games.card.refresh"), viewModel::refresh)
         }
         PatchDisclaimer()
-        OnlineBrowser(state, viewModel, game, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp))
+        if (onlineGame != null) {
+            CollapsibleSection("Buscar on-line") {
+                OnlineBrowser(state, viewModel, onlineGame, Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp))
+            }
+        }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val compact = maxWidth < 820.dp
             if (compact) {

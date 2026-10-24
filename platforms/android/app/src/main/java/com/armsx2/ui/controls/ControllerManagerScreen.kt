@@ -4,17 +4,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -46,6 +42,9 @@ import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.common.SettingSwitchRow
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.ui.settings.CollapsibleSection
+import com.armsx2.ui.settings.InfoHint
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun ControllerManagerScreen(onBack: () -> Unit, viewModel: ControllerManagerViewModel = viewModel()) {
@@ -66,7 +65,6 @@ fun ControllerManagerScreen(onBack: () -> Unit, viewModel: ControllerManagerView
         ) {
             ArmsTopBar(
                 title = str("tab.controls"),
-                subtitle = str("pad.editing.description"),
                 leading = { RoundAction("←", str("action.back"), onBack) },
                 actions = { RoundAction("↺", str("action.reset"), viewModel::resetPlayer) },
             )
@@ -107,7 +105,7 @@ private fun ControllerOptions(
 ) {
     GlassPanel(modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            if (!compact) SectionTitle(str("pad.section.playerRumble"), str("pad.editing.description"))
+            if (!compact) SectionTitle("Jogador")
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 ChoiceRow(str("pad.player1"), state.player == 0, { viewModel.setPlayer(0) }, Modifier.weight(1f).controllerFocusable("controls.player1", RoundedCornerShape(14.dp), onConfirm = { viewModel.setPlayer(0) }))
                 ChoiceRow(str("pad.player2"), state.player == 1, { viewModel.setPlayer(1) }, Modifier.weight(1f).controllerFocusable("controls.player2", RoundedCornerShape(14.dp), onConfirm = { viewModel.setPlayer(1) }))
@@ -121,7 +119,7 @@ private fun ControllerOptions(
                 ChoiceRow(str("pad.section.padProfiles"), state.section == ControllerSection.Profiles, { viewModel.setSection(ControllerSection.Profiles) }, Modifier.controllerFocusable("controls.section.profiles", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Profiles) }))
                 ChoiceRow(str("tab.hotkeys"), state.section == ControllerSection.Hotkeys, { viewModel.setSection(ControllerSection.Hotkeys) }, Modifier.controllerFocusable("controls.section.hotkeys", RoundedCornerShape(14.dp), onConfirm = { viewModel.setSection(ControllerSection.Hotkeys) }))
             }
-            if (!compact) Spacer(Modifier.weight(1f))
+            CollapsibleSection("Outras opções") {
             SettingSwitchRow(
                 str("pad.rumble.label"), str("pad.rumble.description"), state.rumble, viewModel::setRumble,
                 modifier = Modifier.controllerFocusable(
@@ -154,7 +152,7 @@ private fun ControllerOptions(
             // Which player each connected controller is. Several can share one. Only the players
             // Multitap arms, like the Pad tab: a pin past them would route input nowhere.
             if (!state.allToPlayer1 && state.pads.isNotEmpty()) {
-                SectionTitle(str("pad.section.controllers"), str("pad.assign.help"))
+                SectionTitle(str("pad.section.controllers"))
                 val slotCount = if (state.multitap) com.armsx2.input.PadRouter.MAX_PADS else 2
                 state.pads.forEach { pad ->
                     val pinned = state.pins[pad.descriptor]
@@ -172,6 +170,7 @@ private fun ControllerOptions(
                     }
                 }
             }
+            }
         }
     }
 }
@@ -179,18 +178,20 @@ private fun ControllerOptions(
 @Composable
 private fun ControllerBindings(state: ControllerManagerUiState, viewModel: ControllerManagerViewModel, modifier: Modifier) {
     Column(modifier) {
-        SectionTitle(
-            when (state.section) {
+        val sectionTitle = when (state.section) {
                 ControllerSection.Buttons -> str("pad.section.buttonMapping")
                 ControllerSection.Profiles -> str("pad.section.padProfiles")
                 ControllerSection.Hotkeys -> str("hotkeys.header")
-            },
-            when (state.section) {
+            }
+        val sectionHelp = when (state.section) {
                 ControllerSection.Buttons -> str("pad.instruction.tapThenPress")
                 ControllerSection.Profiles -> str("pad.padProfiles.controlsInfo")
                 ControllerSection.Hotkeys -> str("hotkeys.help")
-            },
-        )
+            }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            SectionTitle(sectionTitle, modifier = Modifier.weight(1f))
+            InfoHint(sectionTitle, sectionHelp)
+        }
         if (state.section == ControllerSection.Profiles) {
             ProfilePanel(state, viewModel)
         } else if (state.section == ControllerSection.Buttons) {
@@ -198,8 +199,8 @@ private fun ControllerBindings(state: ControllerManagerUiState, viewModel: Contr
                 ControllerMappings.actions.forEach { action ->
                     BindingRow(
                         controllerId = "controls.button.${action.id}",
-                        label = action.label,
-                        binding = ControllerMappings.labelForKey(ControllerMappings.physicalFor(action, state.player)),
+                        label = actionLabel(action),
+                        binding = physicalLabel(ControllerMappings.labelForKey(ControllerMappings.physicalFor(action, state.player))),
                         capturing = state.capturingAction == action,
                         onBind = { if (state.capturingAction == action) viewModel.cancelCapture() else viewModel.beginCapture(action) },
                         onClear = { viewModel.clear(action) },
@@ -221,6 +222,44 @@ private fun ControllerBindings(state: ControllerManagerUiState, viewModel: Contr
             }
         }
     }
+}
+
+private fun actionLabel(action: ControllerMappings.Action): String = when (action.id) {
+    "dpad_up" -> "Direcional ↑"
+    "dpad_down" -> "Direcional ↓"
+    "dpad_left" -> "Direcional ←"
+    "dpad_right" -> "Direcional →"
+    "cross" -> "X"
+    "circle" -> "Círculo"
+    "square" -> "Quadrado"
+    "triangle" -> "Triângulo"
+    "analog" -> "Modo analógico"
+    else -> when {
+        action.id.startsWith("ls_") -> "Analógico esquerdo ${directionSymbol(action.id)}"
+        action.id.startsWith("rs_") -> "Analógico direito ${directionSymbol(action.id)}"
+        else -> action.label
+    }
+}
+
+private fun directionSymbol(id: String): String = when (id.substringAfterLast('_')) {
+    "up" -> "↑"
+    "down" -> "↓"
+    "left" -> "←"
+    "right" -> "→"
+    else -> ""
+}
+
+private fun physicalLabel(label: String): String = when (label) {
+    "Not set" -> ""
+    "D-Pad Up" -> "Direcional ↑"
+    "D-Pad Down" -> "Direcional ↓"
+    "D-Pad Left" -> "Direcional ←"
+    "D-Pad Right" -> "Direcional →"
+    "Button A" -> "Botão A"
+    "Button B" -> "Botão B"
+    "Button X" -> "Botão X"
+    "Button Y" -> "Botão Y"
+    else -> label
 }
 
 /**
@@ -279,35 +318,42 @@ private fun ProfilePanel(state: ControllerManagerUiState, viewModel: ControllerM
 private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 54.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier.defaultMinSize(minHeight = 44.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = if (selected) NevoaPalette.SelectedSurface else NevoaPalette.Glass,
+        border = if (selected) BorderStroke(1.dp, NevoaPalette.Selected.copy(alpha = 0.6f)) else null,
     ) {
-        Text(label, Modifier.padding(horizontal = 13.dp, vertical = 11.dp), style = MaterialTheme.typography.labelLarge)
+        Text(label, Modifier.padding(horizontal = 12.dp, vertical = 8.dp), style = MaterialTheme.typography.labelLarge)
     }
 }
 
 @Composable
 private fun BindingRow(controllerId: String, label: String, binding: String, capturing: Boolean, onBind: () -> Unit, onClear: () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(17.dp),
-        color = if (capturing) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, if (capturing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.46f)),
+        onClick = onBind,
+        modifier = Modifier.fillMaxWidth().controllerFocusable(
+            "$controllerId.bind", RoundedCornerShape(12.dp), onConfirm = onBind,
+        ),
+        shape = RoundedCornerShape(12.dp),
+        color = if (capturing) NevoaPalette.SelectedSurface else NevoaPalette.Glass,
+        border = BorderStroke(1.dp, if (capturing) NevoaPalette.Selected else NevoaPalette.GlassBorder),
     ) {
-        Column(Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                Text(
-                    binding.ifBlank { str("hotkeys.notSet") },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onClear, modifier = Modifier.controllerFocusable("$controllerId.clear", onConfirm = onClear)) { Text(str("pad.action.clear")) }
-                OutlinedButton(onClick = onBind, modifier = Modifier.controllerFocusable("$controllerId.bind", onConfirm = onBind)) { Text(if (capturing) str("hotkeys.capturePrompt") else str("pad.action.bind")) }
+        Row(
+            Modifier.fillMaxWidth().defaultMinSize(minHeight = 54.dp).padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(
+                if (capturing) str("hotkeys.capturePrompt") else binding.ifBlank { str("hotkeys.notSet") },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (capturing) NevoaPalette.Selected else NevoaPalette.TextDim,
+                maxLines = 1,
+            )
+            if (binding.isNotBlank() && !capturing) {
+                TextButton(
+                    onClick = onClear,
+                    modifier = Modifier.controllerFocusable("$controllerId.clear", onConfirm = onClear),
+                ) { Text(str("pad.action.clear")) }
             }
         }
     }
