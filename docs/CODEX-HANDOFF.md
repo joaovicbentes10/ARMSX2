@@ -8,7 +8,7 @@ Você vai assumir o projeto **ARMSX2 Névoa**, uma versão pessoal do emulador d
 
 ## Contexto e objetivo do usuário
 
-- O usuário joga PS2 num **Poco F6 Pro** (Snapdragon 8s Gen 3, tela 3200×1440 = 20:9, Android recente). Jogo principal: *Scooby-Doo! and the Spooky Swamp* (tradução PT-BR).
+- O usuário joga PS2 num **Poco F6 Pro** (chip SM8550/Snapdragon 8 Gen 2 confirmado por ADB, tela 3200×1440 = 20:9, Android 16). Jogo principal: *Scooby-Doo! and the Spooky Swamp* (tradução PT-BR).
 - Ele achava a interface original do ARMSX2 feia ("feita com IA básica", botões desorganizados). Pediu um visual **PS5 com elementos do PS2**: escolheu a direção **"Névoa da BIOS"** — universo escuro da abertura do PS2, torres de luz finas e **translúcidas** (ele testou torres grossas e **preferiu as finas/transparentes**), névoa azul, partículas, cards de vidro.
 - O celular estará **conectado por USB com depuração ativada** — use `adb` para instalar APKs, ver `logcat`, gravar a tela (`adb shell screenrecord`) e tirar screenshots para verificar o resultado você mesmo, em vez de depender só da descrição do usuário.
 - Ele também quer, **no futuro**, um launcher para **Windows** (notebook Acer Nitro V15, Intel i5-13420H + RTX 3050, x86). Decisão já tomada: **não** fazer fork do PCSX2; fazer um **launcher próprio** com a mesma abertura e biblioteca que abre o **PCSX2 oficial** em tela cheia no jogo escolhido (repositório separado, build pelo GitHub Actions). Ainda não começou.

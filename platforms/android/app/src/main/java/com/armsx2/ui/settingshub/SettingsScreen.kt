@@ -38,6 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -52,6 +53,8 @@ import kotlinx.coroutines.launch
 import com.armsx2.GameInfo
 import com.armsx2.i18n.str
 import com.armsx2.navigation.SettingsCategory
+import com.armsx2.nevoa.settings.SettingsGroup
+import com.armsx2.nevoa.settings.groupFor
 import com.armsx2.ui.common.ArmsBackdrop
 import com.armsx2.ui.common.ArmsTopBar
 import com.armsx2.ui.common.GlassPanel
@@ -152,7 +155,9 @@ fun SettingsScreen(
             chipSnapArmed.value = true
             return@LaunchedEffect
         }
-        if (com.armsx2.ui.settings.SettingsControllerNav.currentSelectedId()?.startsWith("settings.chip.") == true) {
+        if (com.armsx2.ui.settings.SettingsControllerNav.currentSelectedId()?.let {
+                it.startsWith("settings.chip.") || it.startsWith("settings.group.")
+            } == true) {
             screenScroll.animateScrollTo(0)
         }
     }
@@ -368,11 +373,8 @@ private fun SettingsCategoryBar(
     gameSpecific: Boolean,
     onSelect: (SettingsCategory) -> Unit,
 ) {
-    // Row + horizontalScroll (NOT LazyRow): controllerFocusable registers each tab via a
-    // SideEffect that only runs for COMPOSED children. A LazyRow leaves every off-screen
-    // tab (Skins / Advanced, past On-Screen) unregistered and unreachable, so
-    // the controller got stuck at the last visible tab. A plain Row composes them all;
-    // each selected chip's bringIntoView then scrolls it into view as the selector moves.
+    // Keep all sections in the active group composed. A LazyRow would leave off-screen
+    // controllerFocusable chips unregistered and unreachable by gamepad.
     val sections = settingsSections().filterNot {
         // General is redundant per-game (redirects to Performance); Info only makes
         // sense for a specific game, so hide it in the global settings.
@@ -380,6 +382,22 @@ private fun SettingsCategoryBar(
             (!gameSpecific && it.category == SettingsCategory.Info) ||
             (gameSpecific && it.category == SettingsCategory.About)
     }
+    val activeGroup = groupFor(selected)
+    Column {
+        SettingsGroupBar(sections, activeGroup, onSelect)
+        Spacer(Modifier.height(4.dp))
+        key(activeGroup) {
+            SettingsSectionBar(sections.filter { groupFor(it.category) == activeGroup }, selected, onSelect)
+        }
+    }
+}
+
+@Composable
+private fun SettingsSectionBar(
+    sections: List<SettingsSection>,
+    selected: SettingsCategory,
+    onSelect: (SettingsCategory) -> Unit,
+) {
     Box(Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 6.dp),
@@ -433,6 +451,48 @@ private fun SettingsCategoryBar(
                 }
             }
             Spacer(Modifier.size(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun SettingsGroupBar(
+    sections: List<SettingsSection>,
+    selected: SettingsGroup,
+    onSelect: (SettingsCategory) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SettingsGroup.entries.forEach { group ->
+            val firstCategory = sections.firstOrNull { groupFor(it.category) == group }?.category
+                ?: return@forEach
+            val active = group == selected
+            val select = { onSelect(firstCategory) }
+            FilterChip(
+                modifier = Modifier.height(42.dp).controllerFocusable(
+                    "settings.group.${group.name}",
+                    RoundedCornerShape(14.dp),
+                    onConfirm = select,
+                ),
+                selected = active,
+                onClick = select,
+                label = { Text(group.label, maxLines = 1, style = MaterialTheme.typography.titleSmall) },
+                leadingIcon = { Text(group.glyph, fontSize = 15.sp) },
+                shape = RoundedCornerShape(14.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Color.Transparent,
+                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                ),
+            )
         }
     }
 }
