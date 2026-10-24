@@ -15,6 +15,8 @@ Levar a identidade “PS2 mais moderno” da abertura e da biblioteca para confi
 
 Fundo escuro `#050812`, névoa azul suave, torres finas e translúcidas, linhas de luz discretas, painéis de vidro e tipografia clara e espaçada. Nas telas de trabalho, o fundo fica mais calmo que na biblioteca para manter leitura e desempenho. Nenhum asset da Sony é incorporado.
 
+Prioridade visual do usuário: reduzir a quantidade de informação simultânea e abandonar a aparência de interface genérica. Mostrar primeiro as ações e valores essenciais; usar hierarquia, espaços vazios e ícones de uma família coerente. Detalhes e destinos secundários ficam recolhidos, sempre acessíveis.
+
 ## Sequência de implementação
 
 ### 1. Base compartilhada
@@ -40,11 +42,11 @@ Exibir somente seções válidas para o escopo atual. Um resultado de busca deve
 
 ### 3. Demais telas
 
-Restilizar e verificar, nessa ordem: BIOS e memory cards; saves; controles; patches e texturas; conquistas; menu durante o jogo e controles de toque. Reutilizar ViewModels e ações existentes. Cada tela deve passar por verificação visual e de navegação antes da próxima.
+Restilizar primeiro o menu lateral, trocando emojis por ícones consistentes e recolhendo destinos secundários. Depois, verificar nessa ordem: BIOS e memory cards; saves; controles; patches e texturas; conquistas; menu durante o jogo e controles de toque. Reutilizar ViewModels e ações existentes. Cada tela deve passar por verificação visual e de navegação antes da próxima.
 
 ### 4. Biblioteca
 
-Integrar busca, ordenação e categorias ao visual Névoa, hoje acessíveis pela biblioteca clássica. Mostrar os saves do memory card no painel do jogo quando houver dados confiáveis para aquele título.
+Revisar a composição dos botões superiores e do painel para reduzir elementos com aparência genérica, preservando a névoa e as torres aprovadas. Integrar busca, ordenação e categorias ao visual Névoa, hoje acessíveis pela biblioteca clássica. Mostrar os saves do memory card no painel do jogo quando houver dados confiáveis para aquele título.
 
 ### 5. Validação
 

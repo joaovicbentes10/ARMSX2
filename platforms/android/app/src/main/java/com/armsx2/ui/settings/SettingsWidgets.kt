@@ -1281,7 +1281,12 @@ internal fun InfoHint(title: String, message: String) {
             .size(22.dp)
             .clip(androidx.compose.foundation.shape.CircleShape)
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .clickable { open = true },
+            .clickable { open = true }
+            .controllerFocusable(
+                "info:$title:${androidx.compose.runtime.currentCompositeKeyHash}",
+                RoundedCornerShape(50),
+                onConfirm = { open = true },
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text("i", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp, fontWeight = FontWeight.Bold)

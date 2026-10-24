@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.ScrollState
@@ -24,8 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -55,6 +54,7 @@ import com.armsx2.i18n.str
 import com.armsx2.navigation.SettingsCategory
 import com.armsx2.nevoa.settings.SettingsGroup
 import com.armsx2.nevoa.settings.groupFor
+import com.armsx2.nevoa.theme.NevoaPalette
 import com.armsx2.ui.common.ArmsBackdrop
 import com.armsx2.ui.common.ArmsTopBar
 import com.armsx2.ui.common.GlassPanel
@@ -75,7 +75,7 @@ import com.armsx2.ui.settings.SkinsTab
 import com.armsx2.ui.settings.LocalSettingsScrollState
 import com.armsx2.ui.settings.LocalSettingsSearchOpenSections
 
-private data class SettingsSection(val category: SettingsCategory, val titleKey: String, val glyph: String)
+private data class SettingsSection(val category: SettingsCategory, val titleKey: String)
 private data class PendingSettingsJump(val category: SettingsCategory, val label: String, val sections: List<String>)
 
 /**
@@ -374,7 +374,7 @@ private fun SettingsCategoryBar(
     onSelect: (SettingsCategory) -> Unit,
 ) {
     // Keep all sections in the active group composed. A LazyRow would leave off-screen
-    // controllerFocusable chips unregistered and unreachable by gamepad.
+    // controllerFocusable entries unregistered and unreachable by gamepad.
     val sections = settingsSections().filterNot {
         // General is redundant per-game (redirects to Performance); Info only makes
         // sense for a specific game, so hide it in the global settings.
@@ -403,13 +403,12 @@ private fun SettingsSectionBar(
             modifier = Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Edge spacing belongs to the scrollable CONTENT, not its viewport. This
-            // lets the final chip scroll fully into view before the trailing inset.
-            Spacer(Modifier.size(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Edge spacing belongs to scrollable content, so the last item can be shown fully.
+            Spacer(Modifier.width(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 sections.forEach { section ->
                     val active = section.category == selected
-                    // Keep the SELECTED chip on-screen. controllerFocusable's bringIntoView
+                    // Keep the selected section on-screen. controllerFocusable's bringIntoView
                     // fires on FOCUS, but L1/R1 changes the selection without moving focus —
                     // so past roughly Network the active tab scrolled off the right edge and
                     // you were flicking blind. Requesting it whenever selection lands here
@@ -418,39 +417,33 @@ private fun SettingsSectionBar(
                     LaunchedEffect(active) {
                         if (active) runCatching { bringIntoView.bringIntoView() }
                     }
-                    FilterChip(
-                        modifier = Modifier.height(36.dp)
+                    Column(
+                        modifier = Modifier
                             .bringIntoViewRequester(bringIntoView)
                             .controllerFocusable(
                                 "settings.chip.${section.category.name}",
-                                RoundedCornerShape(11.dp),
+                                RoundedCornerShape(4.dp),
                                 onConfirm = { onSelect(section.category) },
+                            )
+                            .clickable { onSelect(section.category) }
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                    ) {
+                        Text(
+                            str(section.titleKey),
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (active) NevoaPalette.Text else NevoaPalette.TextDim,
+                        )
+                        Spacer(Modifier.height(5.dp))
+                        Box(
+                            Modifier.fillMaxWidth().height(2.dp).background(
+                                if (active) NevoaPalette.Selected else Color.Transparent,
                             ),
-                        selected = active,
-                        onClick = { onSelect(section.category) },
-                        label = { Text(str(section.titleKey), maxLines = 1, style = MaterialTheme.typography.labelLarge) },
-                        leadingIcon = {
-                            Box(Modifier.size(17.dp), contentAlignment = Alignment.Center) {
-                                Text(
-                                    section.glyph,
-                                    fontSize = 13.sp,
-                                    color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        },
-                        shape = RoundedCornerShape(11.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color.Transparent,
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            iconColor = MaterialTheme.colorScheme.primary,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        ),
-                    )
+                        )
+                    }
                 }
             }
-            Spacer(Modifier.size(8.dp))
+            Spacer(Modifier.width(8.dp))
         }
     }
 }
@@ -473,45 +466,45 @@ private fun SettingsGroupBar(
                 ?: return@forEach
             val active = group == selected
             val select = { onSelect(firstCategory) }
-            FilterChip(
-                modifier = Modifier.height(42.dp).controllerFocusable(
+            Column(
+                modifier = Modifier.controllerFocusable(
                     "settings.group.${group.name}",
-                    RoundedCornerShape(14.dp),
+                    RoundedCornerShape(4.dp),
                     onConfirm = select,
-                ),
-                selected = active,
-                onClick = select,
-                label = { Text(group.label, maxLines = 1, style = MaterialTheme.typography.titleSmall) },
-                leadingIcon = { Text(group.glyph, fontSize = 15.sp) },
-                shape = RoundedCornerShape(14.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = Color.Transparent,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                ),
-            )
+                ).clickable(onClick = select).padding(horizontal = 18.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    group.label,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = if (active) NevoaPalette.Text else NevoaPalette.TextDim,
+                )
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    Modifier.fillMaxWidth().height(2.dp).background(
+                        if (active) NevoaPalette.Selected else Color.Transparent,
+                    ),
+                )
+            }
         }
     }
 }
 
 private fun settingsSections() = listOf(
-    SettingsSection(SettingsCategory.General, "tab.app", "⌂"),
-    SettingsSection(SettingsCategory.Info, "tab.info", "ⓘ"),
-    SettingsSection(SettingsCategory.Performance, "tab.performance", "↯"),
-    SettingsSection(SettingsCategory.Graphics, "tab.renderer", "◫"),
-    SettingsSection(SettingsCategory.Audio, "tab.audio", "♫"),
-    SettingsSection(SettingsCategory.Controls, "tab.controls", "⌁"),
-    SettingsSection(SettingsCategory.Hotkeys, "tab.hotkeys", "⌘"),
+    SettingsSection(SettingsCategory.General, "tab.app"),
+    SettingsSection(SettingsCategory.Info, "tab.info"),
+    SettingsSection(SettingsCategory.Performance, "tab.performance"),
+    SettingsSection(SettingsCategory.Graphics, "tab.renderer"),
+    SettingsSection(SettingsCategory.Audio, "tab.audio"),
+    SettingsSection(SettingsCategory.Controls, "tab.controls"),
+    SettingsSection(SettingsCategory.Hotkeys, "tab.hotkeys"),
     // Skins sits with the control-related tabs rather than after On-Screen: it is controller
     // artwork, so people look for it next to Controls and Shortcuts. Requested by Isshin.
-    SettingsSection(SettingsCategory.Skins, "tab.skins", "◈"),
-    SettingsSection(SettingsCategory.Network, "tab.network", "◎"),
-    SettingsSection(SettingsCategory.OnScreen, "tab.overlay", "⊕"),
-    SettingsSection(SettingsCategory.Advanced, "tab.fixes", "⌘"),
-    SettingsSection(SettingsCategory.Patches, "tab.patches", "✦"),
+    SettingsSection(SettingsCategory.Skins, "tab.skins"),
+    SettingsSection(SettingsCategory.Network, "tab.network"),
+    SettingsSection(SettingsCategory.OnScreen, "tab.overlay"),
+    SettingsSection(SettingsCategory.Advanced, "tab.fixes"),
+    SettingsSection(SettingsCategory.Patches, "tab.patches"),
 )
 
 @Composable

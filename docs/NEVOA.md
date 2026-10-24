@@ -21,12 +21,13 @@ São os únicos lugares onde uma atualização do original pode dar conflito:
 | `BootSplashActivity.kt` | vídeo usa a própria duração; som da abertura; troca para a tela principal sem animação |
 | `Pasx2Application.kt` | 1 linha: cores da paleta Névoa |
 | `navigation/AppNavigation.kt` | rota Home abre `NevoaHome` em vez de `HomeScreen` |
+| `navigation/NavigationDrawer.kt` | menu lateral compacto com ícones consistentes e seções recolhíveis |
 | `ui/theme/Theme.kt` | esquema de cores/tipografia Névoa; horizontal como padrão |
 | `ui/settings/AppTab.kt` | linha "Som da abertura" |
 | `ui/common/ArmsComponents.kt` | fundo Névoa calmo e componentes de vidro compartilhados |
 | `ui/common/SettingControls.kt` | linha de opção com vidro Névoa |
 | `ui/settings/SettingsWidgets.kt` | linhas de opções compactas; descrições abertas pelo ícone de informação |
-| `ui/settingshub/SettingsScreen.kt` | painel de configurações translúcido |
+| `ui/settingshub/SettingsScreen.kt` | painel de configurações translúcido; grupos e seções em navegação tipográfica |
 | `res/values/themes.xml` | estilo `Theme.ARMSX2.Nevoa` |
 | `res/layout/activity_boot_splash.xml` | `FillVideoView` no lugar de `VideoView` |
 | `res/raw/boot_intro.mp4` | abertura própria |

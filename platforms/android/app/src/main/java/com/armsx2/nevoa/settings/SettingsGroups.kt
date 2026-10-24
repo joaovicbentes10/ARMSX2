@@ -3,11 +3,11 @@ package com.armsx2.nevoa.settings
 import com.armsx2.navigation.SettingsCategory
 
 /** Presentation groups only. The existing categories remain the source of settings behavior. */
-enum class SettingsGroup(val label: String, val glyph: String) {
-    System("Sistema", "⌂"),
-    Media("Imagem e som", "◫"),
-    Input("Controle", "⌁"),
-    Extras("Conexões e extras", "◎"),
+enum class SettingsGroup(val label: String) {
+    System("Sistema"),
+    Media("Imagem e som"),
+    Input("Controle"),
+    Extras("Conexões e extras"),
 }
 
 fun groupFor(category: SettingsCategory): SettingsGroup = when (category) {
