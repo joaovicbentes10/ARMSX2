@@ -1570,7 +1570,7 @@ private fun AchievementsPane(state: EmulationMenuUiState, viewModel: EmulationMe
     Spacer(Modifier.height(4.dp))
     // Gateway to the full RetroAchievements screen (unlock list + presentation options).
     CompactAction(str("ra.viewAchievements"), "★", Modifier.fillMaxWidth(), viewModel::openAchievements)
-    Spacer(Modifier.height(4.dp))
+    CollapsibleSection("Modo e detalhes") {
     SectionCard("RetroAchievements") {
         // Signed-in account: avatar + name + both point totals (hardcore / softcore).
         if (state.raUserName.isNotBlank()) {
@@ -1618,9 +1618,12 @@ private fun AchievementsPane(state: EmulationMenuUiState, viewModel: EmulationMe
             onCheckedChange = { viewModel.requestToggleHardcore() },
         )
     }
-    // Inline unlock list, right below the hardcore toggle — no need to open the full
-    // screen (it's still available via the button above).
-    state.achievements.forEach { item -> InGameAchievementRow(item) }
+    }
+    if (state.achievements.isNotEmpty()) {
+        CollapsibleSection("Conquistas") {
+            state.achievements.forEach { item -> InGameAchievementRow(item) }
+        }
+    }
 }
 
 @Composable
