@@ -13,6 +13,8 @@ class LibraryLogicTest {
     @Test fun shouldShowClassic_whenNoDirs() = assertTrue(shouldShowClassic(initialized = true, scanning = false, gameCount = 3, hasRomDirs = false, classicRequested = false))
     @Test fun shouldShowClassic_whenScanningEmpty() = assertTrue(shouldShowClassic(initialized = true, scanning = true, gameCount = 0, hasRomDirs = true, classicRequested = false))
     @Test fun shouldShowNevoa_whenGamesPresent() = assertFalse(shouldShowClassic(initialized = true, scanning = false, gameCount = 3, hasRomDirs = true, classicRequested = false))
+    @Test fun emptySearch_staysInNevoaToAllowClearing() = assertFalse(shouldShowClassic(initialized = true, scanning = false, gameCount = 0, hasRomDirs = true, classicRequested = false, filterActive = true))
+    @Test fun emptySearch_canStillOpenFullLibrary() = assertTrue(shouldShowClassic(initialized = true, scanning = false, gameCount = 0, hasRomDirs = true, classicRequested = true, filterActive = true))
     @Test fun coverLabel_fallsBackToTitle() = assertEquals("Scooby", coverLabel("  Scooby ", "x.iso"))
     @Test fun coverLabel_fallsBackToFileName() = assertEquals("x", coverLabel(" ", "x.iso"))
     @Test fun coverLabel_nothingAtAll() = assertEquals("?", coverLabel("", null))

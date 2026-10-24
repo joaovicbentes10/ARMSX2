@@ -50,7 +50,7 @@ Implementados em código: menu lateral, BIOS, cartões de memória, estado vazio
 
 Revisar a composição dos botões superiores e do painel para reduzir elementos com aparência genérica, preservando a névoa e as torres aprovadas. Integrar busca, ordenação e categorias ao visual Névoa, hoje acessíveis pela biblioteca clássica. Mostrar os saves do memory card no painel do jogo quando houver dados confiáveis para aquele título.
 
-Primeiro ajuste aplicado em código: Menu, Biblioteca completa e Configurar viraram ações tipográficas discretas; Jogar permanece como ação principal. A indicação redundante de X no rodapé e o texto “Nunca jogado” foram retirados. Busca, ordenação, categorias e saves por jogo continuam pendentes.
+Primeiro ajuste aplicado em código: Menu, Biblioteca completa e Configurar viraram ações tipográficas discretas; Jogar permanece como ação principal. A indicação redundante de X no rodapé e o texto “Nunca jogado” foram retirados. Busca e ordenação foram integradas à biblioteca Névoa com o mesmo HomeViewModel da biblioteca clássica. Buscar abre o teclado existente, a consulta pode ser limpa na própria tela e buscas sem resultados preservam a biblioteca Névoa. A ordem alterna entre Título, Recentes e Compatibilidade, mantendo a seleção pelo URI. Categorias e saves por jogo continuam pendentes.
 
 ### 5. Validação
 
@@ -62,3 +62,7 @@ Primeiro ajuste aplicado em código: Menu, Biblioteca completa e Configurar vira
 ## Primeiro incremento
 
 Implementar a base compartilhada em um commit próprio, gerar APK e avaliar no F6 Pro antes de alterar a hierarquia de configurações. Assim, ajustes de cor, transparência e legibilidade podem ser feitos sobre telas reais.
+
+## Validação da busca e ordenação — 24/10/2026
+
+APK release assinado gerado localmente e instalado por cima no F6 Pro, reaproveitando o núcleo nativo do APK do commit 1190fcc467 (SHA-256 idêntico). Os 37 testes Névoa passaram, incluindo regressões para busca vazia sem abandonar a tela e abertura explícita da biblioteca completa. A suíte completa executou 260 testes: 2 falhas fora do escopo no Windows (permissões em TexturePackInstallerTest e CRLF em LicenseDocsTest), 9 ignorados. Toque: consulta correspondente, consulta sem resultados, limpeza e ciclo Título/Recentes/Compatibilidade. Direcional/A via ADB: navegação até Ordem, troca para Recentes, abertura da busca e digitação. A biblioteca do aparelho tem apenas o item da BIOS; reordenação de vários jogos ainda não foi inspecionada no aparelho. Capturas locais em .superpowers/validation/search-sort/.
