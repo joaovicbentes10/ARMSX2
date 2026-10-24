@@ -5,9 +5,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +23,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -33,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,20 +49,24 @@ import com.armsx2.GameInfo
 import com.armsx2.i18n.str
 import com.armsx2.ui.common.ArmsBackdrop
 import com.armsx2.ui.common.ArmsTopBar
-import com.armsx2.ui.common.EmptyState
 import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.StatusChip
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.theme.Success
+import com.armsx2.nevoa.theme.NevoaPalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import compose.icons.LineAwesomeIcons
+import compose.icons.lineawesomeicons.FolderOpen
+import compose.icons.lineawesomeicons.MemorySolid
 
 @Composable
 fun MemoryCardScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: MemoryCardViewModel = viewModel()) {
     val state = viewModel.state.value
     val serial = game?.serial?.takeIf { it.isNotBlank() }
     var createDialog by remember { mutableStateOf(false) }
+    var actionsOpen by remember { mutableStateOf(false) }
     var deleteTarget by remember { mutableStateOf<MemoryCardItem?>(null) }
     var backupsTarget by remember { mutableStateOf<MemoryCardItem?>(null) }
     var restoreTarget by remember {
@@ -88,18 +97,35 @@ fun MemoryCardScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Memo
             item {
                 ArmsTopBar(
                     title = str("memcard.title"),
-                    leading = { RoundAction("←", str("action.back"), onBack) },
+                    leading = {
+                        Box(Modifier.controllerFocusable("memcard.action.back", CircleShape, onConfirm = onBack)) {
+                            RoundAction("←", str("action.back"), onBack)
+                        }
+                    },
                     actions = {
-                        RoundAction("＋", str("memcard.newCard"), { createDialog = true })
-                        RoundAction("⇩", str("action.import"), { importer.launch(arrayOf("application/octet-stream", "*/*")) })
-                        RoundAction("▣", str("memcard.importFolder"), { folderImporter.launch(null) })
-                        RoundAction("↻", str("games.card.refresh"), viewModel::refresh)
+                        Box(Modifier.controllerFocusable("memcard.action.create", CircleShape, onConfirm = { createDialog = true })) {
+                            RoundAction("＋", str("memcard.newCard"), { createDialog = true })
+                        }
+                        Box(Modifier.controllerFocusable("memcard.action.more", CircleShape, onConfirm = { actionsOpen = true })) {
+                            RoundAction("⋮", str("games.toolbar.more"), { actionsOpen = true }, selected = actionsOpen)
+                        }
                     },
                     horizontalPadding = 0.dp,
                 )
             }
             if (state.cards.isEmpty()) {
-                item { EmptyState(str("memcard.empty"), str("memcard.size.hint"), str("memcard.create"), { createDialog = true }, Modifier.fillMaxWidth().height(280.dp).controllerFocusable("memcard.empty.create", onConfirm = { createDialog = true })) }
+                item {
+                    Column(
+                        Modifier.fillMaxWidth().height(220.dp)
+                            .controllerFocusable("memcard.empty.create", onConfirm = { createDialog = true }),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(str("memcard.empty"), style = MaterialTheme.typography.titleLarge, color = NevoaPalette.Text)
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { createDialog = true }) { Text(str("memcard.create")) }
+                    }
+                }
             } else {
                 items(state.cards, key = { it.file.absolutePath }) { item ->
                     // Scope-aware: with a game in context the slot buttons write a PER-GAME
@@ -109,22 +135,53 @@ fun MemoryCardScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Memo
                     // express, and every game just kept whatever card was assigned globally last.
                     val gameSlot1 = serial?.let { viewModel.perGameCard(it, 1) }
                     val gameSlot2 = serial?.let { viewModel.perGameCard(it, 2) }
-                    MemoryCardRow(
-                        item = item,
-                        perGame = serial != null,
-                        slot1Active = if (serial != null) gameSlot1.equals(item.file.name, true) else item.slot1,
-                        slot2Active = if (serial != null) gameSlot2.equals(item.file.name, true) else item.slot2,
-                        onSlot1 = { if (serial != null) viewModel.assignToGame(serial, 1, item) else viewModel.assign(1, item) },
-                        onSlot2 = { if (serial != null) viewModel.assignToGame(serial, 2, item) else viewModel.assign(2, item) },
-                        onClearSlot1 = serial?.let { s -> { viewModel.clearGameCard(s, 1) } },
-                        onClearSlot2 = serial?.let { s -> { viewModel.clearGameCard(s, 2) } },
-                        onExport = item.takeIf { !it.file.isDirectory }?.let { card -> { exportPending = card; exporter.launch(card.file.name) } },
-                        onBackups = { backupsTarget = item },
-                        onDelete = { deleteTarget = item },
-                    )
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        MemoryCardRow(
+                            item = item,
+                            perGame = serial != null,
+                            slot1Active = if (serial != null) gameSlot1.equals(item.file.name, true) else item.slot1,
+                            slot2Active = if (serial != null) gameSlot2.equals(item.file.name, true) else item.slot2,
+                            onSlot1 = { if (serial != null) viewModel.assignToGame(serial, 1, item) else viewModel.assign(1, item) },
+                            onSlot2 = { if (serial != null) viewModel.assignToGame(serial, 2, item) else viewModel.assign(2, item) },
+                            onClearSlot1 = serial?.let { s -> { viewModel.clearGameCard(s, 1) } },
+                            onClearSlot2 = serial?.let { s -> { viewModel.clearGameCard(s, 2) } },
+                            onExport = item.takeIf { !it.file.isDirectory }?.let { card -> { exportPending = card; exporter.launch(card.file.name) } },
+                            onBackups = { backupsTarget = item },
+                            onDelete = { deleteTarget = item },
+                        )
+                    }
                 }
             }
             item { Spacer(Modifier.height(12.dp)) }
+        }
+    }
+
+    if (actionsOpen) {
+        com.armsx2.ui.common.PadModal(key = "memcard-actions", onDismiss = { actionsOpen = false }) {
+            Surface(
+                modifier = Modifier.padding(24.dp).widthIn(max = 320.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = NevoaPalette.Background,
+                border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
+            ) {
+                Column(Modifier.padding(12.dp)) {
+                    val importFile = {
+                        actionsOpen = false
+                        importer.launch(arrayOf("application/octet-stream", "*/*"))
+                    }
+                    val importFolder = { actionsOpen = false; folderImporter.launch(null) }
+                    val refresh = { actionsOpen = false; viewModel.refresh() }
+                    TextButton(onClick = importFile, modifier = Modifier.controllerFocusable("memcard.actions.import", onConfirm = importFile)) {
+                        Text(str("action.import"))
+                    }
+                    TextButton(onClick = importFolder, modifier = Modifier.controllerFocusable("memcard.actions.folder", onConfirm = importFolder)) {
+                        Text(str("memcard.importFolder"))
+                    }
+                    TextButton(onClick = refresh, modifier = Modifier.controllerFocusable("memcard.actions.refresh", onConfirm = refresh)) {
+                        Text(str("games.card.refresh"))
+                    }
+                }
+            }
         }
     }
 
@@ -289,22 +346,53 @@ private fun MemoryCardRow(
     onBackups: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    var expanded by rememberSaveable(item.file.absolutePath) { mutableStateOf(false) }
+    val toggle = { expanded = !expanded }
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(19.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        modifier = Modifier.widthIn(max = 840.dp).fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = NevoaPalette.Glass,
+        border = BorderStroke(
+            1.dp,
+            if (slot1Active || slot2Active) NevoaPalette.Selected.copy(alpha = 0.7f)
+            else NevoaPalette.GlassBorder,
+        ),
     ) {
-        Column(Modifier.padding(13.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (item.file.isDirectory) "🗀" else "▤", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.headlineMedium)
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .controllerFocusable(
+                        "memcard.details.${item.file.absolutePath}",
+                        RoundedCornerShape(8.dp),
+                        onConfirm = toggle,
+                    )
+                    .clickable(onClick = toggle)
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    if (item.file.isDirectory) LineAwesomeIcons.FolderOpen else LineAwesomeIcons.MemorySolid,
+                    contentDescription = null,
+                    tint = NevoaPalette.TextDim,
+                )
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(item.file.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(if (item.file.isDirectory) "Folder" else humanSize(item.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        if (item.file.isDirectory) str("memcard.type.folder") else humanSize(item.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NevoaPalette.TextDim,
+                    )
                 }
+                if (slot1Active) StatusChip(str("memcard.slot1.active"), Success)
+                if (slot2Active) {
+                    Spacer(Modifier.width(6.dp))
+                    StatusChip(str("memcard.slot2.active"), Success)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(if (expanded) "−" else "+", color = NevoaPalette.TextDim)
             }
-            Row(
+            if (expanded) Row(
                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
@@ -312,13 +400,13 @@ private fun MemoryCardRow(
                 // The slot buttons ARE the per-game control when a game is in context, so the
                 // old slot-1-only "This game" button is gone. "Use global" undoes a per-game
                 // pick — previously there was no way to undo one at all.
-                if (slot1Active) StatusChip(str("memcard.slot1.active"), Success) else OutlinedButton(onClick = onSlot1, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot1", onConfirm = onSlot1)) { Text(str("memcard.slot1")) }
+                if (!slot1Active) OutlinedButton(onClick = onSlot1, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot1", onConfirm = onSlot1)) { Text(str("memcard.slot1")) }
                 if (perGame && slot1Active && onClearSlot1 != null) {
                     Spacer(Modifier.width(7.dp))
                     TextButton(onClick = onClearSlot1, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot1.global", onConfirm = onClearSlot1)) { Text(str("memcard.useGlobal")) }
                 }
                 Spacer(Modifier.width(7.dp))
-                if (slot2Active) StatusChip(str("memcard.slot2.active"), Success) else OutlinedButton(onClick = onSlot2, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot2", onConfirm = onSlot2)) { Text(str("memcard.slot2")) }
+                if (!slot2Active) OutlinedButton(onClick = onSlot2, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot2", onConfirm = onSlot2)) { Text(str("memcard.slot2")) }
                 if (perGame && slot2Active && onClearSlot2 != null) {
                     Spacer(Modifier.width(7.dp))
                     TextButton(onClick = onClearSlot2, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.slot2.global", onConfirm = onClearSlot2)) { Text(str("memcard.useGlobal")) }
@@ -329,7 +417,9 @@ private fun MemoryCardRow(
                 }
                 Spacer(Modifier.width(7.dp))
                 TextButton(onClick = onBackups, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.backups", onConfirm = onBackups)) { Text(str("memcard.backups")) }
-                TextButton(onClick = onDelete, enabled = !item.slot1 && !item.slot2, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.delete", onConfirm = onDelete)) { Text(str("action.delete")) }
+                if (!item.slot1 && !item.slot2) {
+                    TextButton(onClick = onDelete, modifier = Modifier.controllerFocusable("memcard.${item.file.name}.delete", onConfirm = onDelete)) { Text(str("action.delete")) }
+                }
             }
         }
     }
@@ -396,6 +486,12 @@ private fun CreateCardDialog(onDismiss: () -> Unit, onCreate: (String, Int, Int)
                             }
                         }
                     }
+                    Text(
+                        str("memcard.size.hint"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NevoaPalette.TextDim,
+                        modifier = Modifier.padding(top = 6.dp),
+                    )
                 }
                 Spacer(Modifier.height(18.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

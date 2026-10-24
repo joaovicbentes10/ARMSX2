@@ -43,6 +43,7 @@ import com.armsx2.ui.common.ArmsTopBar
 import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.settings.controllerFocusable
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun SaveManagerScreen(onBack: () -> Unit, viewModel: SaveManagerViewModel = viewModel()) {
@@ -117,47 +118,14 @@ fun SaveManagerScreen(onBack: () -> Unit, viewModel: SaveManagerViewModel = view
 
 @Composable
 private fun SaveManagerEmptyState() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.42f)),
-        tonalElevation = 1.dp,
+    Column(
+        modifier = Modifier.fillMaxWidth().height(220.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-            ) {
-                Box(
-                    modifier = Modifier.width(48.dp).height(48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "▣",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                }
-            }
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = str("savestate.empty.title"),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = str("savestate.empty.description"),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        Text(str("savestate.empty.title"), style = MaterialTheme.typography.titleLarge, color = NevoaPalette.Text)
+        Spacer(Modifier.height(8.dp))
+        Text(str("savestate.empty.description"), style = MaterialTheme.typography.bodyMedium, color = NevoaPalette.TextDim)
     }
 }
 

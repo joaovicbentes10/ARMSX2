@@ -5,6 +5,7 @@ import androidx.compose.ui.layout.positionInRoot
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -33,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +53,7 @@ import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.common.StatusChip
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.theme.Success
+import com.armsx2.nevoa.theme.NevoaPalette
 
 @Composable
 fun BiosManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: BiosManagerViewModel = viewModel()) {
@@ -82,13 +86,20 @@ fun BiosManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Bio
         ) {
             ArmsTopBar(
                 title = str("setup.page.bios.title"),
-                leading = { RoundAction("←", str("action.back"), onBack) },
+                leading = {
+                    Box(Modifier.controllerFocusable("bios.action.back", CircleShape, onConfirm = onBack)) {
+                        RoundAction("←", str("action.back"), onBack)
+                    }
+                },
                 actions = {
                     var actionsAnchor by remember {
                         mutableStateOf(androidx.compose.ui.geometry.Offset.Zero)
                     }
                     Box(
-                        Modifier.onGloballyPositioned {
+                        Modifier.controllerFocusable(
+                            "bios.action.more", CircleShape,
+                            onConfirm = { actionsMenuExpanded = true },
+                        ).onGloballyPositioned {
                             // Bottom-left of the button, so the panel hangs below it as the
                             // dropdown it replaces did.
                             val p = it.positionInRoot()
@@ -131,15 +142,17 @@ fun BiosManagerScreen(onBack: () -> Unit, game: GameInfo? = null, viewModel: Bio
             } else {
                 if (state.busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
                 state.items.forEach { item ->
-                    BiosRow(
-                        item = item,
-                        showGameAssign = state.gameKey != null,
-                        perGameActive = state.perGameBios?.equals(item.file.name, ignoreCase = true) == true,
-                        onSelect = { viewModel.select(item.file) },
-                        onAssignGame = { viewModel.assignToGame(item) },
-                        onClearGame = { viewModel.clearGameBios() },
-                        onDelete = { deleteTarget = item },
-                    )
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        BiosRow(
+                            item = item,
+                            showGameAssign = state.gameKey != null,
+                            perGameActive = state.perGameBios?.equals(item.file.name, ignoreCase = true) == true,
+                            onSelect = { viewModel.select(item.file) },
+                            onAssignGame = { viewModel.assignToGame(item) },
+                            onClearGame = { viewModel.clearGameBios() },
+                            onDelete = { deleteTarget = item },
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -261,87 +274,105 @@ private fun BiosRow(
     onClearGame: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    var expanded by rememberSaveable(item.file.absolutePath) { mutableStateOf(false) }
+    val toggle = { expanded = !expanded }
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        // Every arcade BIOS is in use (each game starts with one it runs on), as plainly as the console one.
-        color = if (item.selected || item.arcade) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        modifier = Modifier.widthIn(max = 840.dp).fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = NevoaPalette.Glass,
         border = BorderStroke(
             1.dp,
-            if (item.selected || item.arcade) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+            if (item.selected || item.arcade) NevoaPalette.Selected.copy(alpha = 0.7f)
+            else NevoaPalette.GlassBorder,
         ),
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .controllerFocusable(
+                        "bios.details.${item.file.absolutePath}",
+                        RoundedCornerShape(8.dp),
+                        onConfirm = toggle,
+                    )
+                    .clickable(onClick = toggle)
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 // An arcade board's BIOS shows the arcade mark (the ARMSX2 logo in red) in the flag's place.
                 if (item.arcade) {
                     com.armsx2.ui.common.GlyphSizedImage(
-                        item.info.regionFlag, 30.sp,
+                        item.info.regionFlag, 24.sp,
                         androidx.compose.ui.res.painterResource(com.armsx2.R.drawable.ic_arcade),
                     )
                 } else {
-                    Text(item.info.regionFlag, fontSize = 30.sp)
+                    Text(item.info.regionFlag, fontSize = 24.sp)
                 }
                 Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(item.file.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(
-                        "${item.info.description} · ${item.info.versionString} · ${item.info.zone}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (item.selected) StatusChip(str("backend.driver.active"), Success)
+                Text(
+                    item.file.name,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (item.selected || item.arcade) StatusChip(str("backend.driver.active"), Success)
                 if (perGameActive) {
                     Spacer(Modifier.width(6.dp))
                     StatusChip(str("bios.thisGame.active"), Success)
                 }
-                // A Namco arcade board's BIOS: for arcade games, and only those.
                 if (item.arcade) {
                     Spacer(Modifier.width(6.dp))
                     StatusChip(str("bios.arcade.badge"), MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(6.dp))
-                    StatusChip(str("backend.driver.active"), Success)
                 }
+                Spacer(Modifier.width(12.dp))
+                Text(if (expanded) "−" else "+", color = NevoaPalette.TextDim)
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                // Per-game BIOS: pin this BIOS to the loaded game, or revert it to global.
-                if (showGameAssign && !item.arcade) {
-                    if (perGameActive) {
-                        TextButton(
-                            onClick = onClearGame,
-                            modifier = Modifier.controllerFocusable("bios.clearGame.${item.file.absolutePath}", onConfirm = onClearGame),
-                        ) { Text(str("bios.useGlobal")) }
-                    } else {
-                        OutlinedButton(
-                            onClick = onAssignGame,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.controllerFocusable("bios.thisGame.${item.file.absolutePath}", RoundedCornerShape(12.dp), onConfirm = onAssignGame),
-                        ) { Text(str("bios.thisGame")) }
+            if (expanded) {
+                Text(
+                    "${item.info.description} · ${item.info.versionString} · ${item.info.zone}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = NevoaPalette.TextDim,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 36.dp, bottom = 6.dp),
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    // Per-game BIOS: pin this BIOS to the loaded game, or revert it to global.
+                    if (showGameAssign && !item.arcade) {
+                        if (perGameActive) {
+                            TextButton(
+                                onClick = onClearGame,
+                                modifier = Modifier.controllerFocusable("bios.clearGame.${item.file.absolutePath}", onConfirm = onClearGame),
+                            ) { Text(str("bios.useGlobal")) }
+                        } else {
+                            OutlinedButton(
+                                onClick = onAssignGame,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.controllerFocusable("bios.thisGame.${item.file.absolutePath}", RoundedCornerShape(12.dp), onConfirm = onAssignGame),
+                            ) { Text(str("bios.thisGame")) }
+                        }
+                        Spacer(Modifier.width(8.dp))
                     }
-                    Spacer(Modifier.width(8.dp))
+                    if (!item.selected && !item.arcade) OutlinedButton(
+                        onClick = onSelect,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.controllerFocusable(
+                            "bios.use.${item.file.absolutePath}",
+                            RoundedCornerShape(12.dp),
+                            onConfirm = onSelect,
+                        ),
+                    ) { Text(str("setup.bios.useSelected")) }
+                    if (!item.selected) {
+                        Spacer(Modifier.width(8.dp))
+                        TextButton(
+                            onClick = onDelete,
+                            modifier = Modifier.controllerFocusable(
+                                "bios.delete.${item.file.absolutePath}",
+                                onConfirm = onDelete,
+                            ),
+                        ) { Text(str("action.delete")) }
+                    }
                 }
-                if (!item.selected && !item.arcade) OutlinedButton(
-                    onClick = onSelect,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.controllerFocusable(
-                        "bios.use.${item.file.absolutePath}",
-                        RoundedCornerShape(12.dp),
-                        onConfirm = onSelect,
-                    ),
-                ) { Text(str("setup.bios.useSelected")) }
-                Spacer(Modifier.width(8.dp))
-                TextButton(
-                    onClick = onDelete,
-                    enabled = !item.selected,
-                    modifier = Modifier.controllerFocusable(
-                        if (item.selected) null else "bios.delete.${item.file.absolutePath}",
-                        onConfirm = onDelete,
-                    ),
-                ) { Text(str("action.delete")) }
             }
         }
     }

@@ -44,6 +44,8 @@ Exibir somente seções válidas para o escopo atual. Um resultado de busca deve
 
 Restilizar primeiro o menu lateral, trocando emojis por ícones consistentes e recolhendo destinos secundários. Depois, verificar nessa ordem: BIOS e memory cards; saves; controles; patches e texturas; conquistas; menu durante o jogo e controles de toque. Reutilizar ViewModels e ações existentes. Cada tela deve passar por verificação visual e de navegação antes da próxima.
 
+Implementados em código: menu lateral, BIOS, cartões de memória e estado vazio de saves. Os detalhes das listas foram colocados sob demanda. A validação no F6 Pro segue pendente para as últimas telas.
+
 ### 4. Biblioteca
 
 Revisar a composição dos botões superiores e do painel para reduzir elementos com aparência genérica, preservando a névoa e as torres aprovadas. Integrar busca, ordenação e categorias ao visual Névoa, hoje acessíveis pela biblioteca clássica. Mostrar os saves do memory card no painel do jogo quando houver dados confiáveis para aquele título.

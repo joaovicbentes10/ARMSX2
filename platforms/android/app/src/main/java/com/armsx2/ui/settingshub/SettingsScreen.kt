@@ -59,7 +59,6 @@ import com.armsx2.ui.common.ArmsBackdrop
 import com.armsx2.ui.common.ArmsTopBar
 import com.armsx2.ui.common.GlassPanel
 import com.armsx2.ui.common.RoundAction
-import com.armsx2.ui.common.SectionTitle
 import com.armsx2.ui.settings.controllerFocusable
 import com.armsx2.ui.settings.AppTab
 import com.armsx2.ui.settings.AudioTab
@@ -351,10 +350,8 @@ private fun SettingsPanel(
     viewModel: SettingsViewModel,
     modifier: Modifier,
 ) {
-    GlassPanel(modifier = modifier.padding(horizontal = 8.dp), contentPadding = 16.dp) {
+    GlassPanel(modifier = modifier.padding(horizontal = 8.dp), contentPadding = 12.dp) {
         Column(Modifier.fillMaxWidth()) {
-            SectionTitle(categoryTitle(category))
-            Spacer(Modifier.height(12.dp))
             // Only the tabs that own game settings have rows that take a mark.
             if (categoryHasResettableSettings(category)) {
                 com.armsx2.ui.settings.OverrideLegend()
@@ -436,7 +433,7 @@ private fun SettingsSectionBar(
                         )
                         Spacer(Modifier.height(5.dp))
                         Box(
-                            Modifier.fillMaxWidth().height(2.dp).background(
+                            Modifier.width(30.dp).height(2.dp).background(
                                 if (active) NevoaPalette.Selected else Color.Transparent,
                             ),
                         )
@@ -481,7 +478,7 @@ private fun SettingsGroupBar(
                 )
                 Spacer(Modifier.height(6.dp))
                 Box(
-                    Modifier.fillMaxWidth().height(2.dp).background(
+                    Modifier.width(30.dp).height(2.dp).background(
                         if (active) NevoaPalette.Selected else Color.Transparent,
                     ),
                 )
