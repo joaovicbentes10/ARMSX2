@@ -104,9 +104,10 @@ void main() {
     float span = a.w - a.z;
     float hh = (h - a.z) / span;
     float up = pow(clamp(1.0 - hh, 0.0, 1.0), 1.5) * (1.0 - smoothstep(b.x - 0.08, b.x, hh));
-    float refl = pow(clamp(1.0 + hh * 5.0, 0.0, 1.0), 2.0) * 0.12 * min(b.x, 1.0); // faint floor reflection
-    float soft = 0.025 * halo + 1e-5; // base melts into the floor during the intro; exact cut at rest
-    float fade = mix(refl, up, smoothstep(-soft, soft, h - a.z));
+    // Below its base a tower keeps going and dissolves into the fog, so during the approach no
+    // tower ends in a hard line above the floor. At rest every base sits on the bottom edge.
+    float base = 1.0 - smoothstep(b.x - 0.08, b.x, 0.0);
+    float fade = h >= a.z ? up : base * exp((h - a.z) / 0.06);
     float pulse = 0.6 + 0.4 * sin(t * 0.6 + b.z * 1.7);
     vec3 tc = towerColor(b.z);
     col += tc * shape * fade * pulse * 0.55 * b.y;

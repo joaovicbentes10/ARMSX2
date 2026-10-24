@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <VideoView
+    <com.armsx2.nevoa.intro.FillVideoView
         android:id="@+id/boot_splash_video"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
