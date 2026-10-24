@@ -20,7 +20,7 @@ const tmp = mkdtempSync(join(tmpdir(), 'nevoa-intro-'));
 try {
   const page = await browser.newPage();
   page.on('pageerror', e => { throw e; });
-  await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
+  await page.setViewport({ width: 2400, height: 1080, deviceScaleFactor: 1 });
   await page.goto(pathToFileURL(join(here, 'intro.html')).href, { waitUntil: 'load' });
   await page.evaluate(() => document.fonts.ready);
 
@@ -46,6 +46,11 @@ try {
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-framerate', String(fps), '-i', join(tmp, '%04d.png'),
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', crf, '-movflags', '+faststart', '-an', mp4], { stdio: 'inherit' });
     console.log(`${mp4}: ${(statSync(mp4).size / 1048576).toFixed(2)} MB`);
+    // Main's window background: the app shows this exact frame while it starts, so the intro hands off without a cut.
+    await shoot((frames - 1) / fps, join(outDir, 'last_frame.png'));
+    const webp = join(outDir, 'nevoa_last_frame.webp');
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', join(outDir, 'last_frame.png'), '-quality', '90', webp], { stdio: 'inherit' });
+    console.log(`${webp}: ${(statSync(webp).size / 1024).toFixed(0)} KB`);
   }
 } finally {
   await browser.close();

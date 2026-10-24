@@ -1,6 +1,6 @@
 # Abertura do ARMSX2 Névoa
 
-Gera `boot_intro.mp4` (1920×1080, 30 fps, 8 s, sem áudio) a partir de `intro.html`.
+Gera `boot_intro.mp4` (2400×1080 = 20:9 do Poco F6 Pro, 30 fps, 8 s, sem áudio) e `nevoa_last_frame.webp` (fundo da janela do app enquanto ele abre) a partir de `intro.html`.
 
 - `intro.html`: canvas WebGL2 com `window.renderFrame(t)` determinístico (PRNG com semente, sem relógio).
   O último quadro é o `NevoaBackground` em repouso (porta de `NevoaShader.kt` com `iTime = 0`);

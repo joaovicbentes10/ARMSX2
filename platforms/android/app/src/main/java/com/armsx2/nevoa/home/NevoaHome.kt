@@ -2,6 +2,9 @@ package com.armsx2.nevoa.home
 
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyCode
@@ -85,7 +89,10 @@ fun NevoaHome(
     val games = remember(state.recentGames, state.visibleGames) {
         libraryOrder(state.recentGames, state.visibleGames) { it.uri.toString() }
     }
-    if (shouldShowClassic(state.initialized, state.scanning, games.size, directories.isNotEmpty(), classicRequested)) {
+    // While the first scan runs, show only the fog (it continues the intro's last frame) instead of
+    // flashing the classic screen.
+    val loading = !state.initialized && directories.isNotEmpty() && !classicRequested
+    if (!loading && shouldShowClassic(state.initialized, state.scanning, games.size, directories.isNotEmpty(), classicRequested)) {
         BackHandler(enabled = classicRequested) { classicRequested = false }
         HomeScreen(
             // The classic grid's B goes to the menu; when the user came from the row, it comes back here.
@@ -94,15 +101,35 @@ fun NevoaHome(
             viewModel = viewModel,
         )
     } else {
-        NevoaRow(
-            games = games,
-            onLaunch = { viewModel.launch(it) },
-            onOpenGameSettings = onOpenGameSettings,
-            onOpenClassic = { classicRequested = true },
-            onOpenMenu = onOpenMenu,
-        )
+        // One background for loading and the row, so its clock never restarts mid-way.
+        Box(Modifier.fillMaxSize().background(NevoaPalette.Background)) {
+            NevoaBackground(Modifier.fillMaxSize())
+            if (!loading) {
+                NevoaRow(
+                    games = games,
+                    onLaunch = { viewModel.launch(it) },
+                    onOpenGameSettings = onOpenGameSettings,
+                    onOpenClassic = { classicRequested = true },
+                    onOpenMenu = onOpenMenu,
+                )
+            }
+        }
     }
 }
+
+/** The PS5-style entrance plays once per process: after the intro, not on every return from a game. */
+private object NevoaEntrance { var played = false }
+
+/** Fades and slides an element in while [progress] goes from [start] to [end]. Read in the draw
+ *  phase, so the entrance animates without recomposing the screen. */
+private fun Modifier.enter(progress: () -> Float, start: Float, end: Float, dx: Float = 0f, dy: Float = 0f) =
+    graphicsLayer {
+        val p = ((progress() - start) / (end - start)).coerceIn(0f, 1f)
+        val e = 1f - (1f - p) * (1f - p) * (1f - p)
+        alpha = p
+        translationX = (1f - e) * dx * density
+        translationY = (1f - e) * dy * density
+    }
 
 @Composable
 private fun NevoaRow(
@@ -189,10 +216,19 @@ private fun NevoaRow(
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
 
+    val entrance = remember { Animatable(if (NevoaEntrance.played) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!NevoaEntrance.played) {
+            NevoaEntrance.played = true
+            delay(250)
+            entrance.animateTo(1f, tween(1100, easing = LinearEasing))
+        }
+    }
+    val progress = { entrance.value }
+
     Box(
         Modifier
             .fillMaxSize()
-            .background(NevoaPalette.Background)
             .onPreviewKeyEvent { event ->
                 if (event.type == KeyEventType.KeyDown && event.key.nativeKeyCode == AndroidKeyEvent.KEYCODE_BUTTON_Y) {
                     if (busy) return@onPreviewKeyEvent true
@@ -206,17 +242,16 @@ private fun NevoaRow(
             .focusRequester(focus)
             .focusable(),
     ) {
-        NevoaBackground(Modifier.fillMaxSize())
         GlassButton(
             NevoaStrings.Menu,
             openMenu,
-            Modifier.align(Alignment.TopStart).padding(16.dp),
+            Modifier.align(Alignment.TopStart).padding(16.dp).enter(progress, 0f, 0.45f, dy = -14f),
             controllerId = if (drawerOpen) null else MenuId,
         )
         GlassButton(
             NevoaStrings.FullLibrary,
             openClassic,
-            Modifier.align(Alignment.TopEnd).padding(16.dp),
+            Modifier.align(Alignment.TopEnd).padding(16.dp).enter(progress, 0f, 0.45f, dy = -14f),
             controllerId = if (drawerOpen) null else FullLibraryId,
         )
         LazyRow(
@@ -234,7 +269,12 @@ private fun NevoaRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             itemsIndexed(games, key = { _, g -> g.uri.toString() }) { i, g ->
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                val caseStart = 0.12f + 0.07f * i.coerceAtMost(6)
+                Row(
+                    Modifier.enter(progress, caseStart, caseStart + 0.45f, dx = 70f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
                     DvdCase(
                         g,
                         selected = i == index,
@@ -248,6 +288,7 @@ private fun NevoaRow(
                     if (i == index) {
                         GameDetailsPanel(
                             g,
+                            modifier = Modifier.enter(progress, 0.35f, 0.8f, dx = 30f),
                             onPlay = { onPlay(g) },
                             onConfigure = { openSettings(g) },
                             configureControllerId = if (drawerOpen) null else ConfigureId,
@@ -260,7 +301,7 @@ private fun NevoaRow(
             NevoaStrings.PressToStart,
             color = NevoaPalette.TextDim,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp).enter(progress, 0.6f, 1f, dy = 10f),
         )
         LaunchBurst(active = pending != null) {
             pending?.let(onLaunch)

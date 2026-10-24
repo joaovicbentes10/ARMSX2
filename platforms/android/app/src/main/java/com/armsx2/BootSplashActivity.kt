@@ -155,7 +155,8 @@ class BootSplashActivity : ComponentActivity() {
             )
         }
         launch.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        startActivity(launch)
+        // No open animation either: Main's window already shows the intro's last frame.
+        startActivity(launch, android.app.ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
         finish()
         // overrideActivityTransition is API 34 (Android 14); on 13 and below it
         // throws NoSuchMethodError (crashed the splash on the Retroid). Fall back to

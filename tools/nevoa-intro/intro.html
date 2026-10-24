@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <title>ARMSX2 Névoa — abertura</title>
 <style>
-  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #050812; }
-  canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  html, body { margin: 0; width: 2400px; height: 1080px; overflow: hidden; background: #050812; }
+  canvas { position: absolute; left: 0; top: 0; width: 2400px; height: 1080px; }
   #wm {
     position: absolute; left: 50%; top: 50%;
     font-family: "Segoe UI Light", "Segoe UI", "Helvetica Neue", sans-serif;
@@ -16,13 +16,13 @@
 </style>
 </head>
 <body>
-<canvas id="c" width="1920" height="1080"></canvas>
+<canvas id="c" width="2400" height="1080"></canvas>
 <div id="wm">ARMSX2</div>
 <script>
 // Colors: NevoaPalette (Global Constraints).
 const SKY = '#050812', FOG = '#5A8CFF', BLUE = '#9CC3FF', VIOLET = '#B9A3FF', CYAN = '#7FE0FF';
 
-const W = 1920, H = 1080, ASPECT = W / H, FPS = 30, FRAMES = 240;
+const W = 2400, H = 1080, ASPECT = W / H, FPS = 30, FRAMES = 240;
 const T_END = (FRAMES - 1) / FPS;      // last frame == NevoaBackground at iTime 0
 const CAM_Y = 5, D_END = 10, D_START = 22, DRIFT = 0.35, T_FLY = 6.0;
 const NT = 36, NP = 96;
