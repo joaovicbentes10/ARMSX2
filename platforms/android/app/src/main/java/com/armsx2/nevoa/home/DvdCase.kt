@@ -44,7 +44,7 @@ private val CaseBand = Color(0xFF0B0F1C)
 @Composable
 fun DvdCase(game: GameInfo, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val selection by animateFloatAsState(if (selected) 1f else 0f, tween(320, easing = FastOutSlowInEasing), label = "dvd-case")
-    val height = (128f + 48f * selection).dp
+    val height = (118f + 66f * selection).dp
     val context = LocalContext.current
     val hasCover = remember(game.uri, CustomCovers.version.value) {
         game.coverUrl != null || CustomCovers.fileFor(context, game) != null
@@ -54,17 +54,17 @@ fun DvdCase(game: GameInfo, selected: Boolean, onClick: () -> Unit, modifier: Mo
             .height(height)
             .aspectRatio(135f / 190f)
             .drawBehind {
-                for (i in 1..4) {
+                for (i in 1..3) {
                     val g = (i * 3).dp.toPx()
                     drawRoundRect(
-                        color = NevoaPalette.Selected.copy(alpha = 0.10f * selection),
+                        color = NevoaPalette.Selected.copy(alpha = 0.025f * selection * (4 - i)),
                         topLeft = Offset(-g, -g),
                         size = Size(size.width + 2 * g, size.height + 2 * g),
                         cornerRadius = CornerRadius(6.dp.toPx() + g),
                     )
                 }
             }
-            .border((1f + selection).dp, lerp(NevoaPalette.GlassBorder, NevoaPalette.Selected, selection), CaseShape)
+            .border((0.6f + 0.6f * selection).dp, lerp(NevoaPalette.GlassBorder, NevoaPalette.Selected.copy(alpha = 0.7f), selection), CaseShape)
             .clip(CaseShape)
             .background(NevoaPalette.Background)
             .clickable(onClick = onClick),

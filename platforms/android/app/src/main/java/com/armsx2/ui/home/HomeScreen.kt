@@ -1449,6 +1449,13 @@ private fun LibraryOverflowMenu(
         ) {
             closeThen { onSort(HomeSort.RecentlyPlayed) }
         }
+        LibraryOverflowItem(
+            glyph = "",
+            label = com.armsx2.i18n.I18n.get("nevoa.sortCompatibility"),
+            selected = selectedSort == HomeSort.Compatibility,
+        ) {
+            closeThen { onSort(HomeSort.Compatibility) }
+        }
         OverflowSeparator()
         // Memory card covers, a section of its own: each game's PS2 save icon, from the player's own
         // cards, as its cover (Off / Animated / Still, cycling like Cover region), the Icon Museum,

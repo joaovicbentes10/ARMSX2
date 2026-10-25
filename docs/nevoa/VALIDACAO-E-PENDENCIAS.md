@@ -1,5 +1,17 @@
 # Validação e pendências
 
+## Home contida — 25/10/2026
+
+O usuário considerou o painel carregado e aprovou reduzir informações e reunir ações secundárias. A home mostra título maior em até duas linhas, histórico em uma linha e uma ação principal: Continuar com estado verificado, Jogar sem estado. Opções do jogo, em botão circular de três pontos com descrição de acessibilidade, reúne Jogar, Estados salvos, Configurar e Categorias do jogo. A lista de estados permanece sob demanda. Capa selecionada e confirmação por controle seguem o mesmo catálogo e passam pela mesma revalidação antes de iniciar.
+
+A ordenação e a faixa de categorias ficam na biblioteca completa. Acrescentada a opção Compatibilidade ao menu existente para manter acessíveis as três ordens. A home preserva o filtro compartilhado e mostra apenas a categoria ativa com ação para limpar. Título/Recentes/Compatibilidade continuam no mesmo ViewModel. Seleção de capa passa a 184 dp, vizinhas a 118 dp; borda e brilho ficaram mais discretos. Mantidos fundo, animações e sons aprovados.
+
+APK final assinado instalado no F6 Pro, SHA256 `BF6CA5729E283C46F5C0A788FDA496A2A18264B0755702185312C55AC4161CFC`. Build final passou em 2 min 11 s, com o mesmo núcleo nativo de referência. Menu de ordenação conferido com Compatibilidade marcada, depois restaurado Título. Captura final da home no aparelho: `.superpowers/validation/home-contida/scooby-final.png`. Sem erro AndroidRuntime na conferência final.
+
+No Poco foram inspecionados o título completo do Scooby em duas linhas, histórico compacto, botão Jogar, caso Continuar no diagnóstico e menu de opções. Conferidos lista vazia, acesso às categorias e Configurar. Confirmação A por evento ADB com fonte gamepad carregou o estado do diagnóstico (`Loaded state from slot 9`), com uma emissão LAUNCH e uma chamada de partida. Não se afirma validação com controle físico.
+
+Criada somente a categoria temporária `QA_Visual` para conferir seleção na biblioteca, retorno com indicador na home e limpeza pelo indicador. A categoria foi excluída com confirmação, restaurando Todos os jogos; nenhum estado ou save de cartão foi alterado. Evidências locais em `.superpowers/validation/home-contida/`, incluindo home, Scooby, opções, filtro e logs de retomada. A suíte completa manteve 303 casos: 293 aprovados, 10 ignorados, nenhuma falha.
+
 ## Encerramento Android — 25/10/2026
 
 **Implementações desta rodada:** estados no painel do jogo, lista de slots/datas e Continuar, com recibo após sucesso nativo e vínculo à URI da imagem aberta. SHA-256 do estado é conferido antes da transição; serial/CRC do disco e caminho exato do slot são confirmados após o boot. Estados antigos exigem carregamento manual bem-sucedido para associação. Uma imagem substituída na mesma URI pode manter a oferta até o boot, mas a identidade nativa diferente bloqueia a carga.

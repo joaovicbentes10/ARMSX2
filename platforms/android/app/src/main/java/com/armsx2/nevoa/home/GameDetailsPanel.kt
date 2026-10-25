@@ -10,14 +10,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,7 +72,7 @@ internal fun GlassButton(
     }
 }
 
-/** Title, play history and the two actions for the selected game. */
+/** A title, a short history line and one primary action. Secondary tools live in Options. */
 @Composable
 fun GameDetailsPanel(
     game: GameInfo,
@@ -73,34 +81,63 @@ fun GameDetailsPanel(
     modifier: Modifier = Modifier,
     configureControllerId: String? = null,
     onCategories: (() -> Unit)? = null,
-    categoriesControllerId: String? = null,
+    states: List<com.armsx2.nevoa.saves.AssociatedState> = emptyList(),
     onContinue: (com.armsx2.nevoa.saves.AssociatedState) -> Unit = {},
-    savesControllerId: String? = null,
+    active: Boolean = true,
 ) {
-    PlayTime.revision.value // re-read the totals after a session ends
-    val last = PlayTime.formatLastPlayed(PlayTime.lastPlayedMillis(game.serial))
+    var options by androidx.compose.runtime.remember(game.uri) { androidx.compose.runtime.mutableStateOf(false) }
+    var showStates by androidx.compose.runtime.remember(game.uri) { androidx.compose.runtime.mutableStateOf(false) }
+    PlayTime.revision.value
+    val last = PlayTime.lastPlayedMillis(game.serial)
     val played = PlayTime.formatPlayed(PlayTime.playedSeconds(game.serial))
-    Column(modifier.width(260.dp).heightIn(max = 240.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    val history = if (last <= 0) "" else if (android.text.format.DateUtils.isToday(last))
+        com.armsx2.i18n.I18n.get("nevoa.playedToday")
+    else com.armsx2.i18n.I18n.get("nevoa.playedOn").format(java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT).format(java.util.Date(last)))
+    val latest = states.firstOrNull()
+    Column(modifier.width(280.dp).heightIn(max = 208.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             coverLabel(game.title, game.uri.lastPathSegment),
             color = NevoaPalette.Text,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        if (last.isNotEmpty()) {
-            Text("${NevoaStrings.Played}: $last", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+        if (history.isNotEmpty() || played.isNotEmpty()) {
+            Text(listOf(history, played).filter { it.isNotEmpty() }.joinToString(" · "),
+                color = NevoaPalette.TextDim.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (played.isNotEmpty()) {
-            Text("${NevoaStrings.PlayTime}: $played", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            GlassButton(if (latest == null) NevoaStrings.Play else com.armsx2.i18n.I18n.get("nevoa.saves.continue"),
+                { if (active) { if (latest == null) onPlay() else onContinue(latest) } }, primary = true)
+            val label = com.armsx2.i18n.I18n.get("nevoa.gameOptions")
+            Box(Modifier.size(44.dp)
+                .controllerFocusable(configureControllerId, androidx.compose.foundation.shape.CircleShape, onConfirm = { if (active) options = true })
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(NevoaPalette.Glass)
+                .border(1.dp, NevoaPalette.GlassBorder, androidx.compose.foundation.shape.CircleShape)
+                .semantics { contentDescription = label }
+                .clickable { if (active) options = true }
+                .drawBehind {
+                    for (i in -1..1) drawCircle(NevoaPalette.TextDim, 1.5.dp.toPx(), androidx.compose.ui.geometry.Offset(size.width / 2 + i * 6.dp.toPx(), size.height / 2))
+                })
         }
-        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlassButton(NevoaStrings.Play, onPlay, primary = true)
-            GlassButton(NevoaStrings.Configure, onConfigure, quiet = true, controllerId = configureControllerId)
-        }
-        onCategories?.let {
-            GlassButton(com.armsx2.i18n.I18n.get("nevoa.gameCategories"), it, quiet = true, controllerId = categoriesControllerId)
-        }
-        com.armsx2.nevoa.saves.GameSavePanel(game, onContinue, savesControllerId)
     }
+    if (options && active) com.armsx2.ui.common.PadModal(key = "nevoa.game-options", onDismiss = { options = false }) {
+        androidx.compose.material3.Surface(Modifier.padding(20.dp).widthIn(max = 320.dp).fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp), color = NevoaPalette.Background, contentColor = NevoaPalette.Text) {
+            Column(Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(com.armsx2.i18n.I18n.get("nevoa.gameOptions"), style = MaterialTheme.typography.titleMedium)
+                Text(game.title, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                GlassButton(NevoaStrings.Play, { options = false; onPlay() }, Modifier.fillMaxWidth().padding(top = 10.dp), quiet = true, controllerId = "nevoa.options.play")
+                GlassButton("${com.armsx2.i18n.I18n.get("nevoa.saves.states")} (${states.size})", { options = false; showStates = true }, Modifier.fillMaxWidth(), quiet = true, controllerId = "nevoa.options.states")
+                GlassButton(NevoaStrings.Configure, { options = false; onConfigure() }, Modifier.fillMaxWidth(), quiet = true, controllerId = "nevoa.options.configure")
+                onCategories?.let { action ->
+                    GlassButton(com.armsx2.i18n.I18n.get("nevoa.gameCategories"), { options = false; action() }, Modifier.fillMaxWidth(), quiet = true, controllerId = "nevoa.options.categories")
+                }
+            }
+        }
+    }
+    if (showStates && active) com.armsx2.nevoa.saves.GameSaveList(game, states,
+        onContinue = { showStates = false; onContinue(it) }, onDismiss = { showStates = false })
 }

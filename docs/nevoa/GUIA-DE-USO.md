@@ -103,9 +103,9 @@ No layout padrão, os quatro botões de ação formam um losango regular mesmo e
 
 ### Categorias
 
-A faixa abaixo do cabeçalho filtra a home e a biblioteca completa. “Todos os jogos” remove o filtro de categoria; uma busca ativa continua valendo. Uma seleção sem resultados oferece também uma ação para limpar ambos e recuperar a biblioteca.
+A faixa na biblioteca completa escolhe a categoria e mantém o filtro ao voltar à home. A home mostra apenas a categoria ativa com uma ação para removê-la. “Todos os jogos” remove o filtro de categoria; uma busca ativa continua valendo. Uma seleção sem resultados oferece também uma ação para limpar ambos e recuperar a biblioteca. A ordenação fica na biblioteca completa.
 
-Na home, selecione um jogo e use “Categorias do jogo” para criar categorias ou marcar/desmarcar associações. Um jogo pode pertencer a várias. Na biblioteca completa, o menu de contexto do jogo mantém o mesmo acesso. Jogos sem identificador estável, como a BIOS, continuam em Todos os jogos.
+Na home, selecione um jogo e use o botão de três pontos → “Categorias do jogo” para criar categorias ou marcar/desmarcar associações. Um jogo pode pertencer a várias. Na biblioteca completa, o menu de contexto do jogo mantém o mesmo acesso. Jogos sem identificador estável, como a BIOS, continuam em Todos os jogos.
 
 Com uma categoria selecionada, “Gerenciar categoria” permite renomear ou excluir, com confirmação para excluir. Isso não apaga os jogos. Segurar o nome da categoria abre o mesmo painel. Busca e ordenação funcionam em conjunto com a categoria, e os recentes respeitam a seleção. No controle, navegue verticalmente até a faixa, use esquerda/direita e confirme; na biblioteca completa, R1 mantém a troca de modo.
 
@@ -115,6 +115,6 @@ Confirmar Jogar ou a capa selecionada toca um efeito próprio curto, acompanhand
 
 ### Estados salvos na home
 
-Selecione o jogo e abra “Estados salvos” para ver os slots associados e suas datas. “Continuar” retoma o estado mais recente verificado; escolher um slot na lista retoma aquele estado. “Jogar” continua iniciando normalmente, respeitando a preferência existente de carregamento automático.
+Selecione o jogo e abra o botão de três pontos → “Estados salvos” para ver os slots associados e suas datas. A ação principal vira “Continuar” quando existe um estado verificado; sem ele, mostra “Jogar”. Escolher um slot na lista retoma aquele estado. “Jogar” no menu de opções inicia normalmente, respeitando a preferência existente de carregamento automático. A capa selecionada e a confirmação por controle seguem a mesma ação principal.
 
 Um estado antigo pode precisar ser carregado uma vez pelo menu em jogo para aparecer no painel. Arquivos substituídos, movidos ou sem associação confirmada não são oferecidos para continuar. Isso não apaga os estados nem os saves do cartão de memória.

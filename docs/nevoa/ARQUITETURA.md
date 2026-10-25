@@ -2,7 +2,7 @@
 
 ## Estados no painel do jogo
 
-`GameSavePanel` consulta somente o jogo selecionado fora da thread principal, após inicialização nativa e com a VM parada. `GameStateCatalog` acompanha gravações/carregamentos manuais bem-sucedidos e autosaves. A identidade vem do getter nativo de serial/CRC do disco usado pelo resolvedor de slots; o CRC do ELF em execução pode ser diferente. Não abrir o CDVD para identificar outro disco durante a emulação.
+`rememberGameStates` consulta somente o jogo selecionado fora da thread principal, após inicialização nativa e com a VM parada. O catálogo compartilhado alimenta capa, confirmação por controle e botão principal. `GameSaveList` abre pelo menu de opções; a revalidação de conteúdo fica centralizada no pedido de partida da home. A consulta é reiniciada por URI, evitando expor o catálogo do item anterior durante a troca. `GameStateCatalog` acompanha gravações/carregamentos manuais bem-sucedidos e autosaves. A identidade vem do getter nativo de serial/CRC do disco usado pelo resolvedor de slots; o CRC do ELF em execução pode ser diferente. Não abrir o CDVD para identificar outro disco durante a emulação.
 
 `StateAssociation` mantém um recibo adjacente `.nevoa-state`: identidade nativa, URI da imagem aberta, slot, caminho canônico, tamanho, data e SHA-256 do estado efetivamente salvo. A biblioteca exige a URI registrada nessa operação e o serial do jogo selecionado. Isso evita depender da consulta offline ao CDVD, que falha para alguns acessos SAF. `Continuar` revalida os bytes do estado antes da transição; depois do boot, o runtime confirma serial/CRC do disco e destino exato do slot antes de carregar. Nome semelhante de arquivo não habilita o botão. Estados antigos ou associados a outra URI ganham recibo após carregamento manual bem-sucedido.
 
@@ -139,7 +139,7 @@ O editor usa um painel de até 480 dp, cores Névoa e opções adicionais recolh
 
 ### Categorias da biblioteca
 
-`NevoaCategoryFilter` é a faixa horizontal compartilhada pela home e pelos modos Grade, Lista e Estante. Reutiliza `GameCategories` e o JSON `library.categories`, com associação por `GameInfo.settingsKey`; nenhum formato novo ou migração. “Categorias do jogo” abre o editor de associação existente, agora em cartão limitado a 480 dp. Selecionar uma categoria oferece Gerenciar, com renomeação e exclusão confirmada.
+`NevoaCategoryFilter` é a faixa horizontal dos modos Grade, Lista e Estante da biblioteca completa. A home compartilha o filtro do ViewModel e mostra somente a categoria ativa com ação para limpar. Reutiliza `GameCategories` e o JSON `library.categories`, com associação por `GameInfo.settingsKey`; nenhum formato novo ou migração. “Categorias do jogo”, no menu de opções da home, abre o editor de associação existente em cartão limitado a 480 dp. Na biblioteca completa, selecionar uma categoria oferece Gerenciar, com renomeação e exclusão confirmada.
 
 `CategoryPool` resolve a categoria válida e os jogos associados antes da busca/ordenação. Categoria existente e vazia mantém a seleção; categoria removida volta a todos os jogos. `HomeViewModel` devolve a categoria resolvida no estado e restringe os recentes ao mesmo conjunto. Mudanças em `GameCategories.version` reconstruem o filtro sem varrer os arquivos de jogos. A seleção é compartilhada entre home e biblioteca completa durante a sessão.
 
