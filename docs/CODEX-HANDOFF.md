@@ -2,6 +2,8 @@
 
 Documentação de referência: [índice do projeto](NEVOA.md), [desenvolvimento](nevoa/DESENVOLVIMENTO.md) e [validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md). Esta passagem resume a operação; os guias detalham o estado atual.
 
+Pendência adicional solicitada pelo usuário: sincronizar o som final da abertura imediatamente antes de mostrar a lista de jogos, sem corte ou áudio residual sobre a biblioteca. Validar o momento da passagem no aparelho. Foi mencionada a versão V5; a instalação atual usa V6, portanto confirmar a faixa antes de trocar o arquivo.
+
 > Cole tudo abaixo no Codex.
 
 ---

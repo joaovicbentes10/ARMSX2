@@ -123,6 +123,8 @@ Não foram feitas mudanças nesses módulos para contornar a suíte. Preservar a
 
 ## Próximos incrementos
 
+**Sincronismo do áudio da abertura:** alinhar o efeito sonoro final à passagem imediatamente anterior à exibição da lista de jogos. O som não deve ser cortado pela saída da abertura nem continuar perceptivelmente sobre a biblioteca. Validar a sequência audiovisual no F6 Pro; apenas ter vídeo e áudio com 8 s não comprova sincronismo. O usuário mencionou V5 nesta solicitação; o arquivo atualmente incorporado é V6. Confirmar a faixa pretendida antes de substituir o asset.
+
 1. **Categorias:** integrar as existentes com apresentação discreta, filtro vazio recuperável e navegação por controle.
 2. **Saves no painel:** usar associação confiável ao jogo, sem inferir apenas pelo nome de arquivo.
 3. **Controles de toque:** revisar apresentação, acesso às opções e interação com jogo real.
