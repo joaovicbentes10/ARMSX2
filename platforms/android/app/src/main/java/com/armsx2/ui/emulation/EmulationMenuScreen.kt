@@ -119,6 +119,7 @@ import compose.icons.lineawesomeicons.StopSolid
 import compose.icons.lineawesomeicons.CoinsSolid
 import compose.icons.lineawesomeicons.PlusSolid
 import com.armsx2.nevoa.theme.NevoaPalette
+import com.armsx2.nevoa.settings.NevoaSection as PauseSection
 
 /** The Friends panel's nav layer: only its controls answer the pad while it is open. */
 private const val FRIENDS_NAV_LAYER = "menu.friends"
@@ -420,6 +421,7 @@ private fun MenuPage(
     // primary "keep selection on screen" via the nearest scrollable ancestor already.
     androidx.compose.runtime.CompositionLocalProvider(
         com.armsx2.ui.settings.LocalSettingsScrollState provides scrollState,
+        androidx.compose.material3.LocalContentColor provides NevoaPalette.Text,
     ) {
         Column(
             modifier
@@ -625,29 +627,6 @@ private fun MenuHeader(
     }
 }
 
-@Composable
-private fun PauseSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    var expanded by rememberSaveable(title) { mutableStateOf(false) }
-    val angle by animateFloatAsState(if (expanded) 90f else 0f, tween(160), label = "pause-section")
-    val toggle = { expanded = !expanded }
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Surface(
-            onClick = toggle,
-            modifier = Modifier.fillMaxWidth().controllerFocusable("pause.section.$title", RoundedCornerShape(8.dp), onConfirm = toggle),
-            shape = RoundedCornerShape(8.dp),
-            color = Color.Transparent,
-        ) {
-            Row(Modifier.padding(horizontal = 10.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(title, Modifier.weight(1f), color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Icon(LineAwesomeIcons.AngleRightSolid, contentDescription = null, tint = NevoaPalette.TextDim,
-                    modifier = Modifier.size(15.dp).graphicsLayer { rotationZ = angle })
-            }
-        }
-        AnimatedVisibility(expanded, enter = fadeIn(tween(150)) + expandVertically(tween(180)), exit = fadeOut(tween(100)) + shrinkVertically(tween(160))) {
-            Column(Modifier.padding(horizontal = 6.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
-        }
-    }
-}
 @Composable
 private fun MenuGameDetails(gameCRC: String, richPresence: String) {
     val game = MainActivityRuntime.currentGame.value
@@ -1555,7 +1534,7 @@ private fun AchievementsPane(state: EmulationMenuUiState, viewModel: EmulationMe
     Spacer(Modifier.height(4.dp))
     // Gateway to the full RetroAchievements screen (unlock list + presentation options).
     CompactAction(str("ra.viewAchievements"), LineAwesomeIcons.TrophySolid, Modifier.fillMaxWidth(), viewModel::openAchievements)
-    CollapsibleSection("Modo e detalhes") {
+    PauseSection("Modo e detalhes") {
     SectionCard("RetroAchievements") {
         // Signed-in account: avatar + name + both point totals (hardcore / softcore).
         if (state.raUserName.isNotBlank()) {
@@ -1605,7 +1584,7 @@ private fun AchievementsPane(state: EmulationMenuUiState, viewModel: EmulationMe
     }
     }
     if (state.achievements.isNotEmpty()) {
-        CollapsibleSection("Conquistas") {
+        PauseSection("Conquistas") {
             state.achievements.forEach { item -> InGameAchievementRow(item) }
         }
     }
@@ -1753,21 +1732,23 @@ private fun MenuActionRow(item: MenuAction, id: String, modifier: Modifier = Mod
 }
 @Composable
 internal fun SectionCard(title: String, field: String? = null, content: @Composable ColumnScope.() -> Unit) {
-    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = 0.42f, outlineAlpha = 0.34f)
+    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = 0.18f, outlineAlpha = 0.18f)
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(17.dp),
+        shape = RoundedCornerShape(8.dp),
         color = tint.container,
+        contentColor = NevoaPalette.Text,
         border = BorderStroke(1.dp, tint.border),
     ) {
-        Column(Modifier.padding(13.dp)) {
+        Column(Modifier.padding(10.dp)) {
             Text(
                 title,
                 modifier = Modifier.overrideMarker(tint, MaterialTheme.typography.titleSmall.lineHeight),
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
+                color = NevoaPalette.TextDim,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             content()
         }
     }
@@ -1874,7 +1855,7 @@ private fun MenuSwitchRow(
     field: String? = null,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = if (enabled) 0.42f else 0.24f, outlineAlpha = 0.34f)
+    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = if (enabled) 0.18f else 0.10f, outlineAlpha = 0.18f)
     Surface(
         onClick = { if (enabled) onCheckedChange(!checked) },
         modifier = Modifier
@@ -1884,7 +1865,8 @@ private fun MenuSwitchRow(
                 onConfirm = { if (enabled) onCheckedChange(!checked) },
             ),
         enabled = enabled,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
+        contentColor = NevoaPalette.Text,
         color = tint.container,
         border = BorderStroke(1.dp, tint.border),
     ) {
@@ -1925,7 +1907,7 @@ private fun MenuCycleRow(
     field: String? = null,
     onStep: (Int) -> Unit,
 ) {
-    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = 0.42f, outlineAlpha = 0.34f)
+    val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = 0.18f, outlineAlpha = 0.18f)
     Surface(
         onClick = { onStep(1) },
         modifier = Modifier
@@ -1936,7 +1918,8 @@ private fun MenuCycleRow(
                 onLeft = { onStep(-1) },
                 onRight = { onStep(1) },
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(8.dp),
+        contentColor = NevoaPalette.Text,
         color = tint.container,
         border = BorderStroke(1.dp, tint.border),
     ) {

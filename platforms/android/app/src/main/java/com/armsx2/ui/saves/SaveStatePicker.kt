@@ -50,7 +50,12 @@ import androidx.compose.ui.unit.sp
 import com.armsx2.i18n.str
 import com.armsx2.runtime.MainActivityRuntime
 import com.armsx2.ui.common.ArmsBackdrop
-import com.armsx2.ui.common.ArmsTopBar
+import com.armsx2.nevoa.home.NevoaLibraryTopBar
+import com.armsx2.nevoa.home.GlassButton
+import com.armsx2.nevoa.settings.NevoaSection
+import com.armsx2.nevoa.theme.NevoaPalette
+import com.armsx2.nevoa.saves.existingSaveStatePath
+import androidx.compose.ui.graphics.graphicsLayer
 import com.armsx2.ui.common.GlassPanel
 import com.armsx2.ui.common.RoundAction
 import com.armsx2.ui.settings.IntSliderRow
@@ -64,16 +69,16 @@ import kr.co.iefriends.pcsx2.NativeApp
 enum class SaveMode { Save, Load }
 
 private const val SLOTS = 10
-private const val TILE_WIDTH_DP = 200
-// Height for the two-row slot grid: two ~160dp tiles plus the 10dp row gap and 8dp of
+private const val TILE_WIDTH_DP = 180
+// Height for the two-row slot grid: two ~120dp tiles plus the 10dp row gap and 8dp of
 // vertical content padding. Fixed so the tiles never shrink to fit whatever sits above.
-private const val TILE_GRID_HEIGHT_DP = 338
+private const val TILE_GRID_HEIGHT_DP = 258
 
 /**
  * In-game save-state slot picker, the rich replacement for the pause menu's
  * quick Save / Load buttons (matches the old Refresh UI). Both modes show the
  * 10 numbered slots as thumbnail tiles previewed via `getImageSlot(slot)`; the
- * game path from `getGamePathSlot(slot)` marks a slot as occupied.
+ * existing file at `getGamePathSlot(slot)` marks a slot as occupied.
  *
  *  - Save: any tile is a valid target (tap = write/overwrite), then close +
  *    resume via onBack.
@@ -135,17 +140,17 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
 
     ArmsBackdrop {
         Column(Modifier.fillMaxSize()) {
-            ArmsTopBar(
-                title = if (mode == SaveMode.Save) str("savestate.title.save")
-                else str("savestate.title.loadManage"),
-                leading = { RoundAction("←", str("action.back"), onBack, controllerId = "save.back") },
+            NevoaLibraryTopBar(
+                title = if (mode == SaveMode.Save) "Salvar estado" else "Carregar estado",
+                subtitle = MainActivityRuntime.currentGame.value?.title,
+                leading = { GlassButton("Voltar", onBack, quiet = true, controllerId = "save.back") },
                 actions = {
-                    RoundAction("⤓", str("savestate.import"), onClick = { importLauncher.launch(arrayOf("*/*")) }, controllerId = "save.import")
-                    RoundAction(
-                        "🗑",
-                        str("savestate.delete.mode"),
-                        onClick = { deleteMode = !deleteMode; notice = null; failure = null },
-                        selected = deleteMode,
+                    GlassButton("Importar", { importLauncher.launch(arrayOf("*/*")) }, quiet = true, controllerId = "save.import")
+                    GlassButton(
+                        if (deleteMode) "Concluir exclusão" else "Excluir",
+                        { deleteMode = !deleteMode; notice = null; failure = null },
+                        primary = deleteMode,
+                        quiet = !deleteMode,
                         controllerId = "save.deleteMode",
                     )
                 },
@@ -174,20 +179,12 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
-            // Scrollable body: the Load screen stacks the auto-save options ABOVE the
-            // slot grid, and the interval-autosave row made that block tall enough to
-            // squeeze a weight(1f) grid — the two rows of tiles shrank to fit and looked
-            // squished (the reported scaling bug). Give the grid a FIXED height so the
-            // tiles are always full-size, and let the column scroll when options + grid
-            // together exceed a short screen. The Save screen has no options block, so it
-            // just shows the same full-size grid as before.
+            // Fixed two-row grid preserves thumbnail proportions. Load options sit below
+            // it in a disclosure; the body scrolls when expanded on a short screen.
             Column(
                 Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
             ) {
-                if (mode == SaveMode.Load) {
-                    AutoOptions(Modifier.fillMaxWidth().padding(horizontal = 8.dp))
-                    Spacer(Modifier.height(10.dp))
-                }
+
                 LazyHorizontalGrid(
                     rows = GridCells.Fixed(2),
                     // Two comfortable rows of TILE_WIDTH_DP-wide tiles. Fixed, not
@@ -265,6 +262,11 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
                                 }
                             }
                         }
+                    }
+                }
+                if (mode == SaveMode.Load) {
+                    NevoaSection("Salvamento automático", controllerId = "save.options") {
+                        AutoOptions(Modifier.fillMaxWidth())
                     }
                 }
             }
@@ -420,8 +422,8 @@ private fun AutosaveTile(n: Int = 1, onPick: () -> Unit) {
     }
     TileFrame(
         controllerId = if (n == 1) "save.autosave" else "save.autosave.$n",
-        borderColor = Color(0xFFFFB347).copy(alpha = 0.7f),
-        backgroundColor = Color(0xFF2F2820),
+        borderColor = NevoaPalette.TowerViolet.copy(alpha = 0.5f),
+        backgroundColor = NevoaPalette.Glass,
         onClick = onPick,
     ) {
         image?.let {
@@ -433,7 +435,7 @@ private fun AutosaveTile(n: Int = 1, onPick: () -> Unit) {
             subtitle = formatSlotStamp(stamp)
                 ?: gamePath?.substringAfterLast('/')?.substringBeforeLast('.')
                 ?: str("savestate.autosave.savedOnExit"),
-            titleColor = Color(0xFFFFB347),
+            titleColor = NevoaPalette.TowerViolet,
         )
     }
 }
@@ -448,7 +450,9 @@ private fun SlotTile(
     onPick: (Int) -> Unit,
 ) {
     val gamePath by produceState<String?>(initialValue = null, slot, refreshKey) {
-        value = withContext(Dispatchers.IO) { runCatching { NativeApp.getGamePathSlot(slot) }.getOrNull() }
+        value = withContext(Dispatchers.IO) {
+            runCatching { existingSaveStatePath(NativeApp.getGamePathSlot(slot)) }.getOrNull()
+        }
     }
     val image by produceState<android.graphics.Bitmap?>(initialValue = null, slot, refreshKey) {
         value = withContext(Dispatchers.IO) {
@@ -473,14 +477,15 @@ private fun SlotTile(
     TileFrame(
         controllerId = if (enabled) "save.slot.$slot" else null,
         borderColor = if (deleteMode && !empty) Color(0xFFFFB4A2)
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-        backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+        else NevoaPalette.GlassBorder,
+        backgroundColor = NevoaPalette.Glass,
         enabled = enabled,
         onClick = { onPick(slot) },
         // Long-press an OCCUPIED slot to delete it — the reported gap ("tap and hold does
         // nothing", and deleting otherwise meant digging through a file manager).
         onLongClick = if (!empty && onDelete != null) ({ onDelete(slot) }) else null,
     ) {
+        if (empty) Text("Vazio", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.align(Alignment.Center))
         image?.let {
             Image(it.asImageBitmap(), "Slot ${slot + 1}",
                 Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
@@ -512,10 +517,11 @@ private fun TileFrame(
         Modifier
             .width(TILE_WIDTH_DP.dp)
             .fillMaxHeight()
-            .controllerFocusable(controllerId, RoundedCornerShape(12.dp), onConfirm = { if (enabled) onClick() })
-            .clip(RoundedCornerShape(12.dp))
+            .controllerFocusable(controllerId, RoundedCornerShape(8.dp), onConfirm = { if (enabled) onClick() })
+            .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
-            .border(1.dp, borderColor, RoundedCornerShape(12.dp))
+            .graphicsLayer { alpha = if (enabled || onLongClick != null) 1f else 0.45f }
+            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
             .combinedClickable(
                 enabled = enabled || onLongClick != null,
                 onClick = { if (enabled) onClick() },

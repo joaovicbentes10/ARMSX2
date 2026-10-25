@@ -108,7 +108,8 @@ Base: `platforms/android/app/src/test/java/com/armsx2/nevoa/`.
 | `IntroSoundTest` | 4 | Validação de áudio |
 | `NevoaPaletteTest` | 6 | Paleta e contraste |
 | `NevoaOrientationTest` | 5 | Padrão antigo em paisagem e preservação de escolhas explícitas |
-| **Total** | **46** | **Todos passaram localmente** |
+| `SaveSlotFilesTest` | 4 | Caminho candidato do JNI, arquivo existente, diretório e caminho vazio |
+| **Total** | **50** | **Todos passaram localmente** |
 
 Esses testes não comprovam renderização, reprodução real de mídia ou todo o runtime.
 
@@ -158,3 +159,11 @@ Planejado: launcher separado com a mesma identidade, suporte a controle e abertu
 ## Manter o registro
 
 Anotar commit, origem e assinatura do APK, ambiente, testes, capturas e caminhos não exercitados. Preservar resultados anteriores como histórico e corrigir o estado quando houver nova evidência.
+
+## Rodada de abas e estados — 24/10/2026
+
+Abas internas usam cartões menores, preenchimentos discretos e seções recolhíveis compartilhadas (`NevoaSection`). Salvar/carregar usam o cabeçalho Névoa, ações em texto e duas linhas de slots de 120 dp. Opções automáticas ficam recolhidas após os slots.
+
+Corrigida a indicação falsa de slot ocupado: `getGamePathSlot` fornece um nome candidato mesmo sem arquivo. `SaveSlotFiles` verifica a existência antes de mostrar conteúdo ou habilitar carregamento.
+
+APK local assinado instalado no F6 Pro, com bibliotecas nativas reutilizadas do APK de referência (núcleo sem mudanças). Build e 50 testes Névoa passaram. Conferidos Salvar, Carregar, abertura da seção automática e aba gráfica no Scooby. Nenhum estado foi salvo, carregado, importado ou excluído; esses fluxos de escrita não foram exercitados. Capturas locais em `.superpowers/validation/internal-tabs-states/`. A revisão visual identificou um título legado escuro na aba gráfica; a cor de conteúdo da página foi explicitada para o próximo APK.

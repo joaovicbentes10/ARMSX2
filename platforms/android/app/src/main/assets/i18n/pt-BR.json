@@ -1861,7 +1861,7 @@
  "savestate.autoSaveInterval.label": "Salvar automaticamente enquanto joga",
  "savestate.autoSaveInterval.off": "Desligado",
  "savestate.import": "Importar",
- "savestate.hint": "Escolha um slot. Segure um slot ou use o botão de lixeira para excluí-lo.",
+ "savestate.hint": "Escolha um slot. Para excluir, segure um estado existente ou ative Excluir.",
  "savestate.delete.mode": "Excluir um salvamento",
  "savestate.delete.modeHint": "Modo de exclusão: escolha um salvamento para excluir. Toque no botão da lixeira novamente para cancelar.",
  "savestate.delete.title": "Excluir estado salvo",

@@ -1880,7 +1880,7 @@ private val BASE_EN: Map<String, String> = mapOf(
     "savestate.autosaveKeep.description" to "Each autosave moves the earlier ones a place back, so if the newest was saved just before a death you can load the one before it from the tiles after Autosave. Each one takes as much space as a save state.",
     "savestate.backup" to "Backup",
     "savestate.import" to "Import",
-    "savestate.hint" to "Choose a slot. Hold a slot, or use the trash button, to delete it.",
+    "savestate.hint" to "Choose a slot. To delete an existing state, hold it or turn on Delete mode.",
     "savestate.delete.mode" to "Delete a save",
     "savestate.delete.modeHint" to "Delete mode: choose a save to delete. Tap the trash button again to cancel.",
     "savestate.delete.title" to "Delete save state",

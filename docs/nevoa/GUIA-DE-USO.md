@@ -90,3 +90,7 @@ No menu durante a emulação, as ações principais incluem Continuar, Avanço r
 | Atualização recusada pelo Android | Application ID e assinatura; não desinstalar como primeira tentativa |
 
 Consulte os [limites de validação e problemas conhecidos](VALIDACAO-E-PENDENCIAS.md) para distinguir uma pendência de uma regressão confirmada.
+
+### Estados de jogo
+
+Salvar e Carregar usam uma grade de duas linhas. Slots vazios não podem ser carregados. Importar e Excluir ficam no cabeçalho; a exclusão exige confirmação. Em Carregar, expanda “Salvamento automático”, abaixo da grade, para acessar as opções de persistência.
