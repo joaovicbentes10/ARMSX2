@@ -22,7 +22,7 @@ flowchart TD
 
 ### Abertura
 
-`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. A faixa Névoa Suspense acompanha o vídeo padrão, com prioridade para um áudio personalizado quando existir. A preparação é assíncrona, e o player é liberado na conclusão, em onStop ou na destruição da Activity.
+`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. A faixa Névoa Suspense V6 acompanha o vídeo padrão, com prioridade para um áudio personalizado quando existir. A preparação é assíncrona, e o player é liberado na conclusão, em onStop ou na destruição da Activity.
 
 `Main` abre sem animação de troca. Seu tema já mostra `nevoa_last_frame.webp`. Durante a carga inicial, `NevoaHome` mantém o fundo; ao receber os jogos, apresenta a fileira. A entrada visual dos elementos toca uma vez por processo.
 
@@ -42,9 +42,9 @@ Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`,
 
 ### Início de jogo
 
-`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 700 ms, com fade final de 150 ms. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime. A cobertura escura final permanece enquanto a inicialização assíncrona ainda deixa o runtime em STOPPED, evitando expor a biblioteca entre animação e jogo.
+`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 520 ms, com dissolução da cena, um véu azul discreto e escurecimento final. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime. A cobertura escura final permanece enquanto a inicialização assíncrona ainda deixa o runtime em STOPPED, evitando expor a biblioteca entre animação e jogo.
 
-O gate usa o estado de emulação e um timeout para reabrir. A preservação integral da transição durante recriação de Activity continua pendente.
+O círculo branco e as partículas da antiga explosão foram removidos. O gate usa o estado de emulação e um timeout para reabrir. A preservação integral da transição durante recriação de Activity continua pendente.
 
 ### Fundo e ciclo de vida
 
@@ -75,6 +75,7 @@ Base dos caminhos: `platforms/android/app/src/main/java/com/armsx2/nevoa/`.
 | `home/DvdCase.kt` | Caixa, capa, seleção e brilho |
 | `home/GameDetailsPanel.kt` | Dados e ações do jogo; botões compartilhados da biblioteca |
 | `home/LaunchBurst.kt` | Gate e transição de início |
+| `intro/NevoaOrientation.kt` | Mapeia o padrão antigo de orientação para paisagem, preservando escolhas explícitas |
 | `intro/FillVideoView.kt` | Preenchimento do vídeo |
 | `intro/IntroSound.kt` | Validação, cópia e reprodução de áudio |
 | `settings/SettingsGroups.kt` | Agrupamento das categorias existentes |
@@ -106,3 +107,5 @@ Após novos incrementos, o diff contra a base fornece a lista exata. Mudanças n
 Jogos, permissões, configurações, histórico, conquistas e saves permanecem na infraestrutura original. O áudio importado fica em `filesDir/nevoa_intro_sound`, e o vídeo personalizado em `filesDir/bootintro/intro`. São cópias privadas: não dependem do URI de origem após a importação e são removidas se o armazenamento do app for apagado.
 
 O namespace é `com.armsx2`, mas o application ID é `com.armsx2.nevoa`. Por isso, a Activity de abertura via ADB é `com.armsx2.nevoa/com.armsx2.BootSplashActivity`.
+
+A fileira trata gestos horizontais com limiar de 48 dp. O scroll livre foi substituído por um avanço de seleção por gesto, com rolagem animada da lista para acompanhar o URI selecionado. O callback do gesto acompanha a seleção mais recente, também quando ela muda por controle.

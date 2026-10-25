@@ -7,6 +7,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -234,6 +236,7 @@ private fun NevoaRow(
     }
 
     val listState = rememberLazyListState()
+    val moveFromSwipe by rememberUpdatedState<(Int) -> Unit>({ move(it) })
     LaunchedEffect(index, games.map { it.uri.toString() }) {
         if (games.isNotEmpty()) listState.animateScrollToItem((index - 1).coerceAtLeast(0))
     }
@@ -326,11 +329,26 @@ private fun NevoaRow(
         }
         LazyRow(
             state = listState,
+            userScrollEnabled = false,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth()
                 .padding(top = if (query.isNotEmpty()) 64.dp else 0.dp)
                 .height(220.dp)
+                .pointerInput(busy, drawerOpen, games.map { it.uri.toString() }) {
+                    if (busy || drawerOpen) return@pointerInput
+                    var distance = 0f
+                    val threshold = 48.dp.toPx()
+                    detectHorizontalDragGestures(
+                        onDragStart = { distance = 0f },
+                        onDragCancel = { distance = 0f },
+                        onDragEnd = { moveFromSwipe(swipeSelectionDelta(distance, threshold)) },
+                        onHorizontalDrag = { change, amount ->
+                            change.consume()
+                            distance += amount
+                        },
+                    )
+                }
                 .onGloballyPositioned {
                     val p = it.positionInRoot()
                     SettingsControllerNav.setPosition(RowId, p.x, p.y, it.size.width.toFloat())

@@ -538,7 +538,7 @@ fun AppTab() {
                 when {
                     soundBusy -> "Importando som..."
                     soundSet -> "Som da abertura: personalizado"
-                    else -> "Som da abertura: Névoa Suspense"
+                    else -> "Som da abertura: Névoa Suspense V6"
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -2488,7 +2488,7 @@ open class MainActivityRuntime : ComponentActivity() {
     }
 
     /** Apply the user's Emulation Screen Orientation choice, resolved per-game (∘ global).
-     *  0=Use Device Setting, 1=Landscape, 2=Portrait, 3=Auto-Rotate. SENSOR_* variants let
+     *  0=Névoa default (Landscape), 1=Landscape, 2=Portrait, 3=Auto-Rotate. SENSOR_* variants let
      *  the device still flip 180° within the locked axis. Called on launch, on change, at
      *  game boot (applyRendererPrefs) and on exit-to-library — emulationOwnsOrientation decides
      *  the tier: emulation gets the renderer rotation, the library/menus get the launcher one. */
@@ -2500,11 +2500,11 @@ open class MainActivityRuntime : ComponentActivity() {
             com.armsx2.config.ConfigStore.resolveForGame(currentGame.value?.settingsKey).output.orientation
         else
             com.armsx2.ui.theme.LauncherOrientationPreferences.mode.value
-        val requested = when (orientation) {
+        val requested = when (com.armsx2.nevoa.intro.nevoaOrientation(orientation)) {
             1 -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             2 -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
             3 -> ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
-            else -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
         // ★ Only ASSIGN when it actually changes. Writing requestedOrientation makes Android
         // re-evaluate orientation even when the value is identical, and with the default

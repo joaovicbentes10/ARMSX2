@@ -579,7 +579,7 @@ data class OutputSettings(
      *  MainActivityRuntime.applyRendererPrefs; per-game so a title can pin the driver it
      *  needs. Seeded from the legacy global "customDriverId" pref on first load. */
     val customDriverId: String = "",
-    /** Android activity screen orientation: 0 Use Device Setting · 1 Landscape · 2 Portrait
+    /** Android activity screen orientation: 0 Névoa default (Landscape) · 1 Landscape · 2 Portrait
      *  · 3 Auto-Rotate. Applied via MainActivityRuntime.applyEmulationOrientation, resolved
      *  per-game at game boot (global in the library/menus). Seeded from the legacy global
      *  "ui.orientation" pref on first load. */

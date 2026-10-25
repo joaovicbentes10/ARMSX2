@@ -21,6 +21,25 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 | Saves no painel do jogo | Não implementados | Exigir associação confiável ao título |
 | Launcher Windows | Arquitetura planejada | Implementação não iniciada |
 
+## Paisagem na partida, seleção por gesto e áudio V6 — 24/10/2026
+
+Implementação:
+
+- O modo de orientação 0, antes Dispositivo, passa a significar Padrão (paisagem) no Névoa. O valor legado já salvo não libera mais a trava horizontal quando o runtime assume a tela. As opções explícitas Retrato e rotação automática permanecem disponíveis.
+- A fileira principal trata arrastos horizontais com limiar de 48 dp: esquerda avança, direita volta, um item por gesto. Movimentos curtos e cancelados não alteram a seleção; arrastar não inicia o jogo. A lista acompanha a seleção com rolagem animada.
+- Áudio padrão substituído pelo arquivo fornecido `ARMSX2_Nevoa_Suspense_V6.mp3`, copiado sem alteração. O MP3 e a prévia de referência `Nevoa_Previa_2_Ritmo_V6_Inicio_Suave.mp4` têm 8 s. O vídeo foi usado como referência, sem substituir a abertura por uma gravação de tela com rotação/barras.
+- O círculo branco e as partículas da antiga explosão de Jogar foram substituídos por uma dissolução de 520 ms: escurecimento da cena, véu azul discreto e quadro final preto. A cobertura permanece até o runtime assumir a tela.
+
+Validação no F6 Pro, após instalar o release local assinado:
+
+- Movimento curto preservou BIOS; arrasto à esquerda selecionou Scooby sem iniciar; à direita retornou à BIOS; novo arrasto à esquerda selecionou Scooby novamente.
+- Partida do Scooby por Jogar gravada. Quatro amostras do WindowManager mostraram `SCREEN_ORIENTATION_SENSOR_LANDSCAPE`, `mLastOrientation=6`, display `3200x1440`; a captura durante a emulação também tem 3200x1440. A gravação mostra a partida horizontal, sem liberar a orientação para retrato.
+- Inspeção dos quadros da transição confirmou a dissolução, sem círculo branco. Esta rodada valida a entrada, não gameplay prolongado.
+- Hash do áudio incorporado igual ao V6 fornecido; log confirmou `Playback started: bundled`.
+- **46 testes Névoa passaram**, incluindo 4 novos casos de gesto e 5 de orientação. Build release local concluído com núcleo pré-compilado; nenhum código nativo alterado.
+
+Evidências locais não versionadas: `.superpowers/validation/v6-landscape-swipe/`, com `swipe-scooby.png`, `launch.mp4`, `landscape.png`, `orientation.txt`, `transition-contact.png` e `transition-preview.mp4`.
+
 ## Som padrão, biblioteca completa e falhas pretas — 24/10/2026
 
 Implementado e instalado no F6 Pro:
@@ -72,14 +91,15 @@ Base: `platforms/android/app/src/test/java/com/armsx2/nevoa/`.
 |---|---:|---|
 | `ShaderClockTest` | 6 | Relógio e intervalo de atualização |
 | `LaunchGateTest` | 6 | Início duplicado e reabertura |
-| `LibraryLogicTest` | 15 | Seleção, ordem auxiliar, rótulos e fallback, incluindo busca vazia |
+| `LibraryLogicTest` | 19 | Seleção, ordem auxiliar, rótulos e fallback, incluindo busca vazia |
 | `IntroSoundTest` | 4 | Validação de áudio |
 | `NevoaPaletteTest` | 6 | Paleta e contraste |
-| **Total** | **37** | **Todos passaram localmente** |
+| `NevoaOrientationTest` | 5 | Padrão antigo em paisagem e preservação de escolhas explícitas |
+| **Total** | **46** | **Todos passaram localmente** |
 
 Esses testes não comprovam renderização, reprodução real de mídia ou todo o runtime.
 
-A suíte completa local teve **260 testes: 249 passaram, 2 falharam e 9 foram ignorados**. As falhas foram fora do incremento:
+Na execução inicial de busca/ordenação, a suíte completa local teve **260 testes: 249 passaram, 2 falharam e 9 foram ignorados**. As falhas foram fora do incremento:
 
 | Teste | Evidência e motivo identificado |
 |---|---|

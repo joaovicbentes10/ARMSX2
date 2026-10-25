@@ -8,6 +8,13 @@ fun <T> libraryOrder(recent: List<T>, all: List<T>, key: (T) -> String): List<T>
 fun moveSelection(current: Int, delta: Int, count: Int): Int =
     if (count <= 0) 0 else (current + delta).coerceIn(0, count - 1)
 
+/** One selection per deliberate swipe; small movements must not change or launch a game. */
+fun swipeSelectionDelta(distance: Float, threshold: Float): Int = when {
+    distance <= -threshold -> 1
+    distance >= threshold -> -1
+    else -> 0
+}
+
 /** Empty search results stay in Névoa so the user can change or clear the query. */
 fun shouldShowClassic(
     initialized: Boolean,

@@ -11,14 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import com.armsx2.nevoa.theme.NevoaPalette
-import kotlin.math.cos
-import kotlin.math.hypot
 import kotlin.math.sin
+import kotlin.math.PI
 
 /** Allows a single launch until [reset]; guards against double taps and pad + touch at once. */
 class LaunchGate {
@@ -43,18 +41,16 @@ fun shouldReopenGate(
     failureTimeoutMs: Long = 15_000L,
 ): Boolean = nowStopped && (sawNonStopped || elapsedMs >= failureTimeoutMs)
 
-private const val BurstMillis = 700
-private const val FadeMillis = 150
-private const val ParticleCount = 40
+private const val TransitionMillis = 520
 
-/** Light burst over the whole screen. Swallows touches while [active]; calls [onFinished] once. */
+/** Dissolves the library through blue fog into the game's dark loading frame. */
 @Composable
 fun LaunchBurst(active: Boolean, onFinished: () -> Unit) {
     if (!active) return
     val progress = remember { Animatable(0f) }
     val finished by rememberUpdatedState(onFinished)
     LaunchedEffect(Unit) {
-        progress.animateTo(1f, tween(BurstMillis, easing = LinearEasing))
+        progress.animateTo(1f, tween(TransitionMillis, easing = LinearEasing))
         finished()
     }
     Canvas(
@@ -68,35 +64,19 @@ fun LaunchBurst(active: Boolean, onFinished: () -> Unit) {
             },
     ) {
         val p = progress.value
-        val center = Offset(size.width / 2f, size.height / 2f)
-        val maxRadius = hypot(size.width, size.height) / 2f
-        val grow = 1f - (1f - p) * (1f - p) // ease-out
-        val radius = (maxRadius * grow).coerceAtLeast(1f)
-        drawCircle(
-            Brush.radialGradient(
-                0f to NevoaPalette.Text,
-                0.35f to NevoaPalette.TowerCyan,
-                0.7f to NevoaPalette.Fog,
-                0.95f to NevoaPalette.Background,
-                1f to Color.Transparent,
-                center = center,
-                radius = radius,
-            ),
-            radius = radius,
-            center = center,
-        )
-        for (i in 0 until ParticleCount) {
-            val angle = i * 2f * Math.PI.toFloat() / ParticleCount + (i % 3) * 0.07f
-            val reach = radius * (0.5f + 0.5f * ((i * 37) % 10) / 10f)
-            drawCircle(
-                NevoaPalette.Text.copy(alpha = 1f - p),
-                radius = 3f + (i % 4) * 1.5f,
-                center = Offset(center.x + cos(angle) * reach, center.y + sin(angle) * reach),
-            )
-        }
-        val fadeStart = 1f - FadeMillis.toFloat() / BurstMillis
-        if (p > fadeStart) {
-            drawRect(Color.Black.copy(alpha = ((p - fadeStart) / (1f - fadeStart)).coerceIn(0f, 1f)))
-        }
+        val dissolve = p * p * (3f - 2f * p)
+        drawRect(NevoaPalette.Background.copy(alpha = dissolve))
+
+        // A broad, dim veil belongs to the existing scene, rather than a white
+        // emitter or particles placed on top of it. It disappears before gameplay.
+        val mist = sin(p * PI).toFloat().coerceAtLeast(0f) * 0.12f
+        val drift = size.width * (p * 0.6f - 0.4f)
+        drawRect(Brush.horizontalGradient(
+            colors = listOf(Color.Transparent, NevoaPalette.Fog.copy(alpha = mist), Color.Transparent),
+            startX = drift,
+            endX = drift + size.width * 1.4f,
+        ))
+        val ending = ((p - 0.4f) / 0.6f).coerceIn(0f, 1f)
+        drawRect(Color.Black.copy(alpha = ending * ending * (3f - 2f * ending)))
     }
 }

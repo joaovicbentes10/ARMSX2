@@ -16,9 +16,13 @@ APKs assinados com a chave estável do Névoa podem ser instalados por cima, pre
 
 Use o fluxo existente do ARMSX2 para selecionar sua BIOS, autorizar pastas de jogos e ajustar os controles. Sem uma biblioteca utilizável, a tela clássica assume o fluxo de preparação. A abertura e a tela principal usam orientação horizontal com os dois lados de paisagem disponíveis.
 
+### Orientação dos jogos
+
+O padrão de orientação do Névoa mantém também os jogos em paisagem, inclusive configurações antigas com valor Dispositivo. Retrato ou rotação automática continuam disponíveis quando escolhidos explicitamente nas configurações do jogo.
+
 ## Abertura
 
-A abertura própria dura aproximadamente oito segundos e termina no cenário da biblioteca. Ela usa o som padrão Névoa Suspense (8 segundos), fornecido pelo responsável pelo projeto. Nas opções de App, é possível escolher outro áudio para substituí-lo. O arquivo personalizado é copiado para o armazenamento privado do aplicativo; Restaurar som padrão volta à faixa incluída.
+A abertura própria dura aproximadamente oito segundos e termina no cenário da biblioteca. Ela usa o som padrão Névoa Suspense V6 (8 segundos), fornecido pelo responsável pelo projeto. Nas opções de App, é possível escolher outro áudio para substituí-lo. O arquivo personalizado é copiado para o armazenamento privado do aplicativo; Restaurar som padrão volta à faixa incluída.
 
 O limite do áudio é **5 MiB**, com tipo MIME `audio/*`. Arquivos informados pelo provedor como `application/ogg` são atualmente recusados, mesmo que sejam áudio.
 
@@ -30,14 +34,14 @@ Uma fileira horizontal apresenta caixas de DVD. A selecionada cresce e recebe br
 
 | Ação | Resultado |
 |---|---|
-| Jogar | Mostra a transição de luz e inicia o item |
+| Jogar | Dissolve a biblioteca na névoa e inicia o item |
 | Configurar | Abre as opções do jogo selecionado |
 | Menu | Abre a navegação lateral |
 | Buscar | Abre o teclado existente para filtrar os jogos |
 | Ordem | Alterna a ordenação |
 | Biblioteca completa | Abre a grade/lista/estante com visual Névoa e os recursos completos |
 
-Por toque, tocar em outra capa muda a seleção; tocar na selecionada inicia o jogo. Jogar também inicia o item. Durante a transição, as ações ficam bloqueadas para evitar disparos duplicados.
+Por toque, tocar em outra capa muda a seleção; tocar na selecionada inicia o jogo. Jogar também inicia o item. Arrastar para a esquerda seleciona o próximo jogo; para a direita, o anterior. Cada gesto avança um item e movimentos pequenos não mudam a seleção. Arrastar não inicia o jogo. Durante a transição, as ações ficam bloqueadas para evitar disparos duplicados.
 
 Por controle, o direcional percorre os elementos e a fileira. Confirmar sobre a fileira inicia o item selecionado. Y/△ abre a biblioteca completa. Ações do topo também participam da navegação por controle.
 

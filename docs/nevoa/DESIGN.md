@@ -37,7 +37,7 @@ Na biblioteca, Jogar é principal. Menu, Buscar, Ordem, Biblioteca completa e Co
 
 ## Movimento e continuidade
 
-A abertura tem formato 20:9, 2400 × 1080, 30 fps e cerca de oito segundos. O fundo se move lentamente; configurações usam modo calmo. A entrada da biblioteca acontece uma vez por processo, e a transição para o jogo é breve. O relógio do fundo para durante a emulação ativa ou pausada.
+A abertura tem formato 20:9, 2400 × 1080, 30 fps e cerca de oito segundos. O fundo se move lentamente; configurações usam modo calmo. A entrada da biblioteca acontece uma vez por processo, e a transição para o jogo dissolve a própria cena em névoa azul e preto, em 520 ms, sem círculo branco ou partículas avulsas. O relógio do fundo para durante a emulação ativa ou pausada.
 
 Gerador WebGL, shader AGSL e fundo inicial da janela precisam manter a mesma composição na passagem. Mudou cores, hash, torres ou enquadramento: revisar os três e regenerar vídeo e imagem final.
 
