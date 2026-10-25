@@ -135,7 +135,7 @@ fun NevoaHome(
                     onCategoriesChanged = viewModel::onCategoriesChanged,
                     onQuery = viewModel::setQuery,
                     onSort = viewModel::setSort,
-                    onLaunch = { viewModel.launch(it) },
+                    onLaunch = { viewModel.launch(it, playLaunchSound = false) },
                     onOpenGameSettings = onOpenGameSettings,
                     onOpenClassic = { classicRequested = true },
                     onOpenMenu = onOpenMenu,
@@ -208,7 +208,7 @@ private fun NevoaRow(
     var launched by remember { mutableStateOf(false) }
     fun onPlay(g: GameInfo) {
         if (gate.tryStart()) {
-            MenuSfx.play(MenuSfx.Event.SELECT)
+            MenuSfx.play(MenuSfx.Event.LAUNCH)
             launchCoverBounds = selectedCoverBounds
             pending = g
         }

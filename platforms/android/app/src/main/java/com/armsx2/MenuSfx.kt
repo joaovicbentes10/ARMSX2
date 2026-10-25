@@ -15,7 +15,7 @@ import java.io.File
 /**
  * UI sound effects for the library/menu — the "console dashboard" blips (select, back, toggle…).
  *
- * Ships a bundled default set: short interface blips trimmed from obsydianx's "Interface SFX Pack
+ * Most bundled clips are short interface blips trimmed from obsydianx's "Interface SFX Pack
  * 1", released CC0 / public domain (https://obsydianx.itch.io/interface-sfx-pack-1). CC0 imposes no
  * attribution requirement, but we credit it in the About screen anyway.
  *
@@ -41,7 +41,8 @@ object MenuSfx {
      *  (case- and extension-insensitive); [defaultRes] is the bundled fallback clip. */
     enum class Event(val fileName: String, val defaultRes: Int, val altRes: Int = 0) {
         NAV("nav", R.raw.sfx_nav_a, R.raw.sfx_nav_b), // alternates two soft ticks as the highlight moves
-        SELECT("select", R.raw.sfx_click),       // confirm / launch a game: a short click, not the old chime
+        SELECT("select", R.raw.sfx_click),       // ordinary menu confirmation
+        LAUNCH("game_launch", R.raw.nevoa_game_launch), // original Nevoa cue; generated in tools/nevoa-sfx
         SUBMENU("submenu", R.raw.sfx_submenu),   // open a settings menu / sub-screen
         MENU_OPEN("menu", R.raw.sfx_menu),       // open the in-game pause menu
         BACK("back", R.raw.sfx_back),
@@ -165,7 +166,11 @@ object MenuSfx {
         lastPlayMs[event] = now
         lastPlayedMs = now
         val g = gain()
-        runCatching { p.play(id, g, g, 1, 0, 1f) }
+        val stream = runCatching { p.play(id, g, g, 1, 0, 1f) }.getOrDefault(0)
+        if (event == Event.LAUNCH) {
+            if (stream != 0) Log.d(TAG, "Game launch sound started, volume=${volumePercent.value}%")
+            else Log.w(TAG, "Game launch sound was not ready")
+        }
     }
 
     /** Map an incoming filename to an event by its base name (case/extension-insensitive). */

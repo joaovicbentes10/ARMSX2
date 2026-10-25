@@ -371,7 +371,7 @@ private val BASE_EN: Map<String, String> = mapOf(
     "app.menuSfx.reset" to "Use Built-in",
     "app.menuSfx.current" to "Sound pack: %s",
     "app.menuSfx.none" to "Using the built-in sound set.",
-    "app.menuSfx.hint" to "Pick a folder with clips named nav, select, submenu, menu, back, toggle_on, toggle_off, reset, slider, sleep, wake (any of .ogg / .wav / .mp3). Keep them short, a fraction of a second.",
+    "app.menuSfx.hint" to "Pick a folder with clips named nav, select, game_launch, submenu, menu, back, toggle_on, toggle_off, reset, slider, sleep, wake (any of .ogg / .wav / .mp3). Keep them short, a fraction of a second.",
     "app.welcomeBack" to "Welcome Back!",
     "app.menuSfx.imported" to "Imported %d sound effect(s).",
     "app.menuSfx.importNone" to "No matching files. Name them select, back, menu, toggle_on, toggle_off, reset, or slider.",

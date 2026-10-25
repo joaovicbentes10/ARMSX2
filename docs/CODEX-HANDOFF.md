@@ -105,3 +105,7 @@ Arte padrão e editor receberam paleta Névoa e apresentação discreta. Mais op
 ## Categorias concluídas — 25/10/2026
 
 Faixa de filtros compartilhada por Home, Grade, Lista e Estante. Categorias do jogo abre a associação na home; Gerenciar permite renomear/excluir; vazio recuperável e recentes respeitando o filtro. `CategoryPool` e `HomeViewModel` resolvem alterações sem rescan e restauram Todos ao remover uma categoria ativa. Controle na biblioteca completa usa a nova zona Categories. Build e 61 testes passaram; APK final instalado e conferido no Poco, categoria temporária de QA removida e Grade restaurada. Próximo item funcional aprovado na sequência geral: associação confiável dos saves ao painel do jogo; ainda não implementado.
+
+## Som de iniciar jogo — 25/10/2026
+
+O usuário pediu um efeito ao confirmar Jogar com sensação de console. Implementado evento próprio LAUNCH de 820 ms, original e reproduzível por tools/nevoa-sfx/generate_launch.py. Segue o volume/ativação de MenuSfx e toca uma vez na home, antes da transição; o ViewModel não repete. Biblioteca completa usa o mesmo evento. Build e 61 testes passaram, APK instalado no Poco e emissão SoundPool conferida em ambas as entradas. A abertura V6 ficou intacta. Principais pendências continuam: saves no painel, validações amplas de runtime/controle e nome futuro da abertura.

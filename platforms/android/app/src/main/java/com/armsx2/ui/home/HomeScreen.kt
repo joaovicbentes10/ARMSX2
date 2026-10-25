@@ -2273,7 +2273,7 @@ object HomeInputController {
 
     fun confirm(): Boolean {
         val viewModel = owner ?: return false
-        com.armsx2.MenuSfx.play(com.armsx2.MenuSfx.Event.SELECT)
+        val before = com.armsx2.MenuSfx.lastPlayedAt()
         when (zone.value) {
             HomeZone.Toolbar -> toolbarActions.getOrNull(toolbarIndex.intValue)?.invoke()
             HomeZone.Search -> searchConfirm?.invoke()
@@ -2284,6 +2284,7 @@ object HomeInputController {
                 viewModel.launch(game)
             }
         }
+        if (com.armsx2.MenuSfx.lastPlayedAt() == before) com.armsx2.MenuSfx.play(com.armsx2.MenuSfx.Event.SELECT)
         return true
     }
 

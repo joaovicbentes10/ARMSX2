@@ -153,7 +153,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         state.value = buildState(state.value.copy(categoryFilter = category, selectedIndex = 0))
     }
 
-    fun launch(game: GameInfo) {
+    fun launch(game: GameInfo) = launch(game, playLaunchSound = true)
+
+    /** Home already played its cue at the start of the cover transition. */
+    fun launch(game: GameInfo, playLaunchSound: Boolean) {
+        if (playLaunchSound) com.armsx2.MenuSfx.play(com.armsx2.MenuSfx.Event.LAUNCH)
         repository.markPlayed(game)
         state.value = buildState(state.value)
         val launchPath = if (game.uri.scheme == "file") game.uri.path ?: game.uri.toString() else game.uri.toString()

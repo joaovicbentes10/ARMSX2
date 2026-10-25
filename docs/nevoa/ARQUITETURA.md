@@ -132,3 +132,9 @@ O editor usa um painel de até 480 dp, cores Névoa e opções adicionais recolh
 `CategoryPool` resolve a categoria válida e os jogos associados antes da busca/ordenação. Categoria existente e vazia mantém a seleção; categoria removida volta a todos os jogos. `HomeViewModel` devolve a categoria resolvida no estado e restringe os recentes ao mesmo conjunto. Mudanças em `GameCategories.version` reconstruem o filtro sem varrer os arquivos de jogos. A seleção é compartilhada entre home e biblioteca completa durante a sessão.
 
 A home usa o registro de navegação de configurações; a biblioteca completa ganhou a zona `HomeZone.Categories` entre Busca e Recentes. A faixa mantém todos os nomes compostos e traz o item focado à área visível, inclusive em listas longas. Voltar não limpa filtros enquanto um modal estiver aberto.
+
+### Som de iniciar jogo
+
+`MenuSfx.Event.LAUNCH` (`game_launch`) usa `res/raw/nevoa_game_launch.wav`, efeito próprio de 820 ms sintetizado por `tools/nevoa-sfx/generate_launch.py`. SoundPool, habilitação, volume e importação de pacotes continuam no gerenciador existente. O evento pode ser substituído por um arquivo de mesmo nome base em um pacote próprio.
+
+Na home, o som toca após `LaunchGate.tryStart()` aceitar a solicitação, no início da animação de 900 ms. A chamada posterior de `HomeViewModel.launch(game, playLaunchSound=false)` evita repetir o efeito ao terminar a animação. Outras entradas da biblioteca usam `launch(game)` e tocam o evento antes de solicitar a partida. A confirmação de `HomeInputController` só adiciona o clique comum se a ação não produziu som, seguindo o padrão já usado por `SettingsControllerNav`. A abertura V6 permanece independente.

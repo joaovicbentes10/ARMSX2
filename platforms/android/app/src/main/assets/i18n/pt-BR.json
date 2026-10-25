@@ -1202,7 +1202,7 @@
  "app.menuSfx.reset": "Usar integrado",
  "app.menuSfx.current": "Pacote de som: %s",
  "app.menuSfx.none": "Usando o conjunto de som integrado.",
- "app.menuSfx.hint": "Escolha uma pasta com clipes chamados nav, select, submenu, menu, back, toggle_on, toggle_off, reset, slider, sleep, wake (qualquer um entre .ogg / .wav / .mp3). Mantenha-os curtos: uma fração de segundo.",
+ "app.menuSfx.hint": "Escolha uma pasta com clipes chamados nav, select, game_launch, submenu, menu, back, toggle_on, toggle_off, reset, slider, sleep, wake (qualquer um entre .ogg / .wav / .mp3). Mantenha-os curtos: uma fração de segundo.",
  "app.welcomeBack": "Bem-vindo de volta!",
  "app.menuSfx.imported": "Efeito(s) sonoro(s) %d importados.",
  "app.menuSfx.importNone": "Nenhum arquivo correspondente. Nomeie-os como selecionar, voltar, menu, toggle_on, toggle_off, reset ou controle deslizante.",

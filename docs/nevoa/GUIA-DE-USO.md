@@ -108,3 +108,7 @@ A faixa abaixo do cabeçalho filtra a home e a biblioteca completa. “Todos os 
 Na home, selecione um jogo e use “Categorias do jogo” para criar categorias ou marcar/desmarcar associações. Um jogo pode pertencer a várias. Na biblioteca completa, o menu de contexto do jogo mantém o mesmo acesso. Jogos sem identificador estável, como a BIOS, continuam em Todos os jogos.
 
 Com uma categoria selecionada, “Gerenciar categoria” permite renomear ou excluir, com confirmação para excluir. Isso não apaga os jogos. Segurar o nome da categoria abre o mesmo painel. Busca e ordenação funcionam em conjunto com a categoria, e os recentes respeitam a seleção. No controle, navegue verticalmente até a faixa, use esquerda/direita e confirme; na biblioteca completa, R1 mantém a troca de modo.
+
+### Som ao jogar
+
+Confirmar Jogar ou a capa selecionada toca um efeito próprio curto, acompanhando a transição. Mudar apenas a seleção continua usando o som de navegação. O volume e a opção de desligar ficam nos sons da interface. Para trocar só o efeito de partida por um pacote próprio, use um clipe com nome base `game_launch` e extensão WAV, OGG ou MP3.
