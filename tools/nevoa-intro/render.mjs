@@ -44,7 +44,9 @@ try {
     }
     const mp4 = join(outDir, 'boot_intro.mp4');
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-framerate', String(fps), '-i', join(tmp, '%04d.png'),
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', crf, '-movflags', '+faststart', '-an', mp4], { stdio: 'inherit' });
+      '-i', join(here, '../../platforms/android/app/src/main/res/raw/nevoa_intro_sound.mp3'),
+      '-map', '0:v:0', '-map', '1:a:0', '-c:a', 'aac', '-b:a', '192k', '-shortest',
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', crf, '-movflags', '+faststart', mp4], { stdio: 'inherit' });
     console.log(`${mp4}: ${(statSync(mp4).size / 1048576).toFixed(2)} MB`);
     // Main's window background: the app shows this exact frame while it starts, so the intro hands off without a cut.
     await shoot((frames - 1) / fps, join(outDir, 'last_frame.png'));

@@ -2,7 +2,7 @@
 
 Documentação de referência: [índice do projeto](NEVOA.md), [desenvolvimento](nevoa/DESENVOLVIMENTO.md) e [validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md). Esta passagem resume a operação; os guias detalham o estado atual.
 
-Pendência adicional solicitada pelo usuário: sincronizar o som final da abertura imediatamente antes de mostrar a lista de jogos, sem corte ou áudio residual sobre a biblioteca. Validar o momento da passagem no aparelho. Foi mencionada a versão V5; a instalação atual usa V6, portanto confirmar a faixa antes de trocar o arquivo.
+O usuário confirmou V6 para o sincronismo da abertura. A trilha foi incorporada ao MP4 padrão para compartilhar o relógio da imagem; build, 50 testes e passagem no F6 Pro conferidos; ver o registro de validação no guia de pendências. Não substituir por V5.
 
 > Cole tudo abaixo no Codex.
 
@@ -20,7 +20,7 @@ Você vai assumir o projeto **ARMSX2 Névoa**, uma versão pessoal do emulador d
 ## Regras do usuário (obrigatórias)
 
 1. **Nunca** colocar `Co-Authored-By`, "Generated with…" ou qualquer menção a IA/Claude/Codex em commits ou PRs. Commits só com a identidade git dele (João Victor <joaovicbentes10@gmail.com>).
-2. **Nenhum asset da Sony** (logo, som, fonte, imagem) embutido no app. A abertura é original; a marca final é a palavra "ARMSX2". O som da abertura é um arquivo que o próprio usuário escolhe no app.
+2. **Nenhum asset da Sony** (logo, som, fonte, imagem) embutido no app. A abertura é original; a marca final é a palavra "ARMSX2". O som padrão V6 foi fornecido pelo usuário; ele também pode substituí-lo no app.
 3. Textos novos da interface em **PT-BR**.
 4. O usuário prefere que o trabalho seja feito direto, sem ficar delegando.
 5. Mostre resultados visuais (prints, quadros de vídeo) antes de considerar algo visual "pronto" — ele avalia pelo olho e pede ajustes finos.
@@ -91,3 +91,7 @@ Release local instalado por cima no F6 Pro. Gestos curtos, esquerda e direita co
 Capa/brilho/painéis agora transitam juntos em 320 ms, com ações e registro de controle desativados no painel que está saindo. Partida de 900 ms com a capa viajando de seus limites congelados no clique até o centro, título e fade para preto; sem círculo/partículas. Menu em paisagem com até 44% da largura (520 dp) e 78% da altura, abas menores, scrim reduzido, ações principais em duas linhas, sem capa/relógio/bateria/identificadores expostos no cabeçalho. Emojis/glyphs de ações e amigos substituídos por Line Awesome. Serial/CRC/presença em Mais ações → Detalhes do jogo, sob demanda. Hardcore preservado.
 
 Poco: seletor/partida gravados; menu, contraste, sete abas, direcional, acesso a detalhes SLUS-21928 / CRC 38E42973, Continuar e reabertura conferidos. Não escrever saves nem afirmar teste de amigos/RA autenticados. Evidências: .superpowers/validation/selection-launch-menu/. Release local assinado instalado; 46 testes Névoa passaram. A gravação final inclui o ajuste de espaçamento. Ver registro de validação para limites.
+
+## Rodadas concluídas em 24/10/2026
+
+Abas e estados receberam apresentação compacta, opções automáticas recolhíveis e detecção real de slots ocupados. A V6 padrão passou a usar o relógio do próprio vídeo, com entrada na biblioteca após o término audiovisual. APK final instalado no Poco; build e 50 testes Névoa passaram. Não foram escritos estados na validação. Categorias, associação de saves no painel, controles de toque e validação ampla continuam como próximos incrementos, listados no guia.

@@ -1,11 +1,11 @@
 # Abertura do ARMSX2 Névoa
 
-Gera `boot_intro.mp4` (2400×1080 = 20:9 do Poco F6 Pro, 30 fps, 8 s, sem áudio) e `nevoa_last_frame.webp` (fundo da janela do app enquanto ele abre) a partir de `intro.html`.
+Gera `boot_intro.mp4` (2400×1080 = 20:9 do Poco F6 Pro, 30 fps, 8 s, com a trilha V6 em AAC) e `nevoa_last_frame.webp` (fundo da janela do app enquanto ele abre) a partir de `intro.html`.
 
 - `intro.html`: canvas WebGL2 com `window.renderFrame(t)` determinístico (PRNG com semente, sem relógio).
   O último quadro é o `NevoaBackground` em repouso (porta de `NevoaShader.kt` com `iTime = 0`);
   `window.selfCheck()` compara os dois e o render aborta se diferirem.
-- `render.mjs`: Puppeteer (SwiftShader) renderiza os 240 quadros numa pasta temporária e chama o `ffmpeg`.
+- `render.mjs`: Puppeteer (SwiftShader) renderiza os 240 quadros numa pasta temporária e chama o `ffmpeg`, incluindo `res/raw/nevoa_intro_sound.mp3` como trilha de áudio. Vídeo e áudio começam em zero e usam o mesmo relógio no Android.
 
 ## Regerar
 
@@ -24,3 +24,5 @@ Requer `ffmpeg` no PATH. Depois de aprovado, copie os dois arquivos (destinos re
 Se mudar cores ou composição em `NevoaShader.kt`/`NevoaPalette.kt`, replique em `intro.html`.
 
 Veja também o [guia de desenvolvimento do Névoa](../../docs/nevoa/DESENVOLVIMENTO.md) e as [regras visuais](../../docs/nevoa/DESIGN.md).
+
+A V6 fornecida tem 8 s. O efeito final e sua cauda permanecem dentro da abertura; a biblioteca só abre na conclusão audiovisual. Ao trocar a música, verificar duração, início e final antes de gerar: `-shortest` limita o MP4 à menor das duas faixas. O MP3 original permanece no repositório.

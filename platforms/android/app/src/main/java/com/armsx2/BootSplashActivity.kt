@@ -26,6 +26,8 @@ class BootSplashActivity : ComponentActivity() {
     private var launchedMain = false
     private var preview = false
     private var rootView: View? = null
+    private var introVideo: VideoView? = null
+    private var stopped = false
     private val timeoutRunnable = Runnable { launchMainAndFinish() }
     // True while a user-chosen intro is the one playing. Cleared if it fails and we fall back.
     private var playingCustom = false
@@ -54,6 +56,7 @@ class BootSplashActivity : ComponentActivity() {
         setContentView(R.layout.activity_boot_splash)
         rootView = findViewById(R.id.boot_splash_root)
         val videoView = findViewById<VideoView?>(R.id.boot_splash_video)
+        introVideo = videoView
         rootView?.apply {
             setOnClickListener { launchMainAndFinish() }
             postDelayed(timeoutRunnable, HARD_TIMEOUT_MS)
@@ -71,7 +74,12 @@ class BootSplashActivity : ComponentActivity() {
                 videoView.setVideoURI(bundled)
             }
             videoView.setOnPreparedListener { mp ->
+                if (launchedMain || stopped) return@setOnPreparedListener
                 mp.isLooping = false
+                // The bundled MP4 contains V6 audio. Only an explicit audio override
+                // mutes that track and uses the separate player.
+                val overrideSound = !playingCustom && com.armsx2.nevoa.intro.IntroSound.exists(this)
+                if (overrideSound) mp.setVolume(0f, 0f)
                 // An intro may run longer than the hard timeout, which exists only to catch a
                 // decode that never starts; once prepared, give the video its own length (capped,
                 // in case a file misreports it). Névoa's bundled intro is 8 s, so this applies to it too.
@@ -80,10 +88,13 @@ class BootSplashActivity : ComponentActivity() {
                     .coerceIn(HARD_TIMEOUT_MS, CUSTOM_MAX_MS)
                 rootView?.postDelayed(timeoutRunnable, runFor)
                 videoView.start()
-                // Sound only accompanies the bundled (silent) intro.
-                if (!playingCustom && !launchedMain && introSound == null) introSound = com.armsx2.nevoa.intro.IntroSound.start(this)
+                android.util.Log.d("NevoaIntro", "Started: customVideo=$playingCustom overrideSound=$overrideSound duration=${mp.duration}")
+                if (overrideSound && introSound == null) introSound = com.armsx2.nevoa.intro.IntroSound.start(this)
             }
-            videoView.setOnCompletionListener { launchMainAndFinish() }
+            videoView.setOnCompletionListener {
+                android.util.Log.d("NevoaIntro", "AV completed; handing off to library")
+                launchMainAndFinish()
+            }
             videoView.setOnErrorListener { _, _, _ ->
                 if (playingCustom) {
                     // A chosen file the device cannot decode falls back to the stock intro
@@ -110,11 +121,22 @@ class BootSplashActivity : ComponentActivity() {
     }
 
     override fun onStop() {
+        stopped = true
+        introVideo?.pause()
         stopIntroSound()
+        rootView?.removeCallbacks(timeoutRunnable)
         super.onStop()
     }
 
+    override fun onRestart() {
+        super.onRestart()
+        // After interruption, enter the library instead of resuming a partial intro.
+        launchMainAndFinish()
+    }
+
     override fun onDestroy() {
+        introVideo?.stopPlayback()
+        introVideo = null
         stopIntroSound()
         rootView?.removeCallbacks(timeoutRunnable)
         super.onDestroy()
@@ -136,6 +158,7 @@ class BootSplashActivity : ComponentActivity() {
     private fun launchMainAndFinish() {
         if (launchedMain) return
         launchedMain = true
+        introVideo?.stopPlayback()
         stopIntroSound()
         rootView?.removeCallbacks(timeoutRunnable)
         if (preview) {

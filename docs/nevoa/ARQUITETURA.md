@@ -22,7 +22,7 @@ flowchart TD
 
 ### Abertura
 
-`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. A faixa Névoa Suspense V6 acompanha o vídeo padrão, com prioridade para um áudio personalizado quando existir. A preparação é assíncrona, e o player é liberado na conclusão, em onStop ou na destruição da Activity.
+`BootSplashActivity` escolhe o vídeo padrão ou personalizado. `FillVideoView` preenche a janela. Depois que o vídeo é preparado, o timeout considera sua duração e uma margem, respeitando os limites da Activity. A faixa Névoa Suspense V6 está incorporada no MP4 padrão (AAC), usando o mesmo relógio da imagem. A conclusão audiovisual entrega à Main. Se existir áudio personalizado, a trilha incorporada é silenciada e `IntroSound` toca a substituição com preparação assíncrona. Um vídeo personalizado mantém seu próprio som. Ao sair para segundo plano, vídeo e som param; ao retornar, a abertura interrompida dá lugar à biblioteca. Os players são liberados na saída e na destruição.
 
 `Main` abre sem animação de troca. Seu tema já mostra `nevoa_last_frame.webp`. Durante a carga inicial, `NevoaHome` mantém o fundo; ao receber os jogos, apresenta a fileira. A entrada visual dos elementos toca uma vez por processo.
 
@@ -113,3 +113,4 @@ A fileira trata gestos horizontais com limiar de 48 dp. O scroll livre foi subst
 A troca de seleção anima altura, brilho e borda da caixa em 320 ms, junto com expansão/recolhimento e fade do painel. O painel que está saindo perde suas ações e seu registro de controle, evitando configuração ou início de um jogo antigo durante a troca. A animação de Jogar recebe uma cópia dos limites da capa no momento do clique; mudanças de layout posteriores não alteram a origem do movimento.
 
 O menu de emulação usa ícones Line Awesome e preserva os IDs de ações no registro de controle. Em paisagem, o conjunto de painel e abas usa até 44% da largura (máximo 520 dp) e 78% da altura. O cabeçalho mostra título, hardcore quando aplicável e atalho de amigos. Serial, CRC e presença são calculados/exibidos sob demanda em Detalhes do jogo, dentro de Mais ações.
+`NevoaSection` fornece a seção recolhível compartilhada pelo menu em jogo e estados. `nevoa/saves/SaveSlotFiles.kt` distingue o caminho candidato retornado pelo JNI de um arquivo efetivamente existente antes de habilitar o carregamento.

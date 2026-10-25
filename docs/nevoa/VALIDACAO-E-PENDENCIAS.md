@@ -124,7 +124,7 @@ Não foram feitas mudanças nesses módulos para contornar a suíte. Preservar a
 
 ## Próximos incrementos
 
-**Sincronismo do áudio da abertura:** alinhar o efeito sonoro final à passagem imediatamente anterior à exibição da lista de jogos. O som não deve ser cortado pela saída da abertura nem continuar perceptivelmente sobre a biblioteca. Validar a sequência audiovisual no F6 Pro; apenas ter vídeo e áudio com 8 s não comprova sincronismo. O usuário mencionou V5 nesta solicitação; o arquivo atualmente incorporado é V6. Confirmar a faixa pretendida antes de substituir o asset.
+**Sincronismo da abertura:** o usuário confirmou V6. A correção passa a incorporar a faixa no vídeo padrão, com relógio único e passagem à biblioteca na conclusão audiovisual. Resultado da conferência no aparelho registrado abaixo.
 
 1. **Categorias:** integrar as existentes com apresentação discreta, filtro vazio recuperável e navegação por controle.
 2. **Saves no painel:** usar associação confiável ao jogo, sem inferir apenas pelo nome de arquivo.
@@ -142,8 +142,8 @@ Executar uma função por vez, ou duas quando uma for simples. Não há data de 
 | Wrap do tempo a cada 600 s | Continuidade de longo prazo pendente |
 | Cadência do fundo | Intervalo atual é 30 ms; medir antes de prometer fps fixo |
 | MIME `application/ogg` | Rejeitado pela validação `audio/*` |
-| Preparação do áudio | Passou a `prepareAsync()` no incremento de som padrão; validar reprodução no aparelho |
-| Ciclo do som | Liberação em conclusão, destruição e `onStop` implementada; retomada completa após interrupção ainda merece teste específico |
+| Preparação do áudio | V6 padrão incorporada no MP4; `prepareAsync()` fica para substituição personalizada |
+| Ciclo do som | Vídeo e som param ao sair; abertura interrompida é pulada ao voltar |
 | Áudio com vídeo próprio | Linha pode continuar visível, embora só toque com o vídeo padrão |
 | Recriação durante o burst | Estado pendente não é integralmente preservado |
 | Textos e tema legados | Textos Névoa fixos fora de I18n e pontos antigos de tema a limpar |
@@ -166,4 +166,16 @@ Abas internas usam cartões menores, preenchimentos discretos e seções recolh�
 
 Corrigida a indicação falsa de slot ocupado: `getGamePathSlot` fornece um nome candidato mesmo sem arquivo. `SaveSlotFiles` verifica a existência antes de mostrar conteúdo ou habilitar carregamento.
 
-APK local assinado instalado no F6 Pro, com bibliotecas nativas reutilizadas do APK de referência (núcleo sem mudanças). Build e 50 testes Névoa passaram. Conferidos Salvar, Carregar, abertura da seção automática e aba gráfica no Scooby. Nenhum estado foi salvo, carregado, importado ou excluído; esses fluxos de escrita não foram exercitados. Capturas locais em `.superpowers/validation/internal-tabs-states/`. A revisão visual identificou um título legado escuro na aba gráfica; a cor de conteúdo da página foi explicitada para o próximo APK.
+APK local assinado instalado no F6 Pro, com bibliotecas nativas reutilizadas do APK de referência (núcleo sem mudanças). Build e 50 testes Névoa passaram. Conferidos Salvar, Carregar, abertura da seção automática e aba gráfica no Scooby. Nenhum estado foi salvo, carregado, importado ou excluído; esses fluxos de escrita não foram exercitados. Capturas locais em `.superpowers/validation/internal-tabs-states/`. A revisão visual identificou um título legado escuro na aba gráfica; a cor de conteúdo da página foi explicitada e a captura `graphics-final.png` confirmou o título legível no APK final.
+
+## Rodada de sincronismo V6 — 24/10/2026
+
+O usuário confirmou a V6 instalada. `boot_intro.mp4` agora contém sua trilha em AAC a 192 kb/s. Áudio e vídeo começam em 0 e duram 8 s, reproduzidos pelo mesmo player. A biblioteca abre em `onCompletion`, após a conclusão audiovisual, sem interromper um segundo player da faixa padrão. Áudio personalizado continua substituindo a trilha (MP4 silenciado); vídeo personalizado conserva o próprio áudio.
+
+O vídeo H.264 foi copiado sem recodificação; hash SHA256 do fluxo visual antes/depois: `8025d2b0646e286d8aa56f6e351af36d17b27a80de442bc70652b3f8a8ae45e3`. O MP3 original preserva os bytes da V6 fornecida. `render.mjs` inclui a faixa ao gerar novos vídeos; sintaxe verificada com `node --check`.
+
+Build local release e 50 testes Névoa passaram. APK instalado no F6 Pro, SHA256 `1A76CFF0766678F637D6DEE2F7F1DB084C09692149A72C0DDFF1013ABC9331D5`, com assinatura do projeto e bibliotecas nativas reutilizadas da referência anterior. Nenhuma alteração no núcleo.
+
+Na partida a frio, log `NevoaIntro` registrou início às 22:58:11.235 (`customVideo=false overrideSound=false duration=8000`) e conclusão audiovisual às 22:58:19.612, seguida da biblioteca. Gravação visual de passagem: `.superpowers/validation/intro-v6-sync/handoff.mp4`; o `screenrecord` usado não captura áudio, portanto a evidência sonora é a faixa muxada, o relógio comum e o término do player, sem alegar audição física do alto-falante. Teste Home durante a abertura e retorno trouxe a biblioteca sem reiniciar a faixa nem gerar erro AndroidRuntime; UI confirmou Menu, Biblioteca completa e Jogar. Conferência final da aba gráfica no Scooby também concluída.
+
+Ao ir para segundo plano, a abertura pausa e remove o timeout; ao retornar, entra na biblioteca. Pular por toque/Voltar libera o vídeo e o som. Substituições de áudio/vídeo e erros de codec não foram novamente exercitados nesta rodada; a mudança de sincronismo automático se aplica ao MP4 padrão com V6.

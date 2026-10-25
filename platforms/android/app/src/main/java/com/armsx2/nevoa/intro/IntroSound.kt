@@ -7,7 +7,7 @@ import java.io.File
 import com.armsx2.R
 
 /**
- * User-chosen sound for the bundled (silent) boot intro. Copied into private storage like
+ * User-chosen override for the bundled boot intro soundtrack. Copied into private storage like
  * BootIntro's custom video, so it survives the source URI going away.
  */
 object IntroSound {
