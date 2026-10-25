@@ -26,3 +26,9 @@ Se mudar cores ou composição em `NevoaShader.kt`/`NevoaPalette.kt`, replique e
 Veja também o [guia de desenvolvimento do Névoa](../../docs/nevoa/DESENVOLVIMENTO.md) e as [regras visuais](../../docs/nevoa/DESIGN.md).
 
 A V6 fornecida tem 8 s. O efeito final e sua cauda permanecem dentro da abertura; a biblioteca só abre na conclusão audiovisual. Ao trocar a música, verificar duração, início e final antes de gerar: `-shortest` limita o MP4 à menor das duas faixas. O MP3 original permanece no repositório.
+
+### Sincronismo do título
+
+O ataque final da V6 começa em 7,0 s. O título ganha opacidade entre 6,97 e 7,10 s, assenta até 7,15 s e dissolve entre 7,50 e 7,95 s. O último quadro continua sem texto, compatível com a biblioteca.
+
+Para mudar apenas a imagem mantendo os pacotes de áudio existentes, use `node render.mjs --audio-from caminho/abertura-anterior.mp4`. A opção copia a trilha de áudio sem recodificar; a geração padrão continua usando o MP3 V6.

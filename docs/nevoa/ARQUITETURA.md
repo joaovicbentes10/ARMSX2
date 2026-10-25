@@ -114,3 +114,5 @@ A troca de seleção anima altura, brilho e borda da caixa em 320 ms, junto com 
 
 O menu de emulação usa ícones Line Awesome e preserva os IDs de ações no registro de controle. Em paisagem, o conjunto de painel e abas usa até 44% da largura (máximo 520 dp) e 78% da altura. O cabeçalho mostra título, hardcore quando aplicável e atalho de amigos. Serial, CRC e presença são calculados/exibidos sob demanda em Detalhes do jogo, dentro de Mais ações.
 `NevoaSection` fornece a seção recolhível compartilhada pelo menu em jogo e estados. `nevoa/saves/SaveSlotFiles.kt` distingue o caminho candidato retornado pelo JNI de um arquivo efetivamente existente antes de habilitar o carregamento.
+
+O título da abertura acompanha o ataque final da V6 em 7,0 s: entrada 6,97–7,10 s, assentamento até 7,15 s e saída 7,50–7,95 s. A linha do tempo está em `tools/nevoa-intro/intro.html`; o relógio audiovisual e a duração de 8 s não mudam. Use `render.mjs --audio-from` para conservar a trilha incorporada ao revisar somente a imagem.

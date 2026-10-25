@@ -252,8 +252,9 @@ window.renderFrame = function (t) {
   gl.uniform4fv(u.tA, tA); gl.uniform4fv(u.tB, tB); gl.uniform4fv(u.pA, pA);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 
-  // Wordmark: tightens while it fades in, then drifts toward the camera and dissolves.
-  const a = smooth(4.8, 6.0, t), out = smooth(6.25, 7.2, t), grow = easeOut((t - 4.8) / 1.5);
+  // V6's final impact starts at 7.0 s. Reveal across that attack, then dissolve
+  // before the unchanged 8 s handoff. Only the wordmark timing changes.
+  const a = smooth(6.97, 7.10, t), out = smooth(7.50, 7.95, t), grow = easeOut((t - 6.97) / 0.18);
   const ls = 1.05 - 0.67 * grow;
   wm.style.opacity = (a * (1 - out)).toFixed(4);
   wm.style.letterSpacing = ls.toFixed(4) + 'em';

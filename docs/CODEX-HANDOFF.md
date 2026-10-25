@@ -95,3 +95,5 @@ Poco: seletor/partida gravados; menu, contraste, sete abas, direcional, acesso a
 ## Rodadas concluídas em 24/10/2026
 
 Abas e estados receberam apresentação compacta, opções automáticas recolhíveis e detecção real de slots ocupados. A V6 padrão passou a usar o relógio do próprio vídeo, com entrada na biblioteca após o término audiovisual. APK final instalado no Poco; build e 50 testes Névoa passaram. Não foram escritos estados na validação. Categorias, associação de saves no painel, controles de toque e validação ampla continuam como próximos incrementos, listados no guia.
+
+O usuário pediu que o ARMSX2 apareça junto do “tum” final, sem alterar o áudio. A linha do tempo do título foi deslocada para o ataque em 7,0 s, com saída até 7,95 s. A trilha AAC é copiada do MP4 anterior; manter essa preservação ao gerar revisões apenas visuais.

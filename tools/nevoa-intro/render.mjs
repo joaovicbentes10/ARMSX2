@@ -1,5 +1,5 @@
 // Renders intro.html frame by frame and encodes out/boot_intro.mp4.
-// Usage: node render.mjs [--crf 20] [--still 1.5,4.2,...]   (--still writes out/still-<t>.png and skips the video)
+// Usage: node render.mjs [--crf 20] [--audio-from existing.mp4] [--still 1.5,4.2,...]   (--still writes out/still-<t>.png and skips the video)
 import puppeteer from 'puppeteer';
 import { mkdirSync, mkdtempSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,6 +12,10 @@ const outDir = join(here, 'out');
 const arg = name => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : undefined; };
 const crf = arg('--crf') ?? '20';
 const stills = arg('--still')?.split(',').map(Number);
+// Timing-only edits can preserve the installed soundtrack byte for byte.
+const audioFrom = arg('--audio-from');
+const audioInput = audioFrom ?? join(here, '../../platforms/android/app/src/main/res/raw/nevoa_intro_sound.mp3');
+const audioCodec = audioFrom ? ['-c:a', 'copy'] : ['-c:a', 'aac', '-b:a', '192k'];
 mkdirSync(outDir, { recursive: true });
 
 // SwiftShader keeps the output identical across machines/GPUs.
@@ -44,8 +48,8 @@ try {
     }
     const mp4 = join(outDir, 'boot_intro.mp4');
     execFileSync('ffmpeg', ['-y', '-v', 'error', '-framerate', String(fps), '-i', join(tmp, '%04d.png'),
-      '-i', join(here, '../../platforms/android/app/src/main/res/raw/nevoa_intro_sound.mp3'),
-      '-map', '0:v:0', '-map', '1:a:0', '-c:a', 'aac', '-b:a', '192k', '-shortest',
+      '-i', audioInput,
+      '-map', '0:v:0', '-map', '1:a:0', ...audioCodec, ...(audioFrom ? [] : ['-shortest']),
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', crf, '-movflags', '+faststart', mp4], { stdio: 'inherit' });
     console.log(`${mp4}: ${(statSync(mp4).size / 1048576).toFixed(2)} MB`);
     // Main's window background: the app shows this exact frame while it starts, so the intro hands off without a cut.
