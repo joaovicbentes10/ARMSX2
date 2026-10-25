@@ -69,6 +69,8 @@ fun GameDetailsPanel(
     onConfigure: () -> Unit,
     modifier: Modifier = Modifier,
     configureControllerId: String? = null,
+    onCategories: (() -> Unit)? = null,
+    categoriesControllerId: String? = null,
 ) {
     PlayTime.revision.value // re-read the totals after a session ends
     val last = PlayTime.formatLastPlayed(PlayTime.lastPlayedMillis(game.serial))
@@ -90,6 +92,9 @@ fun GameDetailsPanel(
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GlassButton(NevoaStrings.Play, onPlay, primary = true)
             GlassButton(NevoaStrings.Configure, onConfigure, quiet = true, controllerId = configureControllerId)
+        }
+        onCategories?.let {
+            GlassButton("Categorias do jogo", it, quiet = true, controllerId = categoriesControllerId)
         }
     }
 }

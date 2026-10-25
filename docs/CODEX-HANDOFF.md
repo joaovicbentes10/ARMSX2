@@ -101,3 +101,7 @@ O usuário pediu que o ARMSX2 apareça junto do “tum” final, sem alterar o �
 ## Controles de toque — 24/10/2026
 
 Arte padrão e editor receberam paleta Névoa e apresentação discreta. Mais opções recolhe ajustes adicionais, e o atalho de edição foi para o início da aba Controles. O usuário acrescentou pedido de alinhar somente as posições dos quatro botões de ação: `FaceButtonPositions.kt` corrige o losango padrão em pixels, preservando centro, distância entre vizinhos, tamanhos e posições próprias. Build e 55 testes passaram, APK final instalado no Poco; arte, feedback L1, editor e centros dos quatro botões conferidos. Não presumir gameplay ou multitoque amplo validado: ver limitações no registro. Próximo incremento funcional: categorias, depois associação confiável de saves ao painel.
+
+## Categorias concluídas — 25/10/2026
+
+Faixa de filtros compartilhada por Home, Grade, Lista e Estante. Categorias do jogo abre a associação na home; Gerenciar permite renomear/excluir; vazio recuperável e recentes respeitando o filtro. `CategoryPool` e `HomeViewModel` resolvem alterações sem rescan e restauram Todos ao remover uma categoria ativa. Controle na biblioteca completa usa a nova zona Categories. Build e 61 testes passaram; APK final instalado e conferido no Poco, categoria temporária de QA removida e Grade restaurada. Próximo item funcional aprovado na sequência geral: associação confiável dos saves ao painel do jogo; ainda não implementado.

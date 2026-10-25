@@ -24,9 +24,7 @@ data class HomeUiState(
     val query: String = "",
     val sort: HomeSort = HomeSort.Title,
     val layout: LibraryLayout = LibraryLayout.Grid,
-    /** Category the LIST layout is filtered to, or null for everything. Only List uses it —
-     *  Grid and Shelf show categories as their own sections instead, the way Recently Played
-     *  works, so filtering the whole library there would hide the sections it is made of. */
+    /** Shared category filter for the home row and every complete-library layout. */
     val categoryFilter: String? = null,
     val scanning: Boolean = false,
     val error: String? = null,
@@ -148,7 +146,9 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectedGame(): GameInfo? = state.value.visibleGames.getOrNull(state.value.selectedIndex)
 
-    /** List-layout category filter. Null shows everything. */
+    /** Shared category filter. Null shows everything. */
+    fun onCategoriesChanged() { state.value = buildState(state.value) }
+
     fun setCategoryFilter(category: String?) {
         state.value = buildState(state.value.copy(categoryFilter = category, selectedIndex = 0))
     }
@@ -198,11 +198,13 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         // A category filter narrows the pool before anything else. Cleared implicitly when the
         // category stops existing (renamed or deleted while selected) rather than leaving the
         // library stuck showing nothing with no obvious way back.
-        val activeCategory = base.categoryFilter?.takeIf { it in com.armsx2.GameCategories.names() }
-        val members = activeCategory?.let { com.armsx2.GameCategories.members(it) }
-        val filtered = base.allGames.filter { game ->
+        val pool = com.armsx2.nevoa.home.categoryPool(
+            base.allGames, base.categoryFilter, com.armsx2.GameCategories.names(),
+            com.armsx2.GameCategories::members, { it.settingsKey },
+        )
+        val categoryUris = pool.games.map { it.uri.toString() }.toSet()
+        val filtered = pool.games.filter { game ->
             val query = base.query.trim()
-            (members == null || game.settingsKey?.let { it in members } == true) &&
             com.armsx2.ArcadeOnly.shows(game) &&
             // Exclude games the user marked hidden (long-press → Hide), unless "Show hidden" is on.
             (com.armsx2.HiddenGames.showHidden.value || !com.armsx2.HiddenGames.isHidden(game)) &&
@@ -231,7 +233,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }
         return base.copy(
             visibleGames = sorted,
-            recentGames = recents,
+            recentGames = recents.filter { it.uri.toString() in categoryUris },
+            categoryFilter = pool.activeCategory,
             selectedIndex = base.selectedIndex.coerceIn(0, (sorted.size - 1).coerceAtLeast(0)),
         )
     }

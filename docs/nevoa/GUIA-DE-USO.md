@@ -100,3 +100,11 @@ Salvar e Carregar usam uma grade de duas linhas. Slots vazios não podem ser car
 Os controles padrão usam linhas claras, fundo leve e resposta azul ao pressionar. As posições e tamanhos continuam editáveis, e skins próprias continuam disponíveis. Para editar durante um jogo: Pausar → Controles → Editar Layout de Toque na Tela, primeira ação da aba. O painel mostra Salvar, Descartar, Redefinir, Perfis e opacidade; “Mais opções” abre multitoque, deslizamento, analógico flutuante, meia tela e grade. A seta recolhe o painel para alcançar botões atrás dele.
 
 No layout padrão, os quatro botões de ação formam um losango regular mesmo em telas largas: triângulo acima, círculo à direita, X abaixo e quadrado à esquerda. A correção ajusta apenas as posições e preserva configurações de tamanho e aparência. Posicionamentos próprios do usuário não são realinhados automaticamente.
+
+### Categorias
+
+A faixa abaixo do cabeçalho filtra a home e a biblioteca completa. “Todos os jogos” remove o filtro de categoria; uma busca ativa continua valendo. Uma seleção sem resultados oferece também uma ação para limpar ambos e recuperar a biblioteca.
+
+Na home, selecione um jogo e use “Categorias do jogo” para criar categorias ou marcar/desmarcar associações. Um jogo pode pertencer a várias. Na biblioteca completa, o menu de contexto do jogo mantém o mesmo acesso. Jogos sem identificador estável, como a BIOS, continuam em Todos os jogos.
+
+Com uma categoria selecionada, “Gerenciar categoria” permite renomear ou excluir, com confirmação para excluir. Isso não apaga os jogos. Segurar o nome da categoria abre o mesmo painel. Busca e ordenação funcionam em conjunto com a categoria, e os recentes respeitam a seleção. No controle, navegue verticalmente até a faixa, use esquerda/direita e confirme; na biblioteca completa, R1 mantém a troca de modo.

@@ -110,7 +110,8 @@ Base: `platforms/android/app/src/test/java/com/armsx2/nevoa/`.
 | `NevoaOrientationTest` | 5 | Padrão antigo em paisagem e preservação de escolhas explícitas |
 | `SaveSlotFilesTest` | 4 | Caminho candidato do JNI, arquivo existente, diretório e caminho vazio |
 | `FaceButtonPositionsTest` | 5 | Losango em pixels, retrato/paisagem, posições próprias, invariantes e dimensões indisponíveis |
-| **Total** | **55** | **Todos passaram localmente** |
+| `CategoryPoolTest` | 6 | Associação por chave, várias categorias, vazio válido, exclusão e atualização de membros |
+| **Total** | **61** | **Todos passaram localmente** |
 
 Esses testes não comprovam renderização, reprodução real de mídia ou todo o runtime.
 
@@ -127,7 +128,7 @@ Não foram feitas mudanças nesses módulos para contornar a suíte. Preservar a
 
 **Sincronismo da abertura:** o usuário confirmou V6. A correção passa a incorporar a faixa no vídeo padrão, com relógio único e passagem à biblioteca na conclusão audiovisual. Resultado da conferência no aparelho registrado abaixo.
 
-1. **Categorias:** integrar as existentes com apresentação discreta, filtro vazio recuperável e navegação por controle.
+1. **Categorias:** integradas na rodada de 25/10/2026; manter validação adicional em bibliotecas grandes e controle físico.
 2. **Saves no painel:** usar associação confiável ao jogo, sem inferir apenas pelo nome de arquivo.
 3. **Controles de toque:** arte padrão, acesso ao editor e losango uniforme implementados; ampliar validação para multitoque simultâneo, skins próprias, outros jogos e gameplay prolongado.
 4. **Validação adicional:** vários jogos, gameplay, conta RetroAchievements autenticada e gamepad físico.
@@ -204,3 +205,13 @@ APK final assinado instalado no F6 Pro, SHA256 `D577C7582C2526095898F2D5BE7D4E96
 Os bounds de acessibilidade confirmaram os centros dos quatro botões: triângulo (2752,5; 622,5), quadrado (2582,5; 792,5), círculo (2921,5; 792,5), X (2752,5; 961,5), com diferença de até 1 px pelo arredondamento da UI. Todos mantiveram 203 × 203 px de bounds. Sem erro AndroidRuntime na conferência.
 
 A validação visual e de editor não comprova gameplay prolongado, multitoque simultâneo ou skins personalizadas. As injeções de Start durante a sequência de abertura não estabeleceram navegação pelo menu nativo do jogo; não registrar Start/direcional/analógico como gameplay validado nesta rodada. Nenhum estado foi salvo/carregado/excluído, e não foram iniciadas novas partidas.
+
+## Categorias compartilhadas — 25/10/2026
+
+Home e biblioteca completa usam a mesma faixa Névoa, sem emoji, com Todos os jogos, categorias existentes e Gerenciar quando há seleção. A associação permanece por chave estável e reutiliza os editores antigos em cartões compactos. As prateleiras duplicadas por categoria foram substituídas pelo filtro nos três modos de exibição. Busca e ordenação atuam sobre o conjunto selecionado, e recentes não trazem jogos de outras categorias. Remover uma categoria ativa restaura a categoria nula no ViewModel, evitando rótulo inválido ou seleção presa.
+
+Build release final passou em 1 min 50 s. Os 61 testes Névoa passaram, incluindo 6 novos de associação, múltiplas categorias, chave ausente, vazio válido, categoria removida e atualização dos membros. Núcleo nativo reutilizado da referência das rodadas anteriores, sem modificações. APK final assinado instalado no F6 Pro, SHA256 `E7E0EDDAA1B7539A9885E5827154CF965B04BA9E11270B973817E3288BA0BD91`.
+
+Conferido no Poco: criar categoria temporária, associar/desassociar Scooby, selecionar filtro com um jogo, manter categoria vazia sem cair na interface antiga, recuperar Todos os jogos, combinar categoria e busca sem resultados, limpar busca mantendo a categoria, manter seleção ao abrir a biblioteca completa, foco na faixa via entrada com fonte gamepad, modos Lista/Estante e retorno à Grade, renomear categoria ativa e excluir com confirmação. O teste de navegação usa eventos ADB com fonte gamepad e espaçamento entre comandos por causa do debounce existente; não substitui controle físico. Uma sequência inicial de eventos rápidos abriu Scooby; o teste foi reiniciado na biblioteca, sem iniciar partida ou gravar estado.
+
+Apenas a categoria temporária de prefixo `QA_Nevoa` foi criada, renomeada e removida; a captura `cleaned.png` confirma o retorno a Todos os jogos sem esse filtro. Nenhum save foi criado/carregado/excluído. Artefatos locais: `.superpowers/validation/categories/` (`filtered-home.png`, `empty-home.png`, `filtered-complete.png`, `category-and-search.png`, `shelf-controller.png`, `cleaned.png`). Sem FATAL EXCEPTION no log AndroidRuntime da conferência final. Bibliotecas com muitas categorias, controle físico e retrato ficam como validação adicional.

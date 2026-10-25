@@ -95,6 +95,8 @@ fun NevoaHome(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state = viewModel.state.value
+    val categoryNames = com.armsx2.GameCategories.names()
+    LaunchedEffect(com.armsx2.GameCategories.version.intValue) { viewModel.onCategoriesChanged() }
     val directories = MainActivityRuntime.romsDirs.value
     val nativeReady = MainActivityRuntime.nativeReady.value
     // Same loading HomeScreen does: the classic screen may never be composed.
@@ -110,7 +112,7 @@ fun NevoaHome(
     // While the first scan runs, show only the fog (it continues the intro's last frame) instead of
     // flashing the classic screen.
     val loading = !state.initialized && directories.isNotEmpty() && !classicRequested
-    if (!loading && shouldShowClassic(state.initialized, state.scanning, games.size, directories.isNotEmpty(), classicRequested, filterActive = state.query.isNotEmpty())) {
+    if (!loading && shouldShowClassic(state.initialized, state.scanning, games.size, directories.isNotEmpty(), classicRequested, filterActive = state.query.isNotEmpty() || state.categoryFilter != null)) {
         BackHandler(enabled = classicRequested) { classicRequested = false }
         HomeScreen(
             // The classic grid's B goes to the menu; when the user came from the row, it comes back here.
@@ -127,6 +129,10 @@ fun NevoaHome(
                     games = games,
                     query = state.query,
                     sort = state.sort,
+                    categoryNames = categoryNames,
+                    category = state.categoryFilter,
+                    onCategory = viewModel::setCategoryFilter,
+                    onCategoriesChanged = viewModel::onCategoriesChanged,
                     onQuery = viewModel::setQuery,
                     onSort = viewModel::setSort,
                     onLaunch = { viewModel.launch(it) },
@@ -158,6 +164,10 @@ private fun NevoaRow(
     games: List<GameInfo>,
     query: String,
     sort: HomeSort,
+    categoryNames: List<String>,
+    category: String?,
+    onCategory: (String?) -> Unit,
+    onCategoriesChanged: () -> Unit,
     onQuery: (String) -> Unit,
     onSort: (HomeSort) -> Unit,
     onLaunch: (GameInfo) -> Unit,
@@ -166,9 +176,29 @@ private fun NevoaRow(
     onOpenMenu: () -> Unit,
 ) {
     // Held by game, not position: launching a game moves it to the front of the recents.
+    var categoryGame by remember { mutableStateOf<GameInfo?>(null) }
+    var manageCategory by remember { mutableStateOf<String?>(null) }
     var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
     val index = indexOfKey(games.map { it.uri.toString() }, selectedKey)
     val game = games.getOrNull(index)
+    categoryGame?.let { selected ->
+        com.armsx2.ui.home.CategorySheet(selected) { categoryGame = null }
+    }
+    manageCategory?.let { selected ->
+        com.armsx2.ui.home.CategoryManageSheet(
+            selected, onDismiss = { manageCategory = null },
+            onRenamed = { from, to ->
+                com.armsx2.GameCategories.rename(from, to)
+                if (category == from) onCategory(to) else onCategoriesChanged()
+                manageCategory = null
+            },
+            onDeleted = {
+                com.armsx2.GameCategories.delete(selected)
+                onCategoriesChanged()
+                manageCategory = null
+            },
+        )
+    }
     LaunchedEffect(game?.uri) { game?.let { selectedKey = it.uri.toString() } }
     // Every launch path goes through the gate, then the burst; the game starts when the burst ends.
     val gate = remember { LaunchGate() }
@@ -257,8 +287,8 @@ private fun NevoaRow(
     LaunchedEffect(drawerOpen, LibraryKeyboard.visible.value) {
         if (!drawerOpen && !LibraryKeyboard.visible.value) runCatching { focus.requestFocus() }
     }
-    BackHandler(enabled = query.isNotEmpty() && !drawerOpen && !LibraryKeyboard.visible.value && !busy) {
-        clearSearch()
+    BackHandler(enabled = (query.isNotEmpty() || category != null) && !drawerOpen && !LibraryKeyboard.visible.value && !com.armsx2.ui.common.PadModals.visible && !busy) {
+        if (query.isNotEmpty()) clearSearch() else onCategory(null)
     }
 
     val entrance = remember { Animatable(if (NevoaEntrance.played) 1f else 0f) }
@@ -311,9 +341,16 @@ private fun NevoaRow(
             )
             GlassButton(NevoaStrings.FullLibrary, openClassic, quiet = true, controllerId = if (drawerOpen) null else FullLibraryId)
         }
+        NevoaCategoryFilter(
+            categoryNames, category,
+            onSelect = { if (!busy) onCategory(it) },
+            onManage = { if (!busy) manageCategory = it },
+            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(top = 64.dp).enter(progress, 0f, 0.45f),
+            controllerPrefix = if (drawerOpen || busy) null else "nevoa.categories",
+        )
         if (query.isNotEmpty()) {
             Row(
-                Modifier.align(Alignment.TopStart).padding(start = 48.dp, end = 48.dp, top = 64.dp),
+                Modifier.align(Alignment.TopStart).padding(start = 48.dp, end = 48.dp, top = 108.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -335,7 +372,9 @@ private fun NevoaRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(NevoaStrings.NoResults, color = NevoaPalette.Text, style = MaterialTheme.typography.titleLarge)
-                Text(NevoaStrings.NoResultsHint, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+                Text(if (category != null) "Escolha outra categoria ou volte a Todos os jogos." else NevoaStrings.NoResultsHint, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+                GlassButton("Todos os jogos", { if (!busy) { onCategory(null); onQuery("") } }, quiet = true,
+                    controllerId = if (drawerOpen) null else "nevoa.clear-filters")
             }
         }
         LazyRow(
@@ -344,7 +383,7 @@ private fun NevoaRow(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth()
-                .padding(top = if (query.isNotEmpty()) 64.dp else 0.dp)
+                .padding(top = if (query.isNotEmpty()) 108.dp else 48.dp)
                 .height(220.dp)
                 .pointerInput(busy, drawerOpen, games.map { it.uri.toString() }) {
                     if (busy || drawerOpen) return@pointerInput
@@ -400,6 +439,8 @@ private fun NevoaRow(
                             onPlay = { if (i == index) onPlay(g) },
                             onConfigure = { if (i == index) openSettings(g) },
                             configureControllerId = if (drawerOpen || i != index) null else ConfigureId,
+                            onCategories = if (g.settingsKey == null) null else ({ if (!busy && i == index) categoryGame = g }),
+                            categoriesControllerId = if (drawerOpen || i != index) null else "nevoa.game-categories",
                         )
                     }
                 }

@@ -46,7 +46,7 @@ O identificador separado permite coexistir com o ARMSX2 oficial. Os aplicativos 
 
 Implementados: abertura própria com passagem contínua para a biblioteca, som padrão Névoa Suspense V6 com opção de arquivo próprio, fundo animado com fallback estático, carrossel de capas com seleção por gesto, painel do jogo, dissolução em névoa ao iniciar, busca, ordenação, configurações em quatro grupos e revisão visual das principais telas auxiliares e do menu em jogo.
 
-Pendentes: categorias na biblioteca Névoa, saves no painel do jogo, revisão dos controles de toque e validações adicionais com jogo real e conta de RetroAchievements autenticada. Ajustes técnicos menores estão no registro de pendências.
+Categorias e apresentação dos controles de toque foram integradas ao Névoa. Pendentes: saves no painel do jogo e validações adicionais com gameplay, multitoque, bibliotecas grandes, controle físico e conta de RetroAchievements autenticada. Ajustes técnicos menores estão no registro de pendências.
 
 ## Regras permanentes
 

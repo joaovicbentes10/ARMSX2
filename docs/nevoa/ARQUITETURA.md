@@ -124,3 +124,11 @@ O título da abertura acompanha o ataque final da V6 em 7,0 s: entrada 6,97–7,
 O editor usa um painel de até 480 dp, cores Névoa e opções adicionais recolhidas em “Mais opções”. Editar Layout de Toque fica no início da aba Controles do menu em jogo. Nenhuma migração de perfis ou coordenadas foi introduzida.
 
 `FaceButtonPositions.kt` corrige o losango padrão usando as dimensões reais em pixels, em vez de espaçamentos percentuais independentes nos dois eixos. Preserva centro e distância entre vizinhos, tamanhos e demais campos; triângulo acima, círculo à direita, X abaixo e quadrado à esquerda. Só reconhece as posições padrão antigas, preservando posicionamentos personalizados. O overlay aplica o layout corrigido ao estado vivo, compartilhado pelo desenho, editor e hit testing. O ajuste não grava perfis automaticamente; Salvar no editor continua sendo explícito.
+
+### Categorias da biblioteca
+
+`NevoaCategoryFilter` é a faixa horizontal compartilhada pela home e pelos modos Grade, Lista e Estante. Reutiliza `GameCategories` e o JSON `library.categories`, com associação por `GameInfo.settingsKey`; nenhum formato novo ou migração. “Categorias do jogo” abre o editor de associação existente, agora em cartão limitado a 480 dp. Selecionar uma categoria oferece Gerenciar, com renomeação e exclusão confirmada.
+
+`CategoryPool` resolve a categoria válida e os jogos associados antes da busca/ordenação. Categoria existente e vazia mantém a seleção; categoria removida volta a todos os jogos. `HomeViewModel` devolve a categoria resolvida no estado e restringe os recentes ao mesmo conjunto. Mudanças em `GameCategories.version` reconstruem o filtro sem varrer os arquivos de jogos. A seleção é compartilhada entre home e biblioteca completa durante a sessão.
+
+A home usa o registro de navegação de configurações; a biblioteca completa ganhou a zona `HomeZone.Categories` entre Busca e Recentes. A faixa mantém todos os nomes compostos e traz o item focado à área visível, inclusive em listas longas. Voltar não limpa filtros enquanto um modal estiver aberto.

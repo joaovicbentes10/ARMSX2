@@ -143,6 +143,8 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state = viewModel.state.value
+    val categoryNames = com.armsx2.GameCategories.names()
+    LaunchedEffect(com.armsx2.GameCategories.version.intValue) { viewModel.onCategoriesChanged() }
     val directories = MainActivityRuntime.romsDirs.value
     val nativeReady = MainActivityRuntime.nativeReady.value
     val context = LocalContext.current
@@ -337,6 +339,12 @@ fun HomeScreen(
             }
             // The Recently-Played games shown above the grid (empty while searching);
             // register them so the controller's Recents zone can launch them.
+            androidx.compose.runtime.SideEffect {
+                HomeInputController.setCategoryActions(if (state.initialized) {
+                    (listOf<String?>(null) + categoryNames).map { name -> { viewModel.setCategoryFilter(name) } } +
+                        (state.categoryFilter?.let { selected -> listOf<() -> Unit>({ manageCategory = selected }) } ?: emptyList())
+                } else emptyList())
+            }
             val shownRecents = if (showRecents && state.recentGames.isNotEmpty() && state.query.isBlank()) {
                 state.recentGames.take(10)
             } else {
@@ -364,8 +372,9 @@ fun HomeScreen(
                 if (!HomeInputController.userNavigated) return@LaunchedEffect
                 val sel = state.selectedIndex
                 if (sel < 0 || state.visibleGames.isEmpty()) return@LaunchedEffect
-                val leading = 1 + // toolbar
+                val leading = (if (ToolbarPositionPreferences.atBottom.value) 0 else 1) + // toolbar
                     (if (state.initialized && showSearch) 1 else 0) + // search field
+                    (if (state.initialized) 1 else 0) + // category filters
                     (if (shownRecents.isNotEmpty()) 1 else 0) + // recents section
                     (if (allGamesHeaderShown) 1 else 0) // All Games header
                 val cols = estimatedColumns.coerceAtLeast(1)
@@ -535,92 +544,14 @@ fun HomeScreen(
                     }
                 }
 
-                // List layout: one filter control instead of category sections. Stacking shelves
-                // inside a single-column list just makes a longer list, so List narrows instead.
-                //
-                // A pill that opens a PadModal, NOT a DropdownMenu: a dropdown is its own focused
-                // window and swallows pad keys, which is exactly why the overflow menu beside it
-                // was already rebuilt the same way.
-                if (state.layout == LibraryLayout.List && state.initialized &&
-                    com.armsx2.GameCategories.names().isNotEmpty()
-                ) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        var picking by remember { mutableStateOf(false) }
-                        val allLabel = str("library.category.all")
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .controllerFocusable("library-category-filter", RoundedCornerShape(12.dp),
-                                    onConfirm = { picking = true })
-                                .clickable { picking = true }
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                "\uD83C\uDFF7\uFE0F  " + (state.categoryFilter ?: allLabel),
-                                Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.onSurface,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text("\u25BE", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        if (picking) {
-                            com.armsx2.ui.common.PadModal(
-                                key = "library-category-picker",
-                                onDismiss = { picking = false },
-                                alignment = Alignment.BottomCenter,
-                            ) {
-                                Surface(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                                    color = MaterialTheme.colorScheme.surface,
-                                    tonalElevation = 2.dp,
-                                ) {
-                                    Column(
-                                        Modifier.fillMaxWidth().heightIn(max = 480.dp)
-                                            .verticalScroll(rememberScrollState())
-                                            .padding(horizontal = 20.dp, vertical = 20.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                                    ) {
-                                        SectionTitle(str("library.category.filter"))
-                                        Spacer(Modifier.height(6.dp))
-                                        (listOf<String?>(null) + com.armsx2.GameCategories.names()).forEach { name ->
-                                            val label = name ?: allLabel
-                                            Row(
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .clip(RoundedCornerShape(10.dp))
-                                                    .controllerFocusable("category-pick-${'$'}label", RoundedCornerShape(10.dp),
-                                                        onConfirm = { viewModel.setCategoryFilter(name); picking = false })
-                                                    .combinedClickable(
-                                                        onClick = { viewModel.setCategoryFilter(name); picking = false },
-                                                        // "All games" is not a category and has nothing to manage.
-                                                        onLongClick = name?.let { { picking = false; manageCategory = it } },
-                                                    )
-                                                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                Text(
-                                                    label,
-                                                    Modifier.weight(1f),
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                )
-                                                if (state.categoryFilter == name) {
-                                                    Text("\u2713", color = MaterialTheme.colorScheme.primary)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                if (state.initialized) {
+                    item(span = { GridItemSpan(maxLineSpan) }, key = "category-filters") {
+                        com.armsx2.nevoa.home.NevoaCategoryFilter(
+                            categoryNames, state.categoryFilter, viewModel::setCategoryFilter,
+                            onManage = { manageCategory = it },
+                            controllerPrefix = null,
+                            focusedIndex = if (HomeInputController.zone.value == HomeZone.Categories) HomeInputController.categoryIndex.intValue else -1,
+                        )
                     }
                 }
 
@@ -719,80 +650,6 @@ fun HomeScreen(
                     }
                 }
 
-                // Category sections, one row each, sitting between Recently Played and the
-                // full library. Grid and Shelf only: List gets a dropdown filter in the toolbar
-                // instead, because stacking rows in a one-column list just makes a longer list.
-                //
-                // Hidden while SEARCHING, exactly like Recently Played above — a search should
-                // show matches, not matches re-sorted into shelves.
-                if (state.layout != LibraryLayout.List && state.query.isBlank() && state.initialized) {
-                    val categoryNames = com.armsx2.GameCategories.names()
-                    categoryNames.forEach { categoryName ->
-                        val members = com.armsx2.GameCategories.members(categoryName)
-                        // Resolve against the games actually in the library, so a category
-                        // holding a game the user has since deleted simply shows fewer, rather
-                        // than an empty shelf with a title over it.
-                        val categoryGames = state.visibleGames.filter { g ->
-                            g.settingsKey?.let { it in members } == true
-                        }
-                        if (categoryGames.isEmpty()) return@forEach
-                        item(span = { GridItemSpan(maxLineSpan) }, key = "category-$categoryName") {
-                            Column {
-                                SectionTitle(
-                                    categoryName,
-                                    detail = categoryGames.size.toString(),
-                                    modifier = Modifier
-                                        .padding(start = if (state.layout == LibraryLayout.Shelf) 4.dp else 0.dp)
-                                        .combinedClickable(
-                                            onClick = {},
-                                            onLongClick = { manageCategory = categoryName },
-                                        ),
-                                )
-                                Spacer(Modifier.height(9.dp))
-                                if (state.layout == LibraryLayout.Shelf) {
-                                    GameShelf(
-                                        games = categoryGames,
-                                        shelfRes = R.drawable.shelf_frosted,
-                                        coverWidth = ((if (compact) 84f else 100f) * coverScale).dp,
-                                        scroll = true,
-                                        selectedIndex = -1,
-                                        onLaunch = { viewModel.launch(it) },
-                                        onDetails = { menuGame = it },
-                                        modifier = Modifier.layout { measurable, constraints ->
-                                            val edge = 8.dp.roundToPx()
-                                            val placeable = measurable.measure(
-                                                constraints.copy(
-                                                    minWidth = constraints.maxWidth + edge * 2,
-                                                    maxWidth = constraints.maxWidth + edge * 2,
-                                                ),
-                                            )
-                                            layout(constraints.maxWidth, placeable.height) {
-                                                placeable.placeRelative(-edge, 0)
-                                            }
-                                        },
-                                    )
-                                } else {
-                                    LazyRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        contentPadding = PaddingValues(horizontal = 8.dp),
-                                    ) {
-                                        itemsIndexed(categoryGames, key = { _, g -> g.uri.toString() }) { _, game ->
-                                            RecentGameCard(
-                                                game = game,
-                                                selected = false,
-                                                onClick = { viewModel.launch(game) },
-                                                onDetails = { menuGame = game },
-                                            )
-                                        }
-                                    }
-                                }
-                                Spacer(Modifier.height(4.dp))
-                            }
-                        }
-                    }
-                }
-
                 // Separate the Recently Played shelf from the full library with an
                 // "All Games" header so the two rows don't run together.
                 if (shownRecents.isNotEmpty() && state.initialized && state.visibleGames.isNotEmpty()) {
@@ -816,7 +673,15 @@ fun HomeScreen(
                     if (com.armsx2.ArcadeOnly.enabled.value && state.query.isBlank()) {
                         arcadeOnlyEmpty { viewModel.setArcadeOnly(false) }
                     } else {
-                        emptyLibrary(state.query.isBlank())
+                        if (state.categoryFilter != null) {
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text("Nenhum jogo nesta seleção", color = com.armsx2.nevoa.theme.NevoaPalette.Text)
+                                    Text("Escolha Todos os jogos ou altere a busca para ver sua biblioteca.", color = com.armsx2.nevoa.theme.NevoaPalette.TextDim)
+                                    com.armsx2.nevoa.home.GlassButton("Todos os jogos", { viewModel.setCategoryFilter(null); viewModel.setQuery("") }, quiet = true)
+                                }
+                            }
+                        } else emptyLibrary(state.query.isBlank())
                     }
                 } else if (state.layout == LibraryLayout.Shelf) {
                     // Fill each plank: chunk by how many covers fit the shelf width.
@@ -1275,7 +1140,7 @@ fun HomeScreen(
  * cannot undo from here.
  */
 @Composable
-private fun CategoryManageSheet(
+internal fun CategoryManageSheet(
     category: String,
     onDismiss: () -> Unit,
     onRenamed: (String, String) -> Unit,
@@ -1288,16 +1153,16 @@ private fun CategoryManageSheet(
     com.armsx2.ui.common.PadModal(
         key = "category-manage",
         onDismiss = onDismiss,
-        alignment = Alignment.BottomCenter,
+        alignment = Alignment.Center,
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            modifier = Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 2.dp,
         ) {
             Column(
-                Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState())
+                Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState())
                     .padding(horizontal = 20.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -1333,7 +1198,6 @@ private fun CategoryManageSheet(
                             .padding(vertical = 12.dp, horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("\uD83D\uDDD1\uFE0F", Modifier.padding(end = 10.dp))
                         Text(
                             str("games.categories.delete"),
                             color = MaterialTheme.colorScheme.error,
@@ -1375,7 +1239,7 @@ private fun CategoryManageSheet(
  * after each would mean re-opening the menu for the second.
  */
 @Composable
-private fun CategorySheet(game: GameInfo, onDismiss: () -> Unit) {
+internal fun CategorySheet(game: GameInfo, onDismiss: () -> Unit) {
     val key = game.settingsKey
     var newName by remember { mutableStateOf("") }
     // Subscribe to edits: names() reads GameCategories.version internally.
@@ -1384,16 +1248,16 @@ private fun CategorySheet(game: GameInfo, onDismiss: () -> Unit) {
     com.armsx2.ui.common.PadModal(
         key = "game-categories",
         onDismiss = onDismiss,
-        alignment = Alignment.BottomCenter,
+        alignment = Alignment.Center,
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            modifier = Modifier.padding(16.dp).widthIn(max = 480.dp).fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 2.dp,
         ) {
             Column(
-                Modifier.fillMaxWidth().heightIn(max = 520.dp).verticalScroll(rememberScrollState())
+                Modifier.fillMaxWidth().heightIn(max = 320.dp).verticalScroll(rememberScrollState())
                     .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -2231,7 +2095,7 @@ private fun CoverPlaceholder(title: String, serial: String?, showText: Boolean) 
 }
 
 /** Vertical focus zones of the library screen, stacked top→bottom. */
-enum class HomeZone { Toolbar, Search, Recents, Grid }
+enum class HomeZone { Toolbar, Search, Categories, Recents, Grid }
 
 object HomeInputController {
     private var owner: HomeViewModel? = null
@@ -2250,6 +2114,8 @@ object HomeInputController {
     val zone = mutableStateOf(HomeZone.Grid)
     val toolbarIndex = mutableIntStateOf(0)
     val recentIndex = mutableIntStateOf(0)
+    val categoryIndex = mutableIntStateOf(0)
+    private var categoryActions: List<() -> Unit> = emptyList()
     private var toolbarActions: List<() -> Unit> = emptyList()
     private var recentCount = 0
     private var recentLauncher: ((Int) -> Unit)? = null
@@ -2280,9 +2146,16 @@ object HomeInputController {
             owner = null
             openMenu = null
             openGameMenu = null
+            categoryActions = emptyList()
             scrollVelocity.floatValue = 0f
             zone.value = HomeZone.Grid
         }
+    }
+
+    fun setCategoryActions(actions: List<() -> Unit>) {
+        categoryActions = actions
+        categoryIndex.intValue = categoryIndex.intValue.coerceIn(0, (actions.size - 1).coerceAtLeast(0))
+        if (actions.isEmpty() && zone.value == HomeZone.Categories) zone.value = HomeZone.Grid
     }
 
     fun setColumnCount(value: Int) { columns = value.coerceAtLeast(1) }
@@ -2318,6 +2191,7 @@ object HomeInputController {
      *  Search, Recents, Grid. When the toolbar is at the bottom it isn't above. */
     private fun zoneAboveGrid(): HomeZone = when {
         recentCount > 0 -> HomeZone.Recents
+        categoryActions.isNotEmpty() -> HomeZone.Categories
         searchAvailable -> HomeZone.Search
         !toolbarAtBottom && toolbarActions.isNotEmpty() -> HomeZone.Toolbar
         else -> HomeZone.Grid
@@ -2331,6 +2205,7 @@ object HomeInputController {
         val beforeZone = zone.value
         val beforeToolbar = toolbarIndex.intValue
         val beforeRecent = recentIndex.intValue
+        val beforeCategory = categoryIndex.intValue
         val beforeSel = viewModel.state.value.selectedIndex
         when (zone.value) {
             HomeZone.Toolbar -> when {
@@ -2338,6 +2213,7 @@ object HomeInputController {
                 // returns to the grid.
                 !toolbarAtBottom && dy > 0 -> zone.value = when {
                     searchAvailable -> HomeZone.Search
+                    categoryActions.isNotEmpty() -> HomeZone.Categories
                     recentCount > 0 -> HomeZone.Recents
                     else -> HomeZone.Grid
                 }
@@ -2347,10 +2223,16 @@ object HomeInputController {
             }
             HomeZone.Search -> when {
                 dy < 0 -> if (!toolbarAtBottom && toolbarActions.isNotEmpty()) zone.value = HomeZone.Toolbar
+                dy > 0 -> zone.value = if (categoryActions.isNotEmpty()) HomeZone.Categories else if (recentCount > 0) HomeZone.Recents else HomeZone.Grid
+            }
+            HomeZone.Categories -> when {
+                dy < 0 -> zone.value = if (searchAvailable) HomeZone.Search else if (!toolbarAtBottom) HomeZone.Toolbar else HomeZone.Categories
                 dy > 0 -> zone.value = if (recentCount > 0) HomeZone.Recents else HomeZone.Grid
+                dx != 0 && categoryActions.isNotEmpty() -> categoryIndex.intValue = (categoryIndex.intValue + dx).coerceIn(0, categoryActions.lastIndex)
             }
             HomeZone.Recents -> when {
                 dy < 0 -> zone.value = when {
+                    categoryActions.isNotEmpty() -> HomeZone.Categories
                     searchAvailable -> HomeZone.Search
                     !toolbarAtBottom && toolbarActions.isNotEmpty() -> HomeZone.Toolbar
                     else -> HomeZone.Recents
@@ -2384,7 +2266,7 @@ object HomeInputController {
             }
         }
         if (zone.value != beforeZone || toolbarIndex.intValue != beforeToolbar ||
-            recentIndex.intValue != beforeRecent || viewModel.state.value.selectedIndex != beforeSel
+            recentIndex.intValue != beforeRecent || categoryIndex.intValue != beforeCategory || viewModel.state.value.selectedIndex != beforeSel
         ) com.armsx2.MenuSfx.play(com.armsx2.MenuSfx.Event.NAV)
         return true
     }
@@ -2395,6 +2277,7 @@ object HomeInputController {
         when (zone.value) {
             HomeZone.Toolbar -> toolbarActions.getOrNull(toolbarIndex.intValue)?.invoke()
             HomeZone.Search -> searchConfirm?.invoke()
+            HomeZone.Categories -> categoryActions.getOrNull(categoryIndex.intValue)?.invoke()
             HomeZone.Recents -> recentLauncher?.invoke(recentIndex.intValue)
             HomeZone.Grid -> {
                 val game = viewModel.selectedGame() ?: return false
