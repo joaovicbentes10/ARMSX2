@@ -1462,8 +1462,8 @@ open class MainActivityRuntime : ComponentActivity() {
                     runCatching { prefs.getBoolean("autoSaveOnExit", false) }.getOrDefault(false))
             vmStopControl.execute {
                 println("@@ANDROID_STOP_JAVA@@ begin saveAutosave=$doAutosave forced=$saveAutosave restart=$restartAfterStop")
-                if (doAutosave)
-                    NativeApp.saveAutosaveState(autosaveKeep())
+                if (doAutosave && NativeApp.saveAutosaveState(autosaveKeep()))
+                    com.armsx2.nevoa.saves.GameStateCatalog.record(-2)
                 NativeApp.shutdown()
                 println("@@ANDROID_STOP_JAVA@@ shutdown_return active=${NativeApp.hasActiveVM()} runLoop=$vmRunLoopActive state=${eState.value}")
                 if (!vmRunLoopActive && (eState.value == EmuState.STOPPED || !NativeApp.hasActiveVM())) {
@@ -1600,6 +1600,7 @@ open class MainActivityRuntime : ComponentActivity() {
 
         @Volatile
         private var pendingSlotLoadOnBoot: Int? = null
+        private var pendingStateProof: com.armsx2.nevoa.saves.AssociatedState? = null
 
         // The last game we booted, retained across exit-to-library so the Save Manager can
         // re-launch + load a save AFTER the game was exited. Kept SEPARATE from currentGame
@@ -1620,7 +1621,15 @@ open class MainActivityRuntime : ComponentActivity() {
          * game explicitly: from the library nothing is booted, so currentGame and contextGame are
          * both null and the original could never fire there.
          */
-        fun launchGameFromSaveSlot(game: GameInfo, slot: Int): Boolean {
+        fun launchVerifiedState(game: GameInfo, state: com.armsx2.nevoa.saves.AssociatedState): Boolean {
+            return launchGameFromSaveSlot(game, state.slot, state)
+        }
+
+        fun clearRequestedSaveState() { pendingSlotLoadOnBoot = null; pendingStateProof = null }
+
+        fun launchGameFromSaveSlot(game: GameInfo, slot: Int, proof: com.armsx2.nevoa.saves.AssociatedState? = null): Boolean {
+            if (slot !in 0..9 && slot != -2) return false
+            pendingStateProof = proof
             val launchPath = if (game.uri.scheme == "file") {
                 game.uri.path ?: game.uri.toString()
             } else {
@@ -1706,7 +1715,7 @@ open class MainActivityRuntime : ComponentActivity() {
                         continue
                     }
                     if (now - lastSaveAt < minutes * 60_000L) continue
-                    runCatching { NativeApp.saveAutosaveState(autosaveKeep()) }
+                    runCatching { if (NativeApp.saveAutosaveState(autosaveKeep())) com.armsx2.nevoa.saves.GameStateCatalog.record(-2) }
                     // Stamped AFTER the write: a savestate takes real time, and starting
                     // the next interval from before it would make saves creep earlier.
                     lastSaveAt = android.os.SystemClock.elapsedRealtime()
@@ -1757,6 +1766,8 @@ open class MainActivityRuntime : ComponentActivity() {
         fun onVmRunning() {
             adoptExternalGameIdentity()
             val requestedSlot = pendingSlotLoadOnBoot
+            val stateProof = pendingStateProof
+            pendingStateProof = null
             val loadAutosave = pendingAutoLoadOnBoot && requestedSlot == null
             if (requestedSlot == null && !loadAutosave) return
             pendingSlotLoadOnBoot = null
@@ -1784,12 +1795,23 @@ open class MainActivityRuntime : ComponentActivity() {
                         if (++attempts < 60) handler.postDelayed(this, 250)
                         return
                     }
+                    if (stateProof != null) {
+                        val target = if (requestedSlot == -2) NativeApp.getAutosaveGamePath() else requestedSlot?.let { NativeApp.getGamePathSlot(it) }
+                        if (!stateProof.identity.matches(com.armsx2.nevoa.saves.GameStateCatalog.runningIdentity() ?: com.armsx2.nevoa.saves.StateIdentity("", "")) ||
+                            !com.armsx2.nevoa.saves.StateAssociation.matchesRuntimeTarget(stateProof, target)) {
+                            instance?.let { android.widget.Toast.makeText(it, com.armsx2.i18n.I18n.get("nevoa.saves.changed"), android.widget.Toast.LENGTH_LONG).show() }
+                            return
+                        }
+                    }
                     val loaded = runCatching {
-                        if (requestedSlot != null) NativeApp.loadStateFromSlot(requestedSlot)
+                        if (requestedSlot == -2) NativeApp.loadAutosaveState()
+                        else if (requestedSlot != null) NativeApp.loadStateFromSlot(requestedSlot)
                         else NativeApp.loadAutosaveState()
                     }.getOrDefault(false)
-                    if (!loaded && ++attempts < 60)
-                        handler.postDelayed(this, 250)
+                    if (!loaded) {
+                        if (++attempts < 60) handler.postDelayed(this, 250)
+                        else instance?.let { android.widget.Toast.makeText(it, com.armsx2.i18n.I18n.get("savestate.error.load"), android.widget.Toast.LENGTH_LONG).show() }
+                    }
                 }
             }
             handler.postDelayed(tryLoad, 250)
@@ -4204,6 +4226,7 @@ open class MainActivityRuntime : ComponentActivity() {
                     Thread.sleep(100)
                     if (!cardBusy()) ok = attempt()
                 }
+                if (ok) com.armsx2.nevoa.saves.GameStateCatalog.record(slot)
                 if (!ok) {
                     val key = when {
                         !cardBusy() -> if (saving) "savestate.error.save" else "savestate.error.load"

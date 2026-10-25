@@ -53,7 +53,7 @@ internal object LicenseDocs {
         val url = Link.find(heading)?.groupValues?.get(1)
         // A license is a <pre>; PCSX2's own entry is paragraphs instead.
         val pre = Pre.find(body)
-        val text = pre?.let { unescape(stripTags(it.groupValues[1])).trim('\n').trimEnd() }
+        val text = pre?.let { preformattedText(it.groupValues[1]) }
             ?: htmlToText(body.replace(Heading, ""))
         LicenseEntry(id, name, url, text, preformatted = pre != null)
     }.toList()
@@ -77,12 +77,15 @@ internal object LicenseDocs {
             .replace(Regex(""" ?$Break[ $Break]*"""), "\n\n")
         s = unescape(s)
         s = Regex("""$PreMark(\d+)$PreMark""").replace(s) { m ->
-            unescape(stripTags(pres[m.groupValues[1].toInt()])).trim('\n').trimEnd()
+            preformattedText(pres[m.groupValues[1].toInt()])
         }
         return s.trim()
     }
 
     private fun stripTags(s: String) = s.replace(Tag, "")
+
+    private fun preformattedText(s: String) = unescape(stripTags(s))
+        .replace("\r\n", "\n").replace('\r', '\n').trim('\n').trimEnd()
 
     private fun unescape(s: String): String = Entity.replace(s) { m ->
         val e = m.groupValues[1]

@@ -61,7 +61,7 @@ class SaveManagerViewModel(application: Application) : AndroidViewModel(applicat
     fun save(slot: Int) {
         viewModelScope.launch {
             val ok = withContext(Dispatchers.IO) {
-                runCatching { NativeApp.saveStateToSlot(slot) }.getOrDefault(false)
+                runCatching { NativeApp.saveStateToSlot(slot) }.getOrDefault(false).also { if (it) com.armsx2.nevoa.saves.GameStateCatalog.record(slot) }
             }
             state.value = if (ok) {
                 state.value.copy(message = "${I18n.get("action.save")} · ${slot + 1}")
@@ -80,7 +80,7 @@ class SaveManagerViewModel(application: Application) : AndroidViewModel(applicat
             }
             val ok = if (hasActiveVm) {
                 withContext(Dispatchers.IO) {
-                    runCatching { NativeApp.loadStateFromSlot(slot) }.getOrDefault(false)
+                    runCatching { NativeApp.loadStateFromSlot(slot) }.getOrDefault(false).also { if (it) com.armsx2.nevoa.saves.GameStateCatalog.record(slot) }
                 }
             } else {
                 MainActivityRuntime.launchCurrentGameFromSaveSlot(slot)

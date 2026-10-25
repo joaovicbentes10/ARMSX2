@@ -26,11 +26,9 @@ import com.armsx2.EmuState
 import com.armsx2.nevoa.theme.NevoaPalette
 import com.armsx2.runtime.MainActivityRuntime
 
-/** Seconds since [startNanos], wrapped at [wrapSeconds] so the shader's float time stays precise. */
-fun shaderSeconds(nowNanos: Long, startNanos: Long, wrapSeconds: Float = 600f): Float {
-    val wrapNanos = (wrapSeconds * 1e9).toLong()
-    return ((nowNanos - startNanos) % wrapNanos) / 1e9f
-}
+/** Continuous session time. Do not wrap: the noise field is not periodic at 600 seconds. */
+fun shaderSeconds(nowNanos: Long, startNanos: Long): Float =
+    (nowNanos - startNanos).coerceAtLeast(0L) / 1e9f
 
 /** Frame throttle: true once [minIntervalNanos] passed since [lastNanos]; [Long.MIN_VALUE] means no frame yet. */
 fun shouldAdvance(nowNanos: Long, lastNanos: Long, minIntervalNanos: Long = 30_000_000L): Boolean =
@@ -81,7 +79,7 @@ private fun AnimatedNevoa(modifier: Modifier, calm: Boolean, active: Boolean) {
         while (true) withFrameNanos {
             if (shouldAdvance(it, last)) {
                 last = it
-                seconds = (base + shaderSeconds(it, start)) % 600f
+                seconds = base + shaderSeconds(it, start)
             }
         }
     }

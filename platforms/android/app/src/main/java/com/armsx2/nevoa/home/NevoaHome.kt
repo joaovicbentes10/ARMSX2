@@ -41,6 +41,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
@@ -135,7 +138,7 @@ fun NevoaHome(
                     onCategoriesChanged = viewModel::onCategoriesChanged,
                     onQuery = viewModel::setQuery,
                     onSort = viewModel::setSort,
-                    onLaunch = { viewModel.launch(it, playLaunchSound = false) },
+                    onLaunch = { game, saved -> if (saved == null) viewModel.launch(game, playLaunchSound = false) else viewModel.resume(game, saved) },
                     onOpenGameSettings = onOpenGameSettings,
                     onOpenClassic = { classicRequested = true },
                     onOpenMenu = onOpenMenu,
@@ -170,7 +173,7 @@ private fun NevoaRow(
     onCategoriesChanged: () -> Unit,
     onQuery: (String) -> Unit,
     onSort: (HomeSort) -> Unit,
-    onLaunch: (GameInfo) -> Unit,
+    onLaunch: (GameInfo, com.armsx2.nevoa.saves.AssociatedState?) -> Unit,
     onOpenGameSettings: (GameInfo) -> Unit,
     onOpenClassic: () -> Unit,
     onOpenMenu: () -> Unit,
@@ -202,15 +205,35 @@ private fun NevoaRow(
     LaunchedEffect(game?.uri) { game?.let { selectedKey = it.uri.toString() } }
     // Every launch path goes through the gate, then the burst; the game starts when the burst ends.
     val gate = remember { LaunchGate() }
-    var pending by remember { mutableStateOf<GameInfo?>(null) }
+    var pendingUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingSlot by rememberSaveable { mutableStateOf<Int?>(null) }
+    var pendingProof by remember { mutableStateOf<com.armsx2.nevoa.saves.AssociatedState?>(null) }
+    val pending = games.firstOrNull { it.uri.toString() == pendingUri }
+    val launchContext = LocalContext.current
+    LaunchedEffect(pendingUri, pendingSlot, pending) {
+        if (pending != null && pendingSlot != null && pendingProof == null) {
+            val recovered = withContext(Dispatchers.IO) {
+                com.armsx2.nevoa.saves.GameStateCatalog.list(launchContext, pending).firstOrNull { it.slot == pendingSlot }
+            }
+            if (recovered == null) {
+                pendingUri = null; pendingSlot = null; gate.reset()
+                android.widget.Toast.makeText(launchContext, com.armsx2.i18n.I18n.get("nevoa.saves.changed"), android.widget.Toast.LENGTH_LONG).show()
+            } else pendingProof = recovered
+        }
+    }
+    LaunchedEffect(pendingUri, pending) {
+        if (pendingUri != null && pending == null) { pendingUri = null; pendingSlot = null; gate.reset() }
+    }
     var selectedCoverBounds by remember { mutableStateOf<Rect?>(null) }
     var launchCoverBounds by remember { mutableStateOf<Rect?>(null) }
     var launched by remember { mutableStateOf(false) }
-    fun onPlay(g: GameInfo) {
-        if (gate.tryStart()) {
+    fun onPlay(g: GameInfo, saved: com.armsx2.nevoa.saves.AssociatedState? = null) {
+        if (pendingUri == null && gate.tryStart()) {
             MenuSfx.play(MenuSfx.Event.LAUNCH)
             launchCoverBounds = selectedCoverBounds
-            pending = g
+            pendingProof = saved
+            pendingSlot = saved?.slot
+            pendingUri = g.uri.toString()
         }
     }
     // While the burst plays every action below is a no-op (touch, pad and Y alike).
@@ -372,8 +395,8 @@ private fun NevoaRow(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(NevoaStrings.NoResults, color = NevoaPalette.Text, style = MaterialTheme.typography.titleLarge)
-                Text(if (category != null) "Escolha outra categoria ou volte a Todos os jogos." else NevoaStrings.NoResultsHint, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
-                GlassButton("Todos os jogos", { if (!busy) { onCategory(null); onQuery("") } }, quiet = true,
+                Text(if (category != null) com.armsx2.i18n.I18n.get("nevoa.categoryEmptyHint") else NevoaStrings.NoResultsHint, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium)
+                GlassButton(com.armsx2.i18n.I18n.get("nevoa.all"), { if (!busy) { onCategory(null); onQuery("") } }, quiet = true,
                     controllerId = if (drawerOpen) null else "nevoa.clear-filters")
             }
         }
@@ -383,8 +406,8 @@ private fun NevoaRow(
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .fillMaxWidth()
-                .padding(top = if (query.isNotEmpty()) 108.dp else 48.dp)
-                .height(220.dp)
+                .padding(top = if (query.isNotEmpty()) 136.dp else 72.dp)
+                .height(240.dp)
                 .pointerInput(busy, drawerOpen, games.map { it.uri.toString() }) {
                     if (busy || drawerOpen) return@pointerInput
                     var distance = 0f
@@ -441,15 +464,25 @@ private fun NevoaRow(
                             configureControllerId = if (drawerOpen || i != index) null else ConfigureId,
                             onCategories = if (g.settingsKey == null) null else ({ if (!busy && i == index) categoryGame = g }),
                             categoriesControllerId = if (drawerOpen || i != index) null else "nevoa.game-categories",
+                            onContinue = { saved -> if (i == index && !busy) onPlay(g, saved) },
+                            savesControllerId = if (drawerOpen || i != index) null else "nevoa.game-saves",
                         )
                     }
                 }
             }
         }
-        LaunchBurst(active = pending != null, game = pending, sourceBounds = launchCoverBounds) {
-            pending?.let(onLaunch)
-            pending = null
-            launched = true
+        LaunchBurst(active = pending != null && (pendingSlot == null || pendingProof != null), game = pending, sourceBounds = launchCoverBounds) {
+            if (pendingUri != null && pending != null) {
+                // After Activity recreation the proof is deliberately re-read, never inferred from the slot.
+                val proof = pendingProof
+                val requested = pendingSlot
+                pendingUri = null
+                pendingSlot = null
+                launched = true
+                if (requested != null && proof == null) {
+                    gate.reset(); launched = false
+                } else onLaunch(pending, proof)
+            }
         }
         // The runtime starts asynchronously. Keep the final dark frame until it owns
         // the screen instead of exposing the library between the burst and gameplay.

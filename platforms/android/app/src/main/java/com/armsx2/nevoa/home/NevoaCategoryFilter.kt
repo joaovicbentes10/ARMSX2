@@ -45,7 +45,7 @@ fun NevoaCategoryFilter(
             val shape = RoundedCornerShape(8.dp)
             val choose = { onSelect(name) }
             Text(
-                name ?: "Todos os jogos",
+                name ?: com.armsx2.i18n.I18n.get("nevoa.all"),
                 modifier = Modifier.widthIn(max = 240.dp)
                     .categoryFocus(focusedIndex == index)
                     .controllerFocusable(controllerPrefix?.let { "$it.$index" }, shape, onConfirm = choose)
@@ -62,7 +62,7 @@ fun NevoaCategoryFilter(
         }
         if (selected != null) {
             androidx.compose.runtime.key("manage") {
-                GlassButton("Gerenciar categoria", { onManage(selected) },
+                GlassButton(com.armsx2.i18n.I18n.get("nevoa.manageCategory"), { onManage(selected) },
                     modifier = Modifier.categoryFocus(focusedIndex == choices.size).then(if (focusedIndex == choices.size) Modifier.border(1.dp, NevoaPalette.Selected, RoundedCornerShape(8.dp)) else Modifier),
                     quiet = true, controllerId = controllerPrefix?.let { "$it.manage" })
             }

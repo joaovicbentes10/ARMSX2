@@ -160,8 +160,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (playLaunchSound) com.armsx2.MenuSfx.play(com.armsx2.MenuSfx.Event.LAUNCH)
         repository.markPlayed(game)
         state.value = buildState(state.value)
+        MainActivityRuntime.clearRequestedSaveState()
         val launchPath = if (game.uri.scheme == "file") game.uri.path ?: game.uri.toString() else game.uri.toString()
         MainActivityRuntime.launchGame(launchPath, game)
+    }
+
+    fun resume(game: GameInfo, saved: com.armsx2.nevoa.saves.AssociatedState) {
+        repository.markPlayed(game)
+        state.value = buildState(state.value)
+        MainActivityRuntime.launchVerifiedState(game, saved)
     }
 
     /** Mark a game hidden (or un-hidden) and refresh the visible list. */

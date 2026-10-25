@@ -161,10 +161,10 @@ object LibraryKeyboard {
     }
 
     private fun glyphOf(key: String): String = when (key) {
-        SPACE -> "Space"
+        SPACE -> com.armsx2.i18n.I18n.get("nevoa.space")
         BACKSPACE -> "⌫"
-        CLEAR -> "Clear"
-        DONE -> "Done"
+        CLEAR -> com.armsx2.i18n.I18n.get("nevoa.clear")
+        DONE -> com.armsx2.i18n.I18n.get("nevoa.done")
         SHIFT -> "⇧"
         else -> if (shifted.value) key.uppercase() else key
     }

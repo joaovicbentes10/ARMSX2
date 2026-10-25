@@ -513,7 +513,8 @@ fun AppTab() {
                     ) { Text(str("app.bootIntro.reset")) }
                 }
             }
-            // Sound for the bundled intro (ignored when a custom intro video is set).
+            // Bundled-intro sound controls do not apply to a user-provided video.
+            if (introName == null) {
             val soundScope = rememberCoroutineScope()
             var soundSet by remember { mutableStateOf(com.armsx2.nevoa.intro.IntroSound.exists(appContext)) }
             var soundBusy by remember { mutableStateOf(false) }
@@ -529,16 +530,16 @@ fun AppTab() {
                         soundBusy = false
                         soundSet = com.armsx2.nevoa.intro.IntroSound.exists(appContext)
                         android.widget.Toast.makeText(
-                            appContext, err ?: "Som da abertura definido.", android.widget.Toast.LENGTH_SHORT,
+                            appContext, err ?: com.armsx2.i18n.I18n.get("nevoa.soundDefined"), android.widget.Toast.LENGTH_SHORT,
                         ).show()
                     }
                 }
             }
             Text(
                 when {
-                    soundBusy -> "Importando som..."
-                    soundSet -> "Som da abertura: personalizado"
-                    else -> "Som da abertura: Névoa Suspense V6"
+                    soundBusy -> com.armsx2.i18n.I18n.get("nevoa.soundImporting")
+                    soundSet -> com.armsx2.i18n.I18n.get("nevoa.soundCustom")
+                    else -> com.armsx2.i18n.I18n.get("nevoa.soundDefault")
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -548,12 +549,12 @@ fun AppTab() {
                 Modifier.fillMaxWidth().padding(top = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val pickSound = { if (!soundBusy) soundPicker.launch(arrayOf("audio/*")) }
+                val pickSound = { if (!soundBusy) soundPicker.launch(arrayOf("audio/*", "application/ogg")) }
                 OutlinedButton(
                     onClick = pickSound,
                     enabled = !soundBusy,
                     modifier = Modifier.controllerFocusable("app.introSound.choose", onConfirm = pickSound),
-                ) { Text("Escolher som da abertura") }
+                ) { Text(com.armsx2.i18n.I18n.get("nevoa.chooseSound")) }
                 if (soundSet) {
                     val removeSound = {
                         if (!soundBusy) {
@@ -565,8 +566,9 @@ fun AppTab() {
                         onClick = removeSound,
                         enabled = !soundBusy,
                         modifier = Modifier.controllerFocusable("app.introSound.reset", onConfirm = removeSound),
-                    ) { Text("Restaurar som padrão") }
+                    ) { Text(com.armsx2.i18n.I18n.get("nevoa.resetSound")) }
                 }
+            }
             }
         }
 

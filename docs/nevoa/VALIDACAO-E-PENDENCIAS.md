@@ -1,8 +1,26 @@
 # Validação e pendências
 
+## Encerramento Android — 25/10/2026
+
+**Implementações desta rodada:** estados no painel do jogo, lista de slots/datas e Continuar, com recibo após sucesso nativo e vínculo à URI da imagem aberta. SHA-256 do estado é conferido antes da transição; serial/CRC do disco e caminho exato do slot são confirmados após o boot. Estados antigos exigem carregamento manual bem-sucedido para associação. Uma imagem substituída na mesma URI pode manter a oferta até o boot, mas a identidade nativa diferente bloqueia a carga.
+
+Removido o wrap de 600 s do relógio do fundo; acrescentados casos na fronteira e em 24 h calculadas. Mantidos o intervalo de 30 ms, partículas discretas e o shader visual para preservar a passagem da abertura. Aceito MIME `application/ogg`; trilha substituta aparece somente quando o vídeo padrão está selecionado. Solicitação de partida preserva URI/slot na recriação e relê o recibo. Textos principais Névoa, teclado, editor e ações de estados foram localizados; menus de biblioteca perderam os emojis. Parser de licenças normaliza CRLF; teste de permissões Unix declara a condição de execução no Windows.
+
+**Build final:** release assinado instalado por cima no Poco F6 Pro. SHA256 do APK: `1C842A15B06FD7234DDAC1684C1191D38C8999E8B79735A50C9F248B2EFB6760`. Suíte completa: **303 testes, 293 aprovados, 10 ignorados, nenhuma falha**; 79 casos no pacote Névoa. Build concluído em 2 min 4 s. Todas as 15 bibliotecas arm64 presentes no APK foram comparadas byte a byte por SHA-256 com a referência nativa local; nenhuma alteração de núcleo. Cristal V2 preserva o hash aprovado `2556e6a8539d8934c112c64d687eeece66dae4fd7d3d988ef6c175f036f772ef`; abertura V6 e título no impacto final não foram modificados.
+
+**Poco:** ISO original de 56 KB gerada por `tools/nevoa-diagnostic/build_iso.py`, copiada para `/sdcard/Download/Ps2/Nevoa_Diagnostico.iso` e reconhecida como terceiro item. Boot exibiu o fundo azul pulsante previsto. Identidade nativa `NEVO-00001 / CD915601`; gravado slot 10 inicialmente vazio e conferido recibo com hash/tamanho/data reais. Após fechar, home mostrou Estados salvos (1), Continuar e lista com data/slot. Retomada pela lista carregou o estado (`Loaded state from slot 9`, índice interno).
+
+Durante a transição, escala de fonte temporária de 1,0 para 1,05 provocou recriação real da Activity, confirmada pelo WindowManager. Uma única emissão LAUNCH e uma única chamada de partida foram registradas; a retomada carregou o slot correto. Escala original 1,0 restaurada, com nova recriação durante a emulação. Saída posterior retornou à home. O estado do diagnóstico não apareceu no Scooby, que mostrou zero estados associados. Nenhum estado comercial ou save de cartão foi criado ou substituído. A ISO e o estado de diagnóstico ficam no aparelho para repetir a conferência.
+
+Scooby foi novamente iniciado: `SLUS-21928 / 38E42973`, execução do ELF confirmada e pausa/saída para a biblioteca. Isso não equivale a gameplay prolongado. Y/△ abriu a biblioteca após fechar a gaveta e após Concluir na busca; entrada ADB com fonte gamepad. Teclado PT-BR e menu Mais sem emojis inspecionados. Medição de aproximadamente 10,3 s na biblioteca registrou 622 quadros de UI e GPU mediana de 23 ms; esse total inclui o trabalho da interface e não comprova taxa fixa do relógio do shader.
+
+Evidências locais ignoradas em `.superpowers/validation/final-pendencias/`: `diagnostic.png`, `states-home.png`, `states-list.png`, `continued.png`, `continue-emulog.txt`, `continue-logcat.txt`, `recreation.txt`, `scooby-emulog.txt`, `library-menu.png` e `gfxinfo.txt`. Os testes de tempo longo são calculados, sem alegar sessão física de 24 h. Não houve nova importação física de áudio/vídeo próprio nem troca de idioma nesta rodada; esses ajustes foram compilados e o MIME foi testado por unidade.
+
+**Dependências externas restantes:** usuário informou não ter gamepad físico nem outro jogo. O diagnóstico comprova outro disco e o ciclo de estados, sem substituir compatibilidade com outro jogo comercial, multitoque amplo, skins próprias ou teste autenticado de RetroAchievements. O login deve ser feito pelo usuário no app. Essas validações ficam registradas como não executadas; não são implementações concluídas por simulação. Nome definitivo continua adiado por solicitação, e o launcher Windows permanece fora desta rodada Android.
+
 [Índice do Névoa](../NEVOA.md)
 
-Referência: 24/10/2026. Este registro delimita a evidência disponível; implementação não significa teste de todos os caminhos.
+Referência: 25/10/2026. Este registro delimita a evidência disponível; implementação não significa teste de todos os caminhos. As seções por rodada preservam o histórico; a situação atual está na tabela e no encerramento abaixo.
 
 ## Situação por área
 
@@ -17,8 +35,8 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 | Controles, patches e texturas | APK `7c71555d6c` inspecionado conforme registro anterior | Arte padrão e editor revisados; ver rodada de controles de toque abaixo |
 | Conquistas | Entrada/login e detalhes recolhíveis inspecionados | Conta autenticada e jogo real não testados nesta rodada |
 | Menu em jogo | `c51ef39430` verde no CI; abas, expansão, continuar e fechar conferidos | Inspeção com BIOS não comprova gameplay |
-| Categorias na tela Névoa | Não integradas | Recursos existentes na biblioteca clássica |
-| Saves no painel do jogo | Não implementados | Exigir associação confiável ao título |
+| Categorias na tela Névoa | Integradas na home e nos três modos da biblioteca | Validação adicional com bibliotecas grandes e controle físico |
+| Saves no painel do jogo | Painel, recibos e retomada implementados | Conferência do ciclo de gravação/retomada descrita no encerramento |
 | Launcher Windows | Arquitetura planejada | Implementação não iniciada |
 
 ## Seletor animado, apresentação de início e pausa contida — 24/10/2026
@@ -102,16 +120,17 @@ Base: `platforms/android/app/src/test/java/com/armsx2/nevoa/`.
 
 | Classe | Casos na execução de referência | Área |
 |---|---:|---|
-| `ShaderClockTest` | 6 | Relógio e intervalo de atualização |
+| `ShaderClockTest` | 9 | Relógio contínuo, fronteira de 600 s, sessão longa e intervalo de atualização |
 | `LaunchGateTest` | 6 | Início duplicado e reabertura |
 | `LibraryLogicTest` | 19 | Seleção, ordem auxiliar, rótulos e fallback, incluindo busca vazia |
-| `IntroSoundTest` | 4 | Validação de áudio |
+| `IntroSoundTest` | 7 | Validação de áudio e MIME OGG |
 | `NevoaPaletteTest` | 6 | Paleta e contraste |
 | `NevoaOrientationTest` | 5 | Padrão antigo em paisagem e preservação de escolhas explícitas |
 | `SaveSlotFilesTest` | 4 | Caminho candidato do JNI, arquivo existente, diretório e caminho vazio |
 | `FaceButtonPositionsTest` | 5 | Losango em pixels, retrato/paisagem, posições próprias, invariantes e dimensões indisponíveis |
 | `CategoryPoolTest` | 6 | Associação por chave, várias categorias, vazio válido, exclusão e atualização de membros |
-| **Total** | **61** | **Todos passaram localmente** |
+| `StateAssociationTest` | 12 | Identidade nativa, URI confirmada, SHA-256, recibos, substituição e destino exato |
+| **Total** | **79** | **Todos passaram localmente** |
 
 Esses testes não comprovam renderização, reprodução real de mídia ou todo o runtime.
 
@@ -122,14 +141,14 @@ Na execução inicial de busca/ordenação, a suíte completa local teve **260 t
 | `TexturePackInstallerTest.aFileThatWillNotDeleteStillTakesThePackOutOfUse` | Falha na preparação de permissões (`setWritable(false)`), dependente do sistema de arquivos no Windows |
 | `LicenseDocsTest.theAndroidListEndsWithTheApacheLicense` | Falha no prefixo da licença WebRTC; o parser remove `\n` inicial e preserva `\r` do checkout CRLF |
 
-Não foram feitas mudanças nesses módulos para contornar a suíte. Preservar as falhas no relato; CI Linux é evidência separada.
+Esse resultado é histórico. Na rodada de encerramento, a normalização CRLF do parser foi corrigida e o teste de permissões Unix passou a declarar sua limitação no Windows. A suíte completa posterior teve 303 testes: 293 aprovados, 10 ignorados e nenhuma falha. CI Linux é evidência separada.
 
 ## Próximos incrementos
 
 **Sincronismo da abertura:** o usuário confirmou V6. A correção passa a incorporar a faixa no vídeo padrão, com relógio único e passagem à biblioteca na conclusão audiovisual. Resultado da conferência no aparelho registrado abaixo.
 
 1. **Categorias:** integradas na rodada de 25/10/2026; manter validação adicional em bibliotecas grandes e controle físico.
-2. **Saves no painel:** usar associação confiável ao jogo, sem inferir apenas pelo nome de arquivo.
+2. **Saves no painel:** implementados com recibo após sucesso nativo e verificação de identidade/conteúdo; ver rodada de encerramento.
 3. **Controles de toque:** arte padrão, acesso ao editor e losango uniforme implementados; ampliar validação para multitoque simultâneo, skins próprias, outros jogos e gameplay prolongado.
 4. **Validação adicional:** vários jogos, gameplay, conta RetroAchievements autenticada e gamepad físico.
 5. **Ajustes menores:** tratar os pontos técnicos abaixo em incrementos proporcionais.
@@ -140,17 +159,17 @@ Executar uma função por vez, ou duas quando uma for simples. Não há data de 
 
 | Item | Situação |
 |---|---|
-| Partículas discretas na resolução nativa | Avaliar tamanho antes de aumentar custo do shader |
-| Wrap do tempo a cada 600 s | Continuidade de longo prazo pendente |
-| Cadência do fundo | Intervalo atual é 30 ms; medir antes de prometer fps fixo |
-| MIME `application/ogg` | Rejeitado pela validação `audio/*` |
+| Partículas discretas na resolução nativa | Inspecionadas; mantido o tamanho discreto aprovado, sem aumentar custo |
+| Wrap do tempo a cada 600 s | Removido; testes na fronteira e em sessão de 24 h, sem alegar espera física de 24 h |
+| Cadência do fundo | Intervalo de 30 ms preservado; medição local registrada abaixo, sem prometer fps fixo |
+| MIME `application/ogg` | Aceito, inclusive com variação de maiúsculas; testes adicionados |
 | Preparação do áudio | V6 padrão incorporada no MP4; `prepareAsync()` fica para substituição personalizada |
 | Ciclo do som | Vídeo e som param ao sair; abertura interrompida é pulada ao voltar |
-| Áudio com vídeo próprio | Linha pode continuar visível, embora só toque com o vídeo padrão |
-| Recriação durante o burst | Estado pendente não é integralmente preservado |
-| Textos e tema legados | Textos Névoa fixos fora de I18n e pontos antigos de tema a limpar |
+| Áudio com vídeo próprio | Controles de trilha substituta ocultos quando há vídeo próprio |
+| Recriação durante o burst | URI/slot preservados; prova do estado relida, sem repetir o som |
+| Textos e tema legados | Textos principais Névoa, teclado e editor localizados; menus de biblioteca sem emojis |
 
-O atalho Y/△ tinha registro de recuperação de foco insuficiente após a gaveta. Em `3222e96576`, o pedido de foco passou a reagir à gaveta e ao teclado. Retestar Y/△ nessas transições antes de encerrar o item; mudança no código não é comprovação de resolução.
+O atalho Y/△ foi retestado no Poco após fechar a gaveta e após Concluir na busca. Nos dois casos abriu Biblioteca completa; eventos ADB com fonte gamepad, sem substituir controle físico.
 
 O aviso de temperatura foi primeiro centralizado e, depois, removido por solicitação do usuário; o aviso de bateria baixa permanece. A importação do chip de status foi preservada após ajuste. São histórico de correção, não pendências atuais confirmadas.
 

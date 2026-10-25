@@ -2726,7 +2726,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                 TouchControls.clearGameLayoutIfRunning()
             }
             ToolbarChip(str("touch.editor.profiles")) { TouchControls.profileDialogOpen.value = true }
-            ToolbarChip(if (advanced) "Menos opções" else "Mais opções") { advanced = !advanced }
+            ToolbarChip(if (advanced) com.armsx2.i18n.I18n.get("nevoa.lessOptions") else com.armsx2.i18n.I18n.get("nevoa.moreOptions")) { advanced = !advanced }
             if (advanced) {
                 ToolbarChip(if (TouchControls.faceMultiTouch.value) str("touch.editor.multiTouchOn") else str("touch.editor.multiTouchOff")) {
                     TouchControls.setFaceMultiTouch(!TouchControls.faceMultiTouch.value)
@@ -2818,7 +2818,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    selectedCfg.id.label + " size",
+                    selectedCfg.id.label + " " + str("touch.editor.size"),
                     color = NevoaPalette.TowerBlue,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,

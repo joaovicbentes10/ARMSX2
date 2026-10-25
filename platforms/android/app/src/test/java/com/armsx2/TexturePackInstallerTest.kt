@@ -78,8 +78,8 @@ class TexturePackInstallerTest {
 
     @Test
     fun aFileThatWillNotDeleteStillTakesThePackOutOfUse() {
-        // Root ignores the permission this relies on.
-        assumeFalse(System.getProperty("user.name") == "root")
+        // Root ignores Unix directory permissions; Windows does not expose this bit via File.
+        assumeFalse(System.getProperty("user.name") == "root" || System.getProperty("os.name").orEmpty().startsWith("Windows"))
         val game = gameFolder()
         val textures = game.parentFile!!
         val stuck = File(game, "replacements/sub")

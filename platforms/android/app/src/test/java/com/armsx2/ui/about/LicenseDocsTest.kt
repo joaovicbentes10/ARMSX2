@@ -12,6 +12,12 @@ import org.junit.Test
  * If PCSX2 changes the layout of its file, this is where it shows, not as an empty list on a phone.
  */
 class LicenseDocsTest {
+    @Test
+    fun preformattedLicensesNormalizeWindowsNewlinesWithoutRemovingIndentation() {
+        val html = "<div id=\"sample\"><h3>Sample</h3><pre>\r\nCopyright\r\n  indented\r\n</pre></div>"
+        assertEquals("Copyright\n  indented", LicenseDocs.parse(html).single().text)
+        assertEquals("Copyright\n  indented", LicenseDocs.htmlToText("<pre>\r\nCopyright\r\n  indented\r\n</pre>"))
+    }
     private val docs = File("../../../bin/docs")
     private val android = File("src/main/assets/licenses/android.html")
 

@@ -1,5 +1,17 @@
 # Arquitetura e mapa do código
 
+## Estados no painel do jogo
+
+`GameSavePanel` consulta somente o jogo selecionado fora da thread principal, após inicialização nativa e com a VM parada. `GameStateCatalog` acompanha gravações/carregamentos manuais bem-sucedidos e autosaves. A identidade vem do getter nativo de serial/CRC do disco usado pelo resolvedor de slots; o CRC do ELF em execução pode ser diferente. Não abrir o CDVD para identificar outro disco durante a emulação.
+
+`StateAssociation` mantém um recibo adjacente `.nevoa-state`: identidade nativa, URI da imagem aberta, slot, caminho canônico, tamanho, data e SHA-256 do estado efetivamente salvo. A biblioteca exige a URI registrada nessa operação e o serial do jogo selecionado. Isso evita depender da consulta offline ao CDVD, que falha para alguns acessos SAF. `Continuar` revalida os bytes do estado antes da transição; depois do boot, o runtime confirma serial/CRC do disco e destino exato do slot antes de carregar. Nome semelhante de arquivo não habilita o botão. Estados antigos ou associados a outra URI ganham recibo após carregamento manual bem-sucedido.
+
+Substituir uma imagem conservando sua URI pode manter a oferta do estado até o boot; a confirmação nativa impede carregar se a identidade do disco mudou. Não se calcula SHA-256 da ROM inteira para compor a home.
+
+A solicitação da transição preserva URI e slot com `rememberSaveable`; na recriação, o recibo é lido novamente antes da partida. O som não é emitido novamente nessa recuperação. Não persistir provas de arquivos como objetos serializados.
+
+O diagnóstico original e reproduzível em `tools/nevoa-diagnostic` oferece uma segunda imagem pequena para testar boot e estados sem baixar jogos comerciais. Suas limitações estão no README da ferramenta.
+
 [Índice do Névoa](../NEVOA.md)
 
 ## Camadas e fluxo

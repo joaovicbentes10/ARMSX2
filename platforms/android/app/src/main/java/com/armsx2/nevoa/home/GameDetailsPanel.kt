@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -71,11 +74,13 @@ fun GameDetailsPanel(
     configureControllerId: String? = null,
     onCategories: (() -> Unit)? = null,
     categoriesControllerId: String? = null,
+    onContinue: (com.armsx2.nevoa.saves.AssociatedState) -> Unit = {},
+    savesControllerId: String? = null,
 ) {
     PlayTime.revision.value // re-read the totals after a session ends
     val last = PlayTime.formatLastPlayed(PlayTime.lastPlayedMillis(game.serial))
     val played = PlayTime.formatPlayed(PlayTime.playedSeconds(game.serial))
-    Column(modifier.width(260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(modifier.width(260.dp).heightIn(max = 240.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             coverLabel(game.title, game.uri.lastPathSegment),
             color = NevoaPalette.Text,
@@ -94,7 +99,8 @@ fun GameDetailsPanel(
             GlassButton(NevoaStrings.Configure, onConfigure, quiet = true, controllerId = configureControllerId)
         }
         onCategories?.let {
-            GlassButton("Categorias do jogo", it, quiet = true, controllerId = categoriesControllerId)
+            GlassButton(com.armsx2.i18n.I18n.get("nevoa.gameCategories"), it, quiet = true, controllerId = categoriesControllerId)
         }
+        com.armsx2.nevoa.saves.GameSavePanel(game, onContinue, savesControllerId)
     }
 }

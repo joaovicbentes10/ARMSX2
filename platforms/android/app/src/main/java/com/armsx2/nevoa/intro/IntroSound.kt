@@ -17,8 +17,8 @@ object IntroSound {
 
     /** Returns null when acceptable, else a PT-BR message. */
     fun validate(sizeBytes: Long, mime: String?): String? = when {
-        mime == null || !mime.startsWith("audio/") -> "Escolha um arquivo de áudio."
-        sizeBytes > MaxBytes -> "O áudio é grande demais (máximo 5 MB)."
+        mime == null || !(mime.startsWith("audio/") || mime.equals("application/ogg", ignoreCase = true)) -> com.armsx2.i18n.I18n.get("nevoa.chooseAudio")
+        sizeBytes > MaxBytes -> com.armsx2.i18n.I18n.get("nevoa.audioTooBig")
         else -> null
     }
 
@@ -51,12 +51,12 @@ object IntroSound {
         }
         if (tooBig == null || temp.length() == 0L) {
             temp.delete()
-            return "Não foi possível ler o arquivo."
+            return com.armsx2.i18n.I18n.get("nevoa.readFailed")
         }
         target.delete()
         if (!temp.renameTo(target)) {
             temp.delete()
-            return "Não foi possível ler o arquivo."
+            return com.armsx2.i18n.I18n.get("nevoa.readFailed")
         }
         return null
     }

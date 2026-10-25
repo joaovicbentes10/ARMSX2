@@ -112,3 +112,9 @@ Com uma categoria selecionada, “Gerenciar categoria” permite renomear ou exc
 ### Som ao jogar
 
 Confirmar Jogar ou a capa selecionada toca um efeito próprio curto, acompanhando a transição. Mudar apenas a seleção continua usando o som de navegação. O volume e a opção de desligar ficam nos sons da interface. Para trocar só o efeito de partida por um pacote próprio, use um clipe com nome base `game_launch` e extensão WAV, OGG ou MP3.
+
+### Estados salvos na home
+
+Selecione o jogo e abra “Estados salvos” para ver os slots associados e suas datas. “Continuar” retoma o estado mais recente verificado; escolher um slot na lista retoma aquele estado. “Jogar” continua iniciando normalmente, respeitando a preferência existente de carregamento automático.
+
+Um estado antigo pode precisar ser carregado uma vez pelo menu em jogo para aparecer no painel. Arquivos substituídos, movidos ou sem associação confirmada não são oferecidos para continuar. Isso não apaga os estados nem os saves do cartão de memória.

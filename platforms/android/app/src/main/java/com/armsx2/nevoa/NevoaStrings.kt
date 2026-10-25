@@ -1,20 +1,20 @@
 package com.armsx2.nevoa
 
-// shortcut: fixed PT-BR strings that skip I18n; migrate if the app ever goes public.
+/** Launcher labels follow the app language and its English fallback. */
 object NevoaStrings {
-    const val Play = "Jogar"
-    const val Configure = "Configurar"
-    const val FullLibrary = "Biblioteca completa"
-    const val Played = "Última vez"
-    const val PlayTime = "Tempo de jogo"
-    const val Menu = "Menu"
-    const val Search = "Buscar"
-    const val SearchPlaceholder = "Buscar jogos por título ou código"
-    const val ClearSearch = "Limpar busca"
-    const val Order = "Ordem"
-    const val OrderTitle = "Título"
-    const val OrderRecent = "Recentes"
-    const val OrderCompatibility = "Compatibilidade"
-    const val NoResults = "Nenhum jogo encontrado"
-    const val NoResultsHint = "Altere ou limpe a busca para ver seus jogos."
+    val Play get() = com.armsx2.i18n.I18n.get("nevoa.play")
+    val Configure get() = com.armsx2.i18n.I18n.get("nevoa.configure")
+    val FullLibrary get() = com.armsx2.i18n.I18n.get("nevoa.library")
+    val Played get() = com.armsx2.i18n.I18n.get("nevoa.played")
+    val PlayTime get() = com.armsx2.i18n.I18n.get("nevoa.playtime")
+    val Menu get() = com.armsx2.i18n.I18n.get("nevoa.menu")
+    val Search get() = com.armsx2.i18n.I18n.get("nevoa.search")
+    val SearchPlaceholder get() = com.armsx2.i18n.I18n.get("nevoa.searchHint")
+    val ClearSearch get() = com.armsx2.i18n.I18n.get("nevoa.clearSearch")
+    val Order get() = com.armsx2.i18n.I18n.get("nevoa.order")
+    val OrderTitle get() = com.armsx2.i18n.I18n.get("nevoa.title")
+    val OrderRecent get() = com.armsx2.i18n.I18n.get("nevoa.recent")
+    val OrderCompatibility get() = com.armsx2.i18n.I18n.get("nevoa.compatibility")
+    val NoResults get() = com.armsx2.i18n.I18n.get("nevoa.noResults")
+    val NoResultsHint get() = com.armsx2.i18n.I18n.get("nevoa.noResultsHint")
 }

@@ -421,7 +421,7 @@ fun HomeScreen(
                 val tb = HomeInputController.zone.value == HomeZone.Toolbar
                 val tbi = HomeInputController.toolbarIndex.intValue
                 NevoaLibraryTopBar(
-                    title = "Biblioteca completa",
+                    title = com.armsx2.i18n.I18n.get("nevoa.library"),
                     subtitle = if (state.scanning) {
                         str("games.scanningRoms")
                     } else if (com.armsx2.ArcadeOnly.enabled.value) {
@@ -676,9 +676,9 @@ fun HomeScreen(
                         if (state.categoryFilter != null) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text("Nenhum jogo nesta seleção", color = com.armsx2.nevoa.theme.NevoaPalette.Text)
-                                    Text("Escolha Todos os jogos ou altere a busca para ver sua biblioteca.", color = com.armsx2.nevoa.theme.NevoaPalette.TextDim)
-                                    com.armsx2.nevoa.home.GlassButton("Todos os jogos", { viewModel.setCategoryFilter(null); viewModel.setQuery("") }, quiet = true)
+                                    Text(com.armsx2.i18n.I18n.get("nevoa.selectionEmpty"), color = com.armsx2.nevoa.theme.NevoaPalette.Text)
+                                    Text(com.armsx2.i18n.I18n.get("nevoa.selectionHint"), color = com.armsx2.nevoa.theme.NevoaPalette.TextDim)
+                                    com.armsx2.nevoa.home.GlassButton(com.armsx2.i18n.I18n.get("nevoa.all"), { viewModel.setCategoryFilter(null); viewModel.setQuery("") }, quiet = true)
                                 }
                             }
                         } else emptyLibrary(state.query.isBlank())
@@ -1354,22 +1354,22 @@ private fun GameMenuAction(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .controllerFocusable(controllerId = id, shape = RoundedCornerShape(18.dp), onConfirm = onClick),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+            .controllerFocusable(controllerId = id, shape = RoundedCornerShape(8.dp), onConfirm = onClick),
+        shape = RoundedCornerShape(8.dp),
+        color = com.armsx2.nevoa.theme.NevoaPalette.Glass,
+        contentColor = com.armsx2.nevoa.theme.NevoaPalette.Text,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)),
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text(glyph, color = MaterialTheme.colorScheme.primary, fontSize = 20.sp)
-            Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
             trailing?.let {
                 Text(
                     it,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
@@ -1668,31 +1668,12 @@ private fun LibraryOverflowItem(
             )
         },
         onClick = onClick,
-        leadingIcon = {
-            Surface(
-                modifier = Modifier.size(34.dp),
-                shape = RoundedCornerShape(11.dp),
-                color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    if (iconRes != null) {
-                        androidx.compose.material3.Icon(
-                            painter = androidx.compose.ui.res.painterResource(iconRes),
-                            contentDescription = null,
-                            tint = iconTint ?: MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(19.dp),
-                        )
-                    } else {
-                        Text(
-                            text = glyph,
-                            fontSize = if (glyph.length > 2) 11.sp else 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
-            }
-        },
+        leadingIcon = if (iconRes == null) null else ({
+            androidx.compose.material3.Icon(
+                painter = androidx.compose.ui.res.painterResource(iconRes), contentDescription = null,
+                tint = iconTint ?: MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(19.dp),
+            )
+        }),
         trailingIcon = {
             when {
                 selected -> Text("✓", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)

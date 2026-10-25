@@ -2,6 +2,14 @@
 
 Documentação de referência: [índice do projeto](NEVOA.md), [desenvolvimento](nevoa/DESENVOLVIMENTO.md) e [validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md). Esta passagem resume a operação; os guias detalham o estado atual.
 
+## Estado atual — encerramento Android de 25/10/2026
+
+O usuário pediu concluir as pendências Android, mantendo o nome provisório. Categorias e som Cristal V2 já estavam aprovados. Esta rodada acrescenta estados no painel do jogo, associação por recibo nativo e URI da imagem, revalidação antes de continuar, preservação da solicitação de partida em recriação, relógio contínuo sem wrap de 600 s, MIME OGG, controles de trilha somente no vídeo padrão e limpeza/localização dos menus restantes da biblioteca. V6, impacto final do título e Cristal V2 ficam preservados.
+
+O usuário informou não ter gamepad físico nem outro jogo. `tools/nevoa-diagnostic` gera uma ISO original pequena, adicionada à pasta de jogos do Poco para testes de boot/estados. Não equiparar o diagnóstico a outro jogo comercial, controle físico ou gameplay. RetroAchievements autenticado ainda depende de login feito pelo próprio usuário; nunca pedir sua senha no chat. Windows continua como projeto futuro separado.
+
+Resultados, APK e limites desta rodada estão no encerramento de [Validação e pendências](nevoa/VALIDACAO-E-PENDENCIAS.md). Os relatos abaixo preservam o histórico e podem mencionar itens que já foram concluídos; não os reabrir sem consultar esse registro atual.
+
 O usuário confirmou V6 para o sincronismo da abertura. A trilha foi incorporada ao MP4 padrão para compartilhar o relógio da imagem; build, 50 testes e passagem no F6 Pro conferidos; ver o registro de validação no guia de pendências. Não substituir por V5.
 
 > Cole tudo abaixo no Codex.

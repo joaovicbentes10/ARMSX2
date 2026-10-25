@@ -141,7 +141,7 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
     ArmsBackdrop {
         Column(Modifier.fillMaxSize()) {
             NevoaLibraryTopBar(
-                title = if (mode == SaveMode.Save) "Salvar estado" else "Carregar estado",
+                title = if (mode == SaveMode.Save) com.armsx2.i18n.I18n.get("nevoa.saveState") else com.armsx2.i18n.I18n.get("nevoa.loadState"),
                 subtitle = MainActivityRuntime.currentGame.value?.title,
                 leading = { GlassButton("Voltar", onBack, quiet = true, controllerId = "save.back") },
                 actions = {
@@ -236,6 +236,7 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
                                     SaveMode.Save -> NativeApp.saveStateToSlot(selected)
                                     SaveMode.Load -> NativeApp.loadStateFromSlot(selected)
                                 }
+                                if (ok) com.armsx2.nevoa.saves.GameStateCatalog.record(selected)
                                 val busy = !ok && mode == SaveMode.Save &&
                                     runCatching { NativeApp.isMemcardBusy() }.getOrDefault(false)
                                 val hardcore = !ok &&
@@ -265,7 +266,7 @@ fun SaveStatePickerScreen(mode: SaveMode, onBack: () -> Unit) {
                     }
                 }
                 if (mode == SaveMode.Load) {
-                    NevoaSection("Salvamento automático", controllerId = "save.options") {
+                    NevoaSection(com.armsx2.i18n.I18n.get("nevoa.autoSave"), controllerId = "save.options") {
                         AutoOptions(Modifier.fillMaxWidth())
                     }
                 }
