@@ -68,7 +68,9 @@ import android.content.res.Configuration
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
+import com.armsx2.nevoa.touch.nevoaPadPainter as padPainter
+import com.armsx2.nevoa.theme.NevoaPalette
+import com.armsx2.nevoa.touch.uniformDefaultFaceDiamond
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -223,6 +225,10 @@ fun TouchControlsOverlay() {
             OverlayDims.last = OverlayDims.Dims(widthPx, heightPx, density.density)
         }
         val layout = TouchControls.activeLayout.value
+        LaunchedEffect(layout, widthPx, heightPx) {
+            val aligned = uniformDefaultFaceDiamond(layout, widthPx, heightPx)
+            if (aligned != layout) TouchControls.activeLayout.value = aligned
+        }
         val tight = tightShoulderFactors()
         // Buttons the single UnifiedTouchLayer currently holds down (face + shoulder +
         // menu digital buttons). The covered widgets read this to paint their pressed
@@ -683,7 +689,7 @@ private fun ButtonWidget(
     val darkenOnPress = pressed && !hasPressedSprite(cfg.id)
     Box(modifier = mod, contentAlignment = Alignment.Center) {
         Image(
-            painter = skinPainter(skinKeyFor(cfg.id)) ?: painterResource(drawableFor(cfg.id, pressed)),
+            painter = skinPainter(skinKeyFor(cfg.id)) ?: padPainter(drawableFor(cfg.id, pressed), pressed),
             contentDescription = cfg.id.label,
             contentScale = ContentScale.Fit,
             alpha = opacity,
@@ -735,7 +741,7 @@ private fun skinPainter(key: String?): Painter? {
  *  At most 1: art taller than it is wide fills the square anyway. */
 @Composable
 private fun shoulderArtAspect(id: TouchButtonId): Float {
-    val art = (skinPainter(skinKeyFor(id)) ?: painterResource(drawableFor(id, false))).intrinsicSize
+    val art = (skinPainter(skinKeyFor(id)) ?: padPainter(drawableFor(id, false))).intrinsicSize
     return if (art.width.isFinite() && art.height.isFinite() && art.width > 0f && art.height > 0f)
         (art.height / art.width).coerceIn(0.2f, 1f) else 1f
 }
@@ -1300,7 +1306,7 @@ private fun PauseGlyph(sizeDp: Float, opacity: Float) {
         modifier = Modifier
             .size(disc)
             .clip(CircleShape)
-            .background(Color.Black.copy(alpha = (0.55f * a).coerceIn(0.32f, 0.60f) * fade)),
+            .background(NevoaPalette.Background.copy(alpha = (0.55f * a).coerceIn(0.32f, 0.60f) * fade)),
         contentAlignment = Alignment.Center,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(barW)) {
@@ -1309,7 +1315,7 @@ private fun PauseGlyph(sizeDp: Float, opacity: Float) {
                     Modifier
                         .size(barW, barH)
                         .background(
-                            Color.White.copy(alpha = (0.95f * a).coerceIn(0.72f, 1.0f) * fade),
+                            NevoaPalette.Text.copy(alpha = (0.95f * a).coerceIn(0.72f, 1.0f) * fade),
                             RoundedCornerShape(barW / 2),
                         )
                 )
@@ -1700,7 +1706,7 @@ private fun DpadWidget(
         // inwards" toward the center. The down arm uses the same
         // sprite rotated 180° and sat correctly already.
         Image(
-            painter = skUp ?: painterResource(
+            painter = skUp ?: padPainter(
                 if (shown.up) R.drawable.pad_dpad_up_pressed else R.drawable.pad_dpad_up
             ),
             contentDescription = str("touch.dpad.up.description"),
@@ -1713,7 +1719,7 @@ private fun DpadWidget(
                 .aspectRatio(upRatio),
         )
         Image(
-            painter = skDown ?: painterResource(
+            painter = skDown ?: padPainter(
                 if (shown.down) R.drawable.pad_dpad_up_pressed else R.drawable.pad_dpad_up
             ),
             contentDescription = str("touch.dpad.down.description"),
@@ -1726,7 +1732,7 @@ private fun DpadWidget(
                 .rotate(if (skDown != null) 0f else 180f),
         )
         Image(
-            painter = skLeft ?: painterResource(
+            painter = skLeft ?: padPainter(
                 if (shown.left) R.drawable.pad_dpad_left_pressed else R.drawable.pad_dpad_left
             ),
             contentDescription = str("touch.dpad.left.description"),
@@ -1738,7 +1744,7 @@ private fun DpadWidget(
                 .aspectRatio(lrRatio),
         )
         Image(
-            painter = skRight ?: painterResource(
+            painter = skRight ?: padPainter(
                 if (shown.right) R.drawable.pad_dpad_right_pressed else R.drawable.pad_dpad_right
             ),
             contentDescription = str("touch.dpad.right.description"),
@@ -1985,7 +1991,7 @@ private fun StickWidget(cfg: TouchButtonCfg, edit: Boolean) {
         val stickSide = if (cfg.id == TouchButtonId.L_STICK) "left" else "right"
         Image(
             painter = skinPainter("analog_base_$stickSide") ?: skinPainter("analog_base")
-                ?: painterResource(R.drawable.pad_stick_base),
+                ?: padPainter(R.drawable.pad_stick_base),
             contentDescription = cfg.id.label + " base",
             contentScale = ContentScale.Fit,
             alpha = opacity,
@@ -1999,7 +2005,7 @@ private fun StickWidget(cfg: TouchButtonCfg, edit: Boolean) {
         val thumbSizeDp = cfg.sizeDp * 0.62f
         Image(
             painter = skinPainter("analog_stick_$stickSide") ?: skinPainter("analog_stick")
-                ?: painterResource(R.drawable.pad_thumb),
+                ?: padPainter(R.drawable.pad_thumb),
             contentDescription = cfg.id.label + " thumb",
             contentScale = ContentScale.Fit,
             alpha = opacity,
@@ -2584,8 +2590,8 @@ private fun DisabledMarker() {
 @Composable
 private fun EditAdornment(id: TouchButtonId? = null) {
     val isSelected = id != null && TouchControls.selectedButton.value == id
-    val color = if (isSelected) Color(0xFFFFD33A) else Colors.pasx2_blue
-    val width = if (isSelected) 3.dp else 2.dp
+    val color = if (isSelected) NevoaPalette.TowerBlue else NevoaPalette.GlassBorder
+    val width = if (isSelected) 2.dp else 1.dp
     Box(
         Modifier
             .fillMaxSize()
@@ -2595,13 +2601,15 @@ private fun EditAdornment(id: TouchButtonId? = null) {
 
 @Composable
 private fun EditToolbar(modifier: Modifier = Modifier) {
+    var advanced by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             // The grip row fills the width, so without a cap the panel was always as wide as the
             // screen. Capped, the chips below wrap onto another line instead.
-            .widthIn(max = 600.dp)
+            .widthIn(max = 480.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xCC000000))
+            .background(NevoaPalette.Background.copy(alpha = 0.94f))
+            .border(1.dp, NevoaPalette.GlassBorder, RoundedCornerShape(12.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -2674,7 +2682,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
             if (MainActivityRuntime.eState.value == EmuState.RUNNING || MainActivityRuntime.eState.value == EmuState.PAUSED)
                 str("touch.editor.scopeGame")
             else str("touch.editor.scopeGlobal"),
-            color = Color(0xFFFFD33A), fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+            color = NevoaPalette.TowerBlue, fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
         )
         // Action chips up top — save commits the live layout into the
         // active profile, discard reverts to the saved version, reset
@@ -2718,45 +2726,48 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                 TouchControls.clearGameLayoutIfRunning()
             }
             ToolbarChip(str("touch.editor.profiles")) { TouchControls.profileDialogOpen.value = true }
-            ToolbarChip(if (TouchControls.faceMultiTouch.value) str("touch.editor.multiTouchOn") else str("touch.editor.multiTouchOff")) {
-                TouchControls.setFaceMultiTouch(!TouchControls.faceMultiTouch.value)
-            }
-            // Glide: what a finger sliding across buttons presses. Cycles Follow -> Hold first
-            // -> Hold all. Only means anything with multi-touch on -- without it each button
-            // owns its own touch and nothing can be glided across -- so the chip is disabled
-            // there instead of silently doing nothing, which is what the old toggle did.
-            val multi = TouchControls.faceMultiTouch.value
-            ToolbarChip(
-                if (!multi) str("touch.editor.glideNeedsMulti")
-                else when (TouchControls.glideMode.value) {
-                    TouchControls.GlideMode.FOLLOW -> str("touch.editor.glideFollow")
-                    TouchControls.GlideMode.HOLD_FIRST -> str("touch.editor.glideHoldFirst")
-                    TouchControls.GlideMode.HOLD_ALL -> str("touch.editor.glideHoldAll")
-                },
-                enabled = multi,
-            ) {
-                val modes = TouchControls.GlideMode.entries
-                TouchControls.setGlideMode(modes[(TouchControls.glideMode.value.ordinal + 1) % modes.size])
-            }
-            ToolbarChip(if (TouchControls.floatingStick.value) str("touch.editor.floatingStickOn") else str("touch.editor.floatingStickOff")) {
-                TouchControls.setFloatingStick(!TouchControls.floatingStick.value)
-            }
-            ToolbarChip(if (TouchControls.fullHalfSticks.value) str("touch.editor.fullHalfSticksOn") else str("touch.editor.fullHalfSticksOff")) {
-                TouchControls.setFullHalfSticks(!TouchControls.fullHalfSticks.value)
-            }
-            // Only meaningful with half-screen sticks on: keep the normal left stick on screen and
-            // make only the right half a stick.
-            if (TouchControls.fullHalfSticks.value) {
-                ToolbarChip(
-                    if (TouchControls.fullHalfKeepLeftStick.value) str("touch.editor.keepLeftStickOn")
-                    else str("touch.editor.keepLeftStickOff"),
-                ) {
-                    TouchControls.setFullHalfKeepLeftStick(!TouchControls.fullHalfKeepLeftStick.value)
+            ToolbarChip(if (advanced) "Menos opções" else "Mais opções") { advanced = !advanced }
+            if (advanced) {
+                ToolbarChip(if (TouchControls.faceMultiTouch.value) str("touch.editor.multiTouchOn") else str("touch.editor.multiTouchOff")) {
+                    TouchControls.setFaceMultiTouch(!TouchControls.faceMultiTouch.value)
                 }
-            }
-            // Snap-to-grid: aligns dragged widgets to a square grid so buttons line up cleanly.
-            ToolbarChip(if (TouchControls.gridSnap.value) str("touch.editor.gridOn") else str("touch.editor.gridOff")) {
-                TouchControls.setGridSnap(!TouchControls.gridSnap.value)
+                // Glide: what a finger sliding across buttons presses. Cycles Follow -> Hold first
+                // -> Hold all. Only means anything with multi-touch on -- without it each button
+                // owns its own touch and nothing can be glided across -- so the chip is disabled
+                // there instead of silently doing nothing, which is what the old toggle did.
+                val multi = TouchControls.faceMultiTouch.value
+                ToolbarChip(
+                    if (!multi) str("touch.editor.glideNeedsMulti")
+                    else when (TouchControls.glideMode.value) {
+                        TouchControls.GlideMode.FOLLOW -> str("touch.editor.glideFollow")
+                        TouchControls.GlideMode.HOLD_FIRST -> str("touch.editor.glideHoldFirst")
+                        TouchControls.GlideMode.HOLD_ALL -> str("touch.editor.glideHoldAll")
+                    },
+                    enabled = multi,
+                ) {
+                    val modes = TouchControls.GlideMode.entries
+                    TouchControls.setGlideMode(modes[(TouchControls.glideMode.value.ordinal + 1) % modes.size])
+                }
+                ToolbarChip(if (TouchControls.floatingStick.value) str("touch.editor.floatingStickOn") else str("touch.editor.floatingStickOff")) {
+                    TouchControls.setFloatingStick(!TouchControls.floatingStick.value)
+                }
+                ToolbarChip(if (TouchControls.fullHalfSticks.value) str("touch.editor.fullHalfSticksOn") else str("touch.editor.fullHalfSticksOff")) {
+                    TouchControls.setFullHalfSticks(!TouchControls.fullHalfSticks.value)
+                }
+                // Only meaningful with half-screen sticks on: keep the normal left stick on screen and
+                // make only the right half a stick.
+                if (TouchControls.fullHalfSticks.value) {
+                    ToolbarChip(
+                        if (TouchControls.fullHalfKeepLeftStick.value) str("touch.editor.keepLeftStickOn")
+                        else str("touch.editor.keepLeftStickOff"),
+                    ) {
+                        TouchControls.setFullHalfKeepLeftStick(!TouchControls.fullHalfKeepLeftStick.value)
+                    }
+                }
+                // Snap-to-grid: aligns dragged widgets to a square grid so buttons line up cleanly.
+                ToolbarChip(if (TouchControls.gridSnap.value) str("touch.editor.gridOn") else str("touch.editor.gridOff")) {
+                    TouchControls.setGridSnap(!TouchControls.gridSnap.value)
+                }
             }
         }
         // Opacity slider — controls the live HUD alpha so the user sees
@@ -2769,7 +2780,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("α", color = Color(0xFFAAAAAA), fontSize = 12.sp)
+            Text("α", color = NevoaPalette.TextDim, fontSize = 12.sp)
             androidx.compose.material3.Slider(
                 value = TouchControls.opacity.floatValue,
                 onValueChange = { TouchControls.setOpacity(it) },
@@ -2778,14 +2789,14 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                     .width(280.dp)
                     .height(28.dp),
                 colors = androidx.compose.material3.SliderDefaults.colors(
-                    thumbColor = Colors.pasx2_blue,
-                    activeTrackColor = Colors.pasx2_blue,
-                    inactiveTrackColor = Color(0xFF333344),
+                    thumbColor = NevoaPalette.TowerBlue,
+                    activeTrackColor = NevoaPalette.TowerBlue,
+                    inactiveTrackColor = NevoaPalette.GlassBorder,
                 ),
             )
             Text(
                 "${(TouchControls.opacity.floatValue * 100).toInt()}%",
-                color = Color(0xFFAAAAAA),
+                color = NevoaPalette.TextDim,
                 fontSize = 11.sp,
                 modifier = Modifier.width(40.dp),
             )
@@ -2808,7 +2819,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
             ) {
                 Text(
                     selectedCfg.id.label + " size",
-                    color = Color(0xFFFFD33A),
+                    color = NevoaPalette.TowerBlue,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -2824,14 +2835,14 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                         .width(240.dp)
                         .height(28.dp),
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = Color(0xFFFFD33A),
-                        activeTrackColor = Color(0xFFFFD33A),
-                        inactiveTrackColor = Color(0xFF444433),
+                        thumbColor = NevoaPalette.TowerBlue,
+                        activeTrackColor = NevoaPalette.TowerBlue,
+                        inactiveTrackColor = NevoaPalette.GlassBorder,
                     ),
                 )
                 Text(
                     "${selectedCfg.sizeDp.toInt()}dp",
-                    color = Color(0xFFAAAAAA),
+                    color = NevoaPalette.TextDim,
                     fontSize = 11.sp,
                     modifier = Modifier.width(48.dp),
                 )
@@ -2895,7 +2906,7 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                 ) {
                     Text(
                         "D-Pad spacing",
-                        color = Color(0xFFFFD33A),
+                        color = NevoaPalette.TowerBlue,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -2907,14 +2918,14 @@ private fun EditToolbar(modifier: Modifier = Modifier) {
                             .width(240.dp)
                             .height(28.dp),
                         colors = androidx.compose.material3.SliderDefaults.colors(
-                            thumbColor = Color(0xFFFFD33A),
-                            activeTrackColor = Color(0xFFFFD33A),
-                            inactiveTrackColor = Color(0xFF444433),
+                            thumbColor = NevoaPalette.TowerBlue,
+                            activeTrackColor = NevoaPalette.TowerBlue,
+                            inactiveTrackColor = NevoaPalette.GlassBorder,
                         ),
                     )
                     Text(
                         "${(TouchControls.dpadSpacing.floatValue * 100).toInt()}%",
-                        color = Color(0xFFAAAAAA),
+                        color = NevoaPalette.TextDim,
                         fontSize = 11.sp,
                         modifier = Modifier.width(48.dp),
                     )
@@ -2932,7 +2943,7 @@ private fun EditorPercentSlider(label: String, value: Int, range: IntRange, onCh
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(label, color = Color(0xFFFFD33A), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text(label, color = NevoaPalette.TowerBlue, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         androidx.compose.material3.Slider(
             value = value.toFloat(),
             onValueChange = { onChange(it.roundToInt().coerceIn(range.first, range.last)) },
@@ -2941,12 +2952,12 @@ private fun EditorPercentSlider(label: String, value: Int, range: IntRange, onCh
                 .width(240.dp)
                 .height(28.dp),
             colors = androidx.compose.material3.SliderDefaults.colors(
-                thumbColor = Color(0xFFFFD33A),
-                activeTrackColor = Color(0xFFFFD33A),
-                inactiveTrackColor = Color(0xFF444433),
+                thumbColor = NevoaPalette.TowerBlue,
+                activeTrackColor = NevoaPalette.TowerBlue,
+                inactiveTrackColor = NevoaPalette.GlassBorder,
             ),
         )
-        Text("$value%", color = Color(0xFFAAAAAA), fontSize = 11.sp, modifier = Modifier.width(48.dp))
+        Text("$value%", color = NevoaPalette.TextDim, fontSize = 11.sp, modifier = Modifier.width(48.dp))
     }
 }
 
@@ -2955,7 +2966,7 @@ private fun ToolbarChip(label: String, enabled: Boolean = true, onClick: () -> U
     Box(
         Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF1F1F2C))
+            .background(NevoaPalette.SelectedSurface.copy(alpha = 0.40f))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 6.dp),
     ) {
@@ -2974,7 +2985,7 @@ private fun PanelSizeButton(label: String, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF1F1F2C))
+            .background(NevoaPalette.SelectedSurface.copy(alpha = 0.40f))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 2.dp),
         contentAlignment = Alignment.Center,

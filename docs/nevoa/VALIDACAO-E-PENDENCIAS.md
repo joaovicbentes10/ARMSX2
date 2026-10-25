@@ -14,7 +14,7 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 | Busca e ordem | `3222e96576`, release local instalada e inspecionada | Reordenação entre vários jogos ainda sem inspeção no aparelho |
 | Configurações | Quatro grupos, descrições sob demanda e painel translúcido | Não equivale a retestar todas as opções globais e por jogo |
 | BIOS, cartões e saves | Layout compacto e estados vazios implementados | Importação/exportação de todos os tipos não reexecutada nesta rodada |
-| Controles, patches e texturas | APK `7c71555d6c` inspecionado conforme registro anterior | Controles de toque ainda pendentes de revisão |
+| Controles, patches e texturas | APK `7c71555d6c` inspecionado conforme registro anterior | Arte padrão e editor revisados; ver rodada de controles de toque abaixo |
 | Conquistas | Entrada/login e detalhes recolhíveis inspecionados | Conta autenticada e jogo real não testados nesta rodada |
 | Menu em jogo | `c51ef39430` verde no CI; abas, expansão, continuar e fechar conferidos | Inspeção com BIOS não comprova gameplay |
 | Categorias na tela Névoa | Não integradas | Recursos existentes na biblioteca clássica |
@@ -109,7 +109,8 @@ Base: `platforms/android/app/src/test/java/com/armsx2/nevoa/`.
 | `NevoaPaletteTest` | 6 | Paleta e contraste |
 | `NevoaOrientationTest` | 5 | Padrão antigo em paisagem e preservação de escolhas explícitas |
 | `SaveSlotFilesTest` | 4 | Caminho candidato do JNI, arquivo existente, diretório e caminho vazio |
-| **Total** | **50** | **Todos passaram localmente** |
+| `FaceButtonPositionsTest` | 5 | Losango em pixels, retrato/paisagem, posições próprias, invariantes e dimensões indisponíveis |
+| **Total** | **55** | **Todos passaram localmente** |
 
 Esses testes não comprovam renderização, reprodução real de mídia ou todo o runtime.
 
@@ -128,7 +129,7 @@ Não foram feitas mudanças nesses módulos para contornar a suíte. Preservar a
 
 1. **Categorias:** integrar as existentes com apresentação discreta, filtro vazio recuperável e navegação por controle.
 2. **Saves no painel:** usar associação confiável ao jogo, sem inferir apenas pelo nome de arquivo.
-3. **Controles de toque:** revisar apresentação, acesso às opções e interação com jogo real.
+3. **Controles de toque:** arte padrão, acesso ao editor e losango uniforme implementados; ampliar validação para multitoque simultâneo, skins próprias, outros jogos e gameplay prolongado.
 4. **Validação adicional:** vários jogos, gameplay, conta RetroAchievements autenticada e gamepad físico.
 5. **Ajustes menores:** tratar os pontos técnicos abaixo em incrementos proporcionais.
 
@@ -189,3 +190,17 @@ A opção `render.mjs --audio-from` copia a trilha AAC do MP4 anterior sem recod
 O MP4 final mantém 240 quadros e 8 s de vídeo, com 8 s e os mesmos 376 pacotes de áudio. A semelhança SSIM do trecho anterior à antiga entrada do título (0–4,7 s) foi 0,998644 após a nova codificação visual. Nenhuma mudança no player Android ou no MP3 original.
 
 Build release concluído em 1 min 43 s; testes Névoa reutilizados pelo Gradle (`UP-TO-DATE`), sem nova lógica de aplicativo para testar. APK instalado no F6 Pro, SHA256 `DDC14437B310C17E49FC284139C5F5CD9569A0CAC021EF8B58865C98DC94E06F`, com bibliotecas nativas de referência e assinatura do projeto. A partida a frio registrou player padrão com duração 8000, seguida de conclusão audiovisual e biblioteca, sem erro AndroidRuntime. A gravação visual confirmou a entrada tardia do título e a passagem para os jogos. Evidência local em `.superpowers/validation/title-final-impact/`; `screenrecord` não contém áudio, e a prévia audiovisual é o próprio MP4 incorporado. Não houve navegação por outras telas nesta validação.
+
+## Controles de toque e losango uniforme — 24/10/2026
+
+Botões padrão substituídos por arte vetorial própria: contornos claros, preenchimento discreto e destaque azul ao pressionar; direcional sem cruzamento de bordas, analógicos com dois anéis, rótulos L1/L2/R1/R2 proporcionais. Pause usa a paleta Névoa. O editor tem painel de até 480 dp, opções adicionais recolhidas, contorno azul de seleção e acesso direto no início da aba Controles do menu em jogo. O pipeline de skins continua priorizando arquivos próprios; coordenadas, tamanhos, keycodes, gestos e perfis não foram redefinidos pela revisão visual.
+
+A pedido do usuário, as posições padrão de triângulo, círculo, X e quadrado passaram a formar um losango regular em pixels. Corrige a distorção dos espaçamentos percentuais em telas largas: no Poco, a distância horizontal antiga era 192 px e a vertical 144 px; agora ambas ficam em aproximadamente 169,7 px. Preserva o centro (2752, 792 px), o espaçamento entre vizinhos e todos os campos além de x/y. Layouts com posições de face personalizadas ficam intactos. A correção atualiza o layout vivo compartilhado pelo desenho e hit testing, sem gravar um perfil automaticamente.
+
+Build release passou; 55 testes Névoa passaram, incluindo 5 casos de geometria. O núcleo nativo permanece o das bibliotecas de referência usadas nas validações anteriores. Capturas e evidências desta rodada em `.superpowers/validation/touch-nevoa/`. O primeiro registro de arte antiga (`before.png`) foi capturado na BIOS; os demais registros usam Scooby, portanto não comparar os fundos como mudança da interface.
+
+APK final assinado instalado no F6 Pro, SHA256 `D577C7582C2526095898F2D5BE7D4E966650D9E5D80B1C51D51C47441D418566`. No Scooby foram conferidos arte padrão, destaque de L1 pressionado e soltura, abertura do editor pela primeira ação da aba Controles, expansão/recolhimento de Mais opções e seleção de botão com painel reposicionado e slider de tamanho. Não foram alterados tamanhos, perfis ou opacidade na verificação. A sessão de edição foi encerrada por Descartar.
+
+Os bounds de acessibilidade confirmaram os centros dos quatro botões: triângulo (2752,5; 622,5), quadrado (2582,5; 792,5), círculo (2921,5; 792,5), X (2752,5; 961,5), com diferença de até 1 px pelo arredondamento da UI. Todos mantiveram 203 × 203 px de bounds. Sem erro AndroidRuntime na conferência.
+
+A validação visual e de editor não comprova gameplay prolongado, multitoque simultâneo ou skins personalizadas. As injeções de Start durante a sequência de abertura não estabeleceram navegação pelo menu nativo do jogo; não registrar Start/direcional/analógico como gameplay validado nesta rodada. Nenhum estado foi salvo/carregado/excluído, e não foram iniciadas novas partidas.

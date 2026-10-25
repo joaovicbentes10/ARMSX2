@@ -1356,6 +1356,7 @@ private fun PerformancePane(state: EmulationMenuUiState, viewModel: EmulationMen
 
 @Composable
 private fun ControlsPane(state: EmulationMenuUiState, viewModel: EmulationMenuViewModel) {
+    CompactAction(str("pad.editTouchLayout"), LineAwesomeIcons.HandPointer, Modifier.fillMaxWidth(), viewModel::editTouchControls)
     MenuSwitchRow(str("pad.onScreenControls.label"), state.touchControlsVisible) {
         viewModel.toggleTouchControls()
     }
@@ -1416,8 +1417,6 @@ private fun ControlsPane(state: EmulationMenuUiState, viewModel: EmulationMenuVi
         // swamp this pane, and you set them once rather than mid-session.
     }
     CompactAction(str("pad.controllerMapping"), LineAwesomeIcons.GamepadSolid, Modifier.fillMaxWidth(), viewModel::openControlsManager)
-    Spacer(Modifier.height(6.dp))
-    CompactAction(str("pad.editTouchLayout"), LineAwesomeIcons.HandPointer, Modifier.fillMaxWidth(), viewModel::editTouchControls)
     Spacer(Modifier.height(6.dp))
     // Sits with the touch layout because it's the same job: what the on-screen pad LOOKS
     // like, right after where it's laid out. Full-screen like Controller mapping.

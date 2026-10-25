@@ -94,3 +94,9 @@ Consulte os [limites de validação e problemas conhecidos](VALIDACAO-E-PENDENCI
 ### Estados de jogo
 
 Salvar e Carregar usam uma grade de duas linhas. Slots vazios não podem ser carregados. Importar e Excluir ficam no cabeçalho; a exclusão exige confirmação. Em Carregar, expanda “Salvamento automático”, abaixo da grade, para acessar as opções de persistência.
+
+### Controles de toque Névoa
+
+Os controles padrão usam linhas claras, fundo leve e resposta azul ao pressionar. As posições e tamanhos continuam editáveis, e skins próprias continuam disponíveis. Para editar durante um jogo: Pausar → Controles → Editar Layout de Toque na Tela, primeira ação da aba. O painel mostra Salvar, Descartar, Redefinir, Perfis e opacidade; “Mais opções” abre multitoque, deslizamento, analógico flutuante, meia tela e grade. A seta recolhe o painel para alcançar botões atrás dele.
+
+No layout padrão, os quatro botões de ação formam um losango regular mesmo em telas largas: triângulo acima, círculo à direita, X abaixo e quadrado à esquerda. A correção ajusta apenas as posições e preserva configurações de tamanho e aparência. Posicionamentos próprios do usuário não são realinhados automaticamente.

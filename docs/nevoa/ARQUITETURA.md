@@ -116,3 +116,11 @@ O menu de emulação usa ícones Line Awesome e preserva os IDs de ações no re
 `NevoaSection` fornece a seção recolhível compartilhada pelo menu em jogo e estados. `nevoa/saves/SaveSlotFiles.kt` distingue o caminho candidato retornado pelo JNI de um arquivo efetivamente existente antes de habilitar o carregamento.
 
 O título da abertura acompanha o ataque final da V6 em 7,0 s: entrada 6,97–7,10 s, assentamento até 7,15 s e saída 7,50–7,95 s. A linha do tempo está em `tools/nevoa-intro/intro.html`; o relógio audiovisual e a duração de 8 s não mudam. Use `render.mjs --audio-from` para conservar a trilha incorporada ao revisar somente a imagem.
+
+### Arte padrão dos controles de toque
+
+`nevoa/touch/NevoaPadPainter.kt` desenha os botões, direcional e analógicos padrão com contornos e preenchimento discreto na paleta Névoa. O overlay continua dono das posições, tamanhos, gestos, estados de pressão e JNI. As dimensões intrínsecas mantêm as proporções dos PNGs anteriores, usadas pelo espaçamento dos ombros e braços do direcional. A cadeia de skins personalizadas continua tendo prioridade sobre a arte padrão.
+
+O editor usa um painel de até 480 dp, cores Névoa e opções adicionais recolhidas em “Mais opções”. Editar Layout de Toque fica no início da aba Controles do menu em jogo. Nenhuma migração de perfis ou coordenadas foi introduzida.
+
+`FaceButtonPositions.kt` corrige o losango padrão usando as dimensões reais em pixels, em vez de espaçamentos percentuais independentes nos dois eixos. Preserva centro e distância entre vizinhos, tamanhos e demais campos; triângulo acima, círculo à direita, X abaixo e quadrado à esquerda. Só reconhece as posições padrão antigas, preservando posicionamentos personalizados. O overlay aplica o layout corrigido ao estado vivo, compartilhado pelo desenho, editor e hit testing. O ajuste não grava perfis automaticamente; Salvar no editor continua sendo explícito.

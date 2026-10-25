@@ -97,3 +97,7 @@ Poco: seletor/partida gravados; menu, contraste, sete abas, direcional, acesso a
 Abas e estados receberam apresentação compacta, opções automáticas recolhíveis e detecção real de slots ocupados. A V6 padrão passou a usar o relógio do próprio vídeo, com entrada na biblioteca após o término audiovisual. APK final instalado no Poco; build e 50 testes Névoa passaram. Não foram escritos estados na validação. Categorias, associação de saves no painel, controles de toque e validação ampla continuam como próximos incrementos, listados no guia.
 
 O usuário pediu que o ARMSX2 apareça junto do “tum” final, sem alterar o áudio. A linha do tempo do título foi deslocada para o ataque em 7,0 s, com saída até 7,95 s. A trilha AAC é copiada do MP4 anterior; manter essa preservação ao gerar revisões apenas visuais.
+
+## Controles de toque — 24/10/2026
+
+Arte padrão e editor receberam paleta Névoa e apresentação discreta. Mais opções recolhe ajustes adicionais, e o atalho de edição foi para o início da aba Controles. O usuário acrescentou pedido de alinhar somente as posições dos quatro botões de ação: `FaceButtonPositions.kt` corrige o losango padrão em pixels, preservando centro, distância entre vizinhos, tamanhos e posições próprias. Build e 55 testes passaram, APK final instalado no Poco; arte, feedback L1, editor e centros dos quatro botões conferidos. Não presumir gameplay ou multitoque amplo validado: ver limitações no registro. Próximo incremento funcional: categorias, depois associação confiável de saves ao painel.
