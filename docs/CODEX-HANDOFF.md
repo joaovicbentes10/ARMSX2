@@ -109,3 +109,7 @@ Faixa de filtros compartilhada por Home, Grade, Lista e Estante. Categorias do j
 ## Som de iniciar jogo — 25/10/2026
 
 O usuário pediu um efeito ao confirmar Jogar com sensação de console. Implementado evento próprio LAUNCH de 820 ms, original e reproduzível por tools/nevoa-sfx/generate_launch.py. Segue o volume/ativação de MenuSfx e toca uma vez na home, antes da transição; o ViewModel não repete. Biblioteca completa usa o mesmo evento. Build e 61 testes passaram, APK instalado no Poco e emissão SoundPool conferida em ambas as entradas. A abertura V6 ficou intacta. Principais pendências continuam: saves no painel, validações amplas de runtime/controle e nome futuro da abertura.
+
+## Som Cristal V2 aprovado — 25/10/2026
+
+O usuário achou a primeira versão básica e aprovou a prévia Cristal V2, com acorde curto, síntese FM e reverberação estéreo. O recurso `nevoa_game_launch.wav` e seu gerador passaram a usar essa versão de 880 ms, idêntica byte a byte à prévia aprovada (SHA256 `2556e6a8539d8934c112c64d687eeece66dae4fd7d3d988ef6c175f036f772ef`). Eventos, volume e regra de tocar uma vez continuam os mesmos.

@@ -1,52 +1,63 @@
-"""Original Nevoa game-launch cue. Standard library only; no sampled sounds."""
-import math
+"""Approved Nevoa Crystal V2 game-launch cue; original synthesis, no samples."""
+import math, random, wave, struct
 from pathlib import Path
-import random
-import struct
-import wave
-
-RATE = 48000
-DURATION = 0.82  # Leaves 80 ms before the 900 ms home transition hands off.
-DESTINATION = Path(__file__).resolve().parents[2] / "platforms/android/app/src/main/res/raw/nevoa_game_launch.wav"
-
-
-def smooth(start, end, value):
-    x = min(1.0, max(0.0, (value - start) / (end - start)))
-    return x * x * (3.0 - 2.0 * x)
+RATE=48000
+DURATION=0.88
+N=round(RATE*DURATION)
+root=Path(__file__).resolve().parents[2] / 'platforms/android/app/src/main/res/raw'
 
 
 def generate():
-    rng = random.Random(2502026)
-    frames = []
-    air_fast = air_slow = phase = 0.0
-    for index in range(round(RATE * DURATION)):
-        t = index / RATE
-        noise = rng.uniform(-1.0, 1.0)
-        air_fast += 0.32 * (noise - air_fast)
-        air_slow += 0.035 * (noise - air_slow)
-        sweep = (air_fast - air_slow) * math.sin(math.pi * min(t / 0.46, 1.0)) ** 2
-        phase += math.tau * (72.0 + 98.0 * math.exp(-t / 0.16)) / RATE
-        body = math.sin(phase) * (1.0 - math.exp(-t * 90.0)) * math.exp(-t * 5.5)
-        shimmer = (math.sin(math.tau * 250.0 * t) + 0.35 * math.sin(math.tau * 375.0 * t))
-        shimmer *= (1.0 - math.exp(-t * 70.0)) * math.exp(-t * 7.0)
-        u = max(0.0, t - 0.42)
-        arrival = math.sin(math.tau * 65.0 * u) * (1.0 - math.exp(-u * 100.0)) * math.exp(-u * 14.0)
-        fade = 1.0 - smooth(0.62, DURATION - 1.0 / RATE, t)
-        pan = -0.22 + 0.44 * min(t / 0.46, 1.0)
-        core = 0.28 * body + 0.045 * shimmer + 0.16 * arrival
-        left = (core + 0.20 * sweep * (1.0 - pan)) * fade
-        right = (core + 0.20 * sweep * (1.0 + pan)) * fade
-        frames.append((left, right))
-    peak = max(abs(sample) for frame in frames for sample in frame)
-    scale = 0.78 / peak
-    pcm = b"".join(struct.pack("<hh", round(left * scale * 32767), round(right * scale * 32767)) for left, right in frames)
-    DESTINATION.parent.mkdir(parents=True, exist_ok=True)
-    with wave.open(str(DESTINATION), "wb") as output:
-        output.setnchannels(2)
-        output.setsampwidth(2)
-        output.setframerate(RATE)
-        output.writeframes(pcm)
-    print(f"{DESTINATION}: {len(frames) / RATE:.3f} s, stereo PCM16, peak 0.78")
+    rng=random.Random(251025)
+    left=[0.0]*N
+    right=[0.0]*N
+    notes=[(349.2282,0.000,0.70,-0.18),(523.2511,0.012,0.35,0.26),(783.9909,0.027,0.16,-0.28),(698.4565,0.040,0.20,0.14)]
+    def smooth(a,b,t):
+     x=max(0.,min(1.,(t-a)/(b-a)));return x*x*(3.-2.*x)
+    fast=slow=0.
+    for i in range(N):
+     t=i/RATE
+     l=r=0.
+     for freq,onset,amp,pan in notes:
+      u=t-onset
+      if u<0:continue
+      p=math.tau*freq*u
+      env=(1-math.exp(-u*260))*(0.8*math.exp(-u*6.2)+0.2*math.exp(-u*3.8))
+      index=2.3*math.exp(-u*25)
+      voice=(0.76*math.sin(p+index*math.sin(p*2.002))+0.16*math.sin(p*3.001)*math.exp(-u*8)+0.08*math.sin(p*4.003)*math.exp(-u*16))*env*amp
+      l+=voice*math.sqrt((1-pan)/2)
+      r+=voice*math.sqrt((1+pan)/2)
+     u=max(0,t-.015)
+     padenv=smooth(.015,.11,t)*math.exp(-u*4.8)
+     l+=padenv*(.11*math.sin(math.tau*174.6141*u)+.07*math.sin(math.tau*261.6256*u))
+     r+=padenv*(.11*math.sin(math.tau*174.6141*1.0012*u)+.07*math.sin(math.tau*261.6256*.9989*u))
+     sub=.12*math.sin(math.tau*87.307*u)*(1-math.exp(-u*130))*math.exp(-u*11)
+     noise=rng.uniform(-1,1)
+     fast+=.32*(noise-fast);slow+=.05*(noise-slow)
+     air=.09*(fast-slow)*smooth(0,.04,t)*(1-smooth(.16,.31,t))
+     left[i]=l+sub+air
+     right[i]=r+sub+air*.87
+    # Damped short room: separate reflections surround a clear central transient.
+    for channel,times in [(left,[.0237,.0319,.0411]),(right,[.0271,.0367,.0439])]:
+     dry=channel[:]
+     for delay in times:
+      length=round(delay*RATE);buffer=[0.0]*length;damped=0.
+      for i in range(N):
+       j=i%length;echo=buffer[j]
+       damped+=.32*(echo-damped)
+       buffer[j]=dry[i]+damped*.56
+       channel[i]+=echo*.135
+    for i in range(N):
+     fade=(1-smooth(.66,DURATION-1/RATE,i/RATE))
+     left[i]*=fade;right[i]*=fade
+    peak=max(max(abs(x) for x in left),max(abs(x) for x in right))
+    scale=.78/peak
+    pcm=b''.join(struct.pack('<hh',round(l*scale*32767),round(r*scale*32767)) for l,r in zip(left,right))
+    path=root/'nevoa_game_launch.wav'
+    with wave.open(str(path),'wb') as w:
+     w.setnchannels(2);w.setsampwidth(2);w.setframerate(RATE);w.writeframes(pcm)
+    rms=math.sqrt(sum((l*l+r*r)*scale*scale for l,r in zip(left,right))/(2*N))
+    print(f'{path}\nduration={DURATION}s peak=0.78 RMS={20*math.log10(rms):.2f}dBFS first={left[0],right[0]} last={left[-1],right[-1]}')
 
 
 if __name__ == "__main__":

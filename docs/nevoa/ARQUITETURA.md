@@ -135,6 +135,6 @@ A home usa o registro de navegação de configurações; a biblioteca completa g
 
 ### Som de iniciar jogo
 
-`MenuSfx.Event.LAUNCH` (`game_launch`) usa `res/raw/nevoa_game_launch.wav`, efeito próprio de 820 ms sintetizado por `tools/nevoa-sfx/generate_launch.py`. SoundPool, habilitação, volume e importação de pacotes continuam no gerenciador existente. O evento pode ser substituído por um arquivo de mesmo nome base em um pacote próprio.
+`MenuSfx.Event.LAUNCH` (`game_launch`) usa `res/raw/nevoa_game_launch.wav`, efeito próprio Cristal V2 de 880 ms sintetizado por `tools/nevoa-sfx/generate_launch.py`. SoundPool, habilitação, volume e importação de pacotes continuam no gerenciador existente. O evento pode ser substituído por um arquivo de mesmo nome base em um pacote próprio.
 
 Na home, o som toca após `LaunchGate.tryStart()` aceitar a solicitação, no início da animação de 900 ms. A chamada posterior de `HomeViewModel.launch(game, playLaunchSound=false)` evita repetir o efeito ao terminar a animação. Outras entradas da biblioteca usam `launch(game)` e tocam o evento antes de solicitar a partida. A confirmação de `HomeInputController` só adiciona o clique comum se a ação não produziu som, seguindo o padrão já usado por `SettingsControllerNav`. A abertura V6 permanece independente.
