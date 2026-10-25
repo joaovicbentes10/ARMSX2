@@ -2,6 +2,12 @@ package com.armsx2.ui.emulation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.graphicsLayer
+import compose.icons.lineawesomeicons.AngleRightSolid
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
@@ -97,6 +103,22 @@ import compose.icons.lineawesomeicons.PlayCircle
 import compose.icons.lineawesomeicons.ThLargeSolid
 import compose.icons.lineawesomeicons.TrophySolid
 import compose.icons.lineawesomeicons.WrenchSolid
+import compose.icons.lineawesomeicons.UsersSolid
+import compose.icons.lineawesomeicons.Keyboard
+import compose.icons.lineawesomeicons.MagicSolid
+import compose.icons.lineawesomeicons.HandPointer
+import compose.icons.lineawesomeicons.MemorySolid
+import compose.icons.lineawesomeicons.PaintBrushSolid
+import compose.icons.lineawesomeicons.FastForwardSolid
+import compose.icons.lineawesomeicons.Save
+import compose.icons.lineawesomeicons.FolderOpen
+import compose.icons.lineawesomeicons.RedoAltSolid
+import compose.icons.lineawesomeicons.CompactDiscSolid
+import compose.icons.lineawesomeicons.CameraSolid
+import compose.icons.lineawesomeicons.StopSolid
+import compose.icons.lineawesomeicons.CoinsSolid
+import compose.icons.lineawesomeicons.PlusSolid
+import com.armsx2.nevoa.theme.NevoaPalette
 
 /** The Friends panel's nav layer: only its controls answer the pad while it is open. */
 private const val FRIENDS_NAV_LAYER = "menu.friends"
@@ -215,7 +237,7 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.62f))
+                    .background(Color.Black.copy(alpha = 0.28f))
                     .clickable(onClick = closeMenu),
             )
         }
@@ -239,9 +261,9 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical)),
                     shape = if (menuLeft) RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
                         else RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp),
-                    color = MaterialTheme.colorScheme.surface,
+                    color = NevoaPalette.Background.copy(alpha = 0.94f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                    shadowElevation = 22.dp,
+                    shadowElevation = 0.dp,
                 ) {
                     MenuPage(
                         state = state,
@@ -254,9 +276,9 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
             } else {
                 Row(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.64f)
-                        .widthIn(max = 900.dp)
+                        .fillMaxHeight(0.78f)
+                        .fillMaxWidth(0.44f)
+                        .widthIn(max = 520.dp)
                         .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical))
                         .padding(
                             top = 14.dp,
@@ -268,10 +290,10 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
                 ) {
                     Surface(
                         modifier = Modifier.weight(1f).fillMaxHeight(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(16.dp),
+                        color = NevoaPalette.Background.copy(alpha = 0.94f),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                        shadowElevation = 22.dp,
+                        shadowElevation = 0.dp,
                     ) {
                         MenuPage(
                             state = state,
@@ -282,11 +304,11 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
                         )
                     }
                     Surface(
-                        modifier = Modifier.width(76.dp).fillMaxHeight(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.94f),
+                        modifier = Modifier.width(52.dp).fillMaxHeight(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = NevoaPalette.Background.copy(alpha = 0.90f),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                        shadowElevation = 18.dp,
+                        shadowElevation = 0.dp,
                     ) {
                         MenuRail(state.tab, viewModel::selectTab)
                     }
@@ -324,7 +346,7 @@ fun EmulationMenuScreen(viewModel: EmulationMenuViewModel = viewModel()) {
                     .fillMaxHeight(0.9f)
                     .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical)),
                 shape = RoundedCornerShape(24.dp),
-                color = MaterialTheme.colorScheme.surface,
+                color = NevoaPalette.Background.copy(alpha = 0.94f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
                 shadowElevation = 24.dp,
             ) {
@@ -402,7 +424,7 @@ private fun MenuPage(
         Column(
             modifier
                 .verticalScroll(scrollState)
-                .padding(bottom = 18.dp),
+                .padding(bottom = 10.dp),
         ) {
             if (compact) CompactMenuTabs(state.tab, viewModel::selectTab)
             MenuHeader(compact, state.hardcore, state.richPresence, state.gameCRC, onOpenFriends)
@@ -411,8 +433,8 @@ private fun MenuPage(
                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.34f),
             )
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // Only the panes with rows that take a mark; the others would show a key to nothing.
                 if (state.tab == EmulationMenuTab.Graphics || state.tab == EmulationMenuTab.Fixes ||
@@ -461,14 +483,14 @@ private fun MenuRail(
         Modifier
             .fillMaxHeight()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 8.dp, vertical = 10.dp),
+            .padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         // Centred, not top-aligned: the rail fills the full height, so with the tabs pinned
         // to the top the column left a block of dead space at the bottom once the duplicate
         // All Settings shortcut was removed from under them. Centring keeps the group
         // balanced regardless of how many tabs there are, and still scrolls if it ever
         // outgrows the rail.
-        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
     ) {
         EmulationMenuTab.entries.forEach { tab ->
             MenuRailTab(tab, tab == selected, onSelect)
@@ -483,19 +505,19 @@ private fun MenuRailTab(tab: EmulationMenuTab, active: Boolean, onSelect: (Emula
     LaunchedEffect(active) { if (active) runCatching { bring.bringIntoView() } }
     Surface(
         onClick = { onSelect(tab) },
-        modifier = Modifier.size(56.dp).bringIntoViewRequester(bring).semantics { contentDescription = label },
-        shape = RoundedCornerShape(18.dp),
-        color = if (active) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+        modifier = Modifier.size(36.dp).bringIntoViewRequester(bring).semantics { contentDescription = label },
+        shape = RoundedCornerShape(8.dp),
+        color = if (active) NevoaPalette.Selected.copy(alpha = 0.12f) else Color.Transparent,
         border = BorderStroke(
-            if (active) 2.dp else 1.dp,
-            if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.34f),
+            1.dp,
+            if (active) MaterialTheme.colorScheme.primary else Color.Transparent,
         ),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = tabIcon(tab),
                 contentDescription = null,
-                modifier = Modifier.size(25.dp),
+                modifier = Modifier.size(18.dp),
                 tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -576,154 +598,117 @@ private fun MenuHeader(
     gameCRC: String,
     onOpenFriends: () -> Unit,
 ) {
-    val game = MainActivityRuntime.currentGame.value
-    val context = LocalContext.current
-    val hasCover = remember(game?.uri, CustomCovers.version.value) {
-        game?.let { it.coverUrl != null || CustomCovers.fileFor(context, it) != null } ?: false
-    }
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = if (compact) 12.dp else 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (game != null && !compact && hasCover) {
-            GameCoverArt(game, Modifier.width(44.dp).height(60.dp))
-            Spacer(Modifier.width(11.dp))
-        }
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    game?.title ?: "PlayStation 2",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (hardcore) {
-                    Spacer(Modifier.width(8.dp))
-                    HardcoreBadge()
-                }
-            }
-            // Serial and CRC together: a PNACH is named <SERIAL>_<CRC>.pnach, so the two values
-            // needed to name one should not live on separate screens.
-            //
-            // The live VM CRC is preferred but cannot be relied on: for ISO boots the core hands
-            // ELFLoadingOnCPUThread an empty path, so UpdateELFInfo takes its failure branch and
-            // leaves s_current_crc at 0 — the emulog shows the loader computing the real CRC and
-            // the VM then reporting 00000000. When that happens, identify the image instead, which
-            // is the same path the Info tab and the library's long-press sheet already take.
-            val resolvedCRC by androidx.compose.runtime.produceState(gameCRC, gameCRC, game?.uri) {
-                value = gameCRC.ifBlank {
-                    game?.uri?.let { com.armsx2.DiscIdentity.resolve(it, game.serial) }.orEmpty()
-                }
-            }
-            val identity = buildList {
-                game?.serial?.takeIf { it.isNotBlank() }?.let(::add)
-                resolvedCRC.takeIf { it.isNotBlank() }?.let { add("CRC $it") }
-            }.joinToString("  ·  ")
-            if (identity.isNotBlank() && !compact) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    identity,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            // RetroAchievements rich presence — the live "what you're doing" line
-            // (e.g. "Pooh & Piglet are in a Scaring Contest"). Restored from the old UI.
-            if (richPresence.isNotBlank()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    richPresence,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        // Clock + battery, same cluster as the library toolbar. Worth having here specifically:
-        // this menu is what you open mid-session on a handheld, so it's exactly when you want to
-        // know the time and how much charge is left. Not controllerFocusable — it's a readout.
-        Spacer(Modifier.width(8.dp))
-        com.armsx2.ui.common.LibraryStatusCluster(
-            Modifier.align(Alignment.CenterVertically),
+        Text(
+            MainActivityRuntime.currentGame.value?.title ?: "PlayStation 2",
+            modifier = Modifier.weight(1f),
+            color = NevoaPalette.Text,
+            style = MaterialTheme.typography.titleSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-
-        // Friends, in the header where it is always visible, with the online count on it. Shown
-        // even where Discord is not available: remote play hosting lives behind it too, and
-        // hosting does not need Discord. The Discord parts inside hide themselves there.
-        Spacer(Modifier.width(8.dp))
+        if (hardcore) HardcoreBadge()
         Surface(
             onClick = onOpenFriends,
-            modifier = Modifier.controllerFocusable(
-                "menu.friends",
-                RoundedCornerShape(14.dp),
-                onConfirm = onOpenFriends,
-            ),
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+            modifier = Modifier.size(40.dp).controllerFocusable("menu.friends", RoundedCornerShape(8.dp), onConfirm = onOpenFriends),
+            shape = RoundedCornerShape(8.dp),
+            color = Color.Transparent,
         ) {
-            Box(Modifier.padding(horizontal = 11.dp, vertical = 9.dp)) {
-                com.armsx2.ui.friends.FriendsGlyphWithBadge(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    glyphSize = 19.sp,
-                )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(LineAwesomeIcons.UsersSolid, contentDescription = "Amigos", tint = NevoaPalette.TextDim, modifier = Modifier.size(18.dp))
             }
         }
     }
 }
 
 @Composable
+private fun PauseSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    var expanded by rememberSaveable(title) { mutableStateOf(false) }
+    val angle by animateFloatAsState(if (expanded) 90f else 0f, tween(160), label = "pause-section")
+    val toggle = { expanded = !expanded }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Surface(
+            onClick = toggle,
+            modifier = Modifier.fillMaxWidth().controllerFocusable("pause.section.$title", RoundedCornerShape(8.dp), onConfirm = toggle),
+            shape = RoundedCornerShape(8.dp),
+            color = Color.Transparent,
+        ) {
+            Row(Modifier.padding(horizontal = 10.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(title, Modifier.weight(1f), color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Icon(LineAwesomeIcons.AngleRightSolid, contentDescription = null, tint = NevoaPalette.TextDim,
+                    modifier = Modifier.size(15.dp).graphicsLayer { rotationZ = angle })
+            }
+        }
+        AnimatedVisibility(expanded, enter = fadeIn(tween(150)) + expandVertically(tween(180)), exit = fadeOut(tween(100)) + shrinkVertically(tween(160))) {
+            Column(Modifier.padding(horizontal = 6.dp, vertical = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp), content = content)
+        }
+    }
+}
+@Composable
+private fun MenuGameDetails(gameCRC: String, richPresence: String) {
+    val game = MainActivityRuntime.currentGame.value
+    val resolvedCRC by androidx.compose.runtime.produceState(gameCRC, gameCRC, game?.uri) {
+        value = gameCRC.ifBlank {
+            game?.uri?.let { com.armsx2.DiscIdentity.resolve(it, game.serial) }.orEmpty()
+        }
+    }
+    game?.serial?.let { Text(it, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodySmall) }
+    if (resolvedCRC.isNotBlank()) Text("CRC $resolvedCRC", color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodySmall)
+    if (richPresence.isNotBlank()) Text(richPresence, color = NevoaPalette.TextDim, style = MaterialTheme.typography.bodySmall)
+}
+@Composable
 private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuViewModel) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val gsDumpQueued = str("gsdump.quick.queued")
     ActionGrid(
         actions = listOf(
-            MenuAction(str("action.resume"), "", "▶", Success, viewModel::resume),
+            MenuAction(str("action.resume"), "", LineAwesomeIcons.PlayCircle, NevoaPalette.Selected, viewModel::resume),
             MenuAction(
                 str("action.fastForward"),
                 if (MainActivityRuntime.fastForwardToggleActive) str("action.fastForward.on") else str("action.fastForward.detail"),
-                "≫",
+                LineAwesomeIcons.FastForwardSolid,
                 if (MainActivityRuntime.fastForwardToggleActive) Success else null,
             ) { MainActivityRuntime.instance?.toggleFastForward(); viewModel.resume() },
         ),
         idPrefix = "primary",
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CompactAction("Salvar", "↥", Modifier.weight(1f)) {
+        CompactAction("Salvar", LineAwesomeIcons.Save, Modifier.weight(1f)) {
             com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.SaveState)
         }
-        CompactAction("Carregar", "↧", Modifier.weight(1f)) {
+        CompactAction("Carregar", LineAwesomeIcons.FolderOpen, Modifier.weight(1f)) {
             com.armsx2.ui.WindowImpl.openInGameScreen(com.armsx2.ui.InGameScreen.LoadState)
         }
     }
-    CollapsibleSection("Mais ações") {
+    PauseSection("Mais ações") {
         ActionGrid(
             actions = listOf(
-                MenuAction(str("memcard.restart"), str("action.reset"), "↻", null, MainActivityRuntime::restart),
-                MenuAction(str("action.swapDisc"), str("action.swapDisc.detail"), "⏏", null, MainActivityRuntime::promptSwapDisc),
+                MenuAction(str("memcard.restart"), str("action.reset"), LineAwesomeIcons.RedoAltSolid, null, MainActivityRuntime::restart),
+                MenuAction(str("action.swapDisc"), str("action.swapDisc.detail"), LineAwesomeIcons.CompactDiscSolid, null, MainActivityRuntime::promptSwapDisc),
                 // Capture resumes because the dump records the next rendered frame.
-                MenuAction(str("renderer.gsDump.label"), str("gsdump.quick.detail"), "⧉", null) {
+                MenuAction(str("renderer.gsDump.label"), str("gsdump.quick.detail"), LineAwesomeIcons.CameraSolid, null) {
                     runCatching { kr.co.iefriends.pcsx2.NativeApp.captureGsDump(1) }
                     android.widget.Toast.makeText(context, gsDumpQueued, android.widget.Toast.LENGTH_LONG).show()
                     viewModel.resume()
                 },
             ) + arcadeActions(viewModel) + listOf(
-                MenuAction(str("action.close"), MainActivityRuntime.currentGame.value?.title.orEmpty(), "■", Danger) {
+                MenuAction(str("action.close"), MainActivityRuntime.currentGame.value?.title.orEmpty(), LineAwesomeIcons.StopSolid, Danger) {
                     MainActivityRuntime.closeGame()
                 },
             ),
             idPrefix = "secondary",
         )
+        PauseSection("Detalhes do jogo") { MenuGameDetails(state.gameCRC, state.richPresence) }
     }
+
     // On-screen display — a single universal on/off (old-UI style); the per-stat
     // toggles live in All Settings. Plus a frame-limit switch so fast-forward is one
     // tap away.
-    CollapsibleSection("Exibição e atalhos") {
+    PauseSection("Exibição e atalhos") {
     SectionCard(str("tab.overlay")) {
         // #357: the pause button replaced the settings cog, so it's front-and-centre here. This is
         // "tap to reveal", NOT show/hide: on = the glyph stays hidden until you tap its top-right
@@ -814,7 +799,7 @@ private fun SessionPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
         ) { _ -> com.armsx2.ui.QuickMenuSide.set(!menuSide) }
     }
     }
-    CollapsibleSection("Slot rápido") {
+    PauseSection("Slot rápido") {
     SectionCard("Seleção de slot") {
         // When each slot was last written. Ten chips numbered 1..10 say nothing about which
         // hold anything or how old they are, so picking a slot to overwrite after a long
@@ -923,7 +908,7 @@ private fun GraphicsPane(state: EmulationMenuUiState, viewModel: EmulationMenuVi
     // Coalesce Render Passes is deliberately NOT here. It only helps Dirge of Cerberus, and the
     // game database already turns it on for Dirge, so it lives in All Settings > Renderer >
     // advanced and nowhere a player tuning performance would reach for it.
-    CompactAction(str("backend.applyRestart"), "↻", Modifier.fillMaxWidth(), MainActivityRuntime::restart)
+    CompactAction(str("backend.applyRestart"), LineAwesomeIcons.RedoAltSolid, Modifier.fillMaxWidth(), MainActivityRuntime::restart)
     HorizontalOptions(
         title = str("renderer.upscale.label"),
         // Share the full settings-tab list so the sub-native 0.25/0.5/0.75/Native
@@ -1020,7 +1005,7 @@ private fun GraphicsPane(state: EmulationMenuUiState, viewModel: EmulationMenuVi
     // Texture packs, straight after the resolution they are usually paired with. They used to be
     // split between the bottom of this page (the switches) and the Options page (the manager),
     // which for one of the most-used features on the device was two places too deep.
-    CompactAction(str("renderer.section.texturePacks"), "▣", Modifier.fillMaxWidth(), viewModel::openTextures)
+    CompactAction(str("renderer.section.texturePacks"), LineAwesomeIcons.PaintBrushSolid, Modifier.fillMaxWidth(), viewModel::openTextures)
     MenuSwitchRow(str("renderer.loadTexturePacks.label"), settings.graphics.loadTextureReplacements, field = "loadTextureReplacements") {
         viewModel.updateSettings { current -> current.copy(graphics = current.graphics.copy(loadTextureReplacements = it)) }
     }
@@ -1451,16 +1436,16 @@ private fun ControlsPane(state: EmulationMenuUiState, viewModel: EmulationMenuVi
         // The four swipe/double-tap ASSIGNMENTS stay in All Settings — six button pickers would
         // swamp this pane, and you set them once rather than mid-session.
     }
-    CompactAction(str("pad.controllerMapping"), "⌁", Modifier.fillMaxWidth(), viewModel::openControlsManager)
+    CompactAction(str("pad.controllerMapping"), LineAwesomeIcons.GamepadSolid, Modifier.fillMaxWidth(), viewModel::openControlsManager)
     Spacer(Modifier.height(6.dp))
-    CompactAction(str("pad.editTouchLayout"), "✥", Modifier.fillMaxWidth(), viewModel::editTouchControls)
+    CompactAction(str("pad.editTouchLayout"), LineAwesomeIcons.HandPointer, Modifier.fillMaxWidth(), viewModel::editTouchControls)
     Spacer(Modifier.height(6.dp))
     // Sits with the touch layout because it's the same job: what the on-screen pad LOOKS
     // like, right after where it's laid out. Full-screen like Controller mapping.
-    CompactAction(str("tab.skins"), "◈", Modifier.fillMaxWidth(), viewModel::openSkins)
+    CompactAction(str("tab.skins"), LineAwesomeIcons.PaintBrushSolid, Modifier.fillMaxWidth(), viewModel::openSkins)
     Spacer(Modifier.height(6.dp))
     // Hotkeys, under Skins: All Settings' Hotkeys page, opened straight over the game.
-    CompactAction(str("tab.hotkeys"), "⌘", Modifier.fillMaxWidth(), viewModel::openHotkeys)
+    CompactAction(str("tab.hotkeys"), LineAwesomeIcons.Keyboard, Modifier.fillMaxWidth(), viewModel::openHotkeys)
     // Analog sticks in-game: swap/invert per stick, deadzone and feel. Requested because some
     // games ship no invert option of their own, so changing it meant leaving the game for All
     // Settings mid-session (Sizor). Global scope, matching the rumble/multitap toggles above.
@@ -1484,16 +1469,16 @@ private fun OptionsPane(state: EmulationMenuUiState, viewModel: EmulationMenuVie
     val settings = state.settings
     // Item 3: gateway to the full per-game settings (all categories the compact menu omits:
     // OSD, Skins, Audio, Hotkeys, Network, Recompiler, ...).
-    CompactAction(str("action.allSettings"), "⚙", Modifier.fillMaxWidth(), viewModel::openFullSettings)
+    CompactAction(str("action.allSettings"), LineAwesomeIcons.CogSolid, Modifier.fillMaxWidth(), viewModel::openFullSettings)
     Spacer(Modifier.height(6.dp))
     // In-game access to the manager screens (the library drawer's Memory Cards /
     // Patches & Cheats / Controller mapping) — open over the paused game.
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        CompactAction(str("memcard.title"), "▤", Modifier.weight(1f), viewModel::openMemcard)
-        CompactAction(str("patches.dialog.patchesAndCheats"), "✦", Modifier.weight(1f), viewModel::openPatches)
+        CompactAction(str("memcard.title"), LineAwesomeIcons.MemorySolid, Modifier.weight(1f), viewModel::openMemcard)
+        CompactAction(str("patches.dialog.patchesAndCheats"), LineAwesomeIcons.MagicSolid, Modifier.weight(1f), viewModel::openPatches)
     }
     // The texture pack manager moved to the Renderer page, under the resolution. Its glyph,
-    // "▣", is one already proven to render in the shipped font -- "▩" (U+25A9) and "⏻" (U+23FB)
+    // LineAwesomeIcons.PaintBrushSolid, is one already proven to render in the shipped font -- "▩" (U+25A9) and "⏻" (U+23FB)
     // come out as tofu boxes on device.
     Spacer(Modifier.height(6.dp))
     // Volume and Mute, the same two settings as All Settings › Audio, kept within reach while
@@ -1569,7 +1554,7 @@ private fun AchievementsPane(state: EmulationMenuUiState, viewModel: EmulationMe
     ) { on -> viewModel.updateSettings { it.copy(emuCore = it.emuCore.copy(achievements = it.emuCore.achievements.copy(enabled = on))) } }
     Spacer(Modifier.height(4.dp))
     // Gateway to the full RetroAchievements screen (unlock list + presentation options).
-    CompactAction(str("ra.viewAchievements"), "★", Modifier.fillMaxWidth(), viewModel::openAchievements)
+    CompactAction(str("ra.viewAchievements"), LineAwesomeIcons.TrophySolid, Modifier.fillMaxWidth(), viewModel::openAchievements)
     CollapsibleSection("Modo e detalhes") {
     SectionCard("RetroAchievements") {
         // Signed-in account: avatar + name + both point totals (hardcore / softcore).
@@ -1652,7 +1637,7 @@ private fun InGameAchievementRow(item: AchievementItem) {
                     Modifier.size(40.dp).clip(RoundedCornerShape(9.dp))
                         .background(MaterialTheme.colorScheme.surface),
                     contentAlignment = Alignment.Center,
-                ) { Text(if (item.unlocked) "★" else "☆") }
+                ) { Icon(LineAwesomeIcons.TrophySolid, contentDescription = null, modifier = Modifier.size(17.dp), tint = if (item.unlocked) NevoaPalette.Selected else NevoaPalette.TextDim) }
             }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
@@ -1701,19 +1686,19 @@ private fun HardcoreBadge() {
 private fun arcadeActions(viewModel: EmulationMenuViewModel): List<MenuAction> {
     if (com.armsx2.arcade.Arcade.sessionMode.intValue < 0) return emptyList()
     return listOf(
-        MenuAction(str("arcade.coin.p1"), str("arcade.coin.p1.detail"), "¢", null) {
+        MenuAction(str("arcade.coin.p1"), str("arcade.coin.p1.detail"), LineAwesomeIcons.CoinsSolid, null) {
             com.armsx2.arcade.Arcade.insertCoin(0)
             viewModel.resume()
         },
-        MenuAction(str("arcade.coin.p2"), str("arcade.coin.p2.detail"), "¢", null) {
+        MenuAction(str("arcade.coin.p2"), str("arcade.coin.p2.detail"), LineAwesomeIcons.CoinsSolid, null) {
             com.armsx2.arcade.Arcade.insertCoin(1)
             viewModel.resume()
         },
-        MenuAction(str("arcade.service"), str("arcade.service.detail"), "✚", null) {
+        MenuAction(str("arcade.service"), str("arcade.service.detail"), LineAwesomeIcons.PlusSolid, null) {
             viewModel.resume()
             com.armsx2.arcade.Arcade.pressService()
         },
-        MenuAction(str("arcade.test"), str("arcade.test.detail"), "⚙", null) {
+        MenuAction(str("arcade.test"), str("arcade.test.detail"), LineAwesomeIcons.CogSolid, null) {
             com.armsx2.arcade.Arcade.toggleTest()
             viewModel.resume()
         },
@@ -1723,52 +1708,49 @@ private fun arcadeActions(viewModel: EmulationMenuViewModel): List<MenuAction> {
 private data class MenuAction(
     val title: String,
     val detail: String,
-    val glyph: String,
+    val icon: ImageVector,
     val accent: Color?,
     val action: () -> Unit,
 )
 
 @Composable
 private fun ActionGrid(actions: List<MenuAction>, idPrefix: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        actions.forEachIndexed { index, item ->
-            val id = "pause.action.$idPrefix.$index"
-            // The registry is the ONE source of truth for which row is selected. The tint used
-            // to come from a separate index in the view model that advanced only when a row was
-            // ACTIVATED, while the D-pad moved the registry — so the menu drew one selection and
-            // moved another, and the row you were pointing at was never the one lit up.
-            val active = com.armsx2.ui.settings.SettingsControllerNav.isSelected(id)
-            Surface(
-                onClick = item.action,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = listOf(item.title, item.detail).filter { it.isNotBlank() }.joinToString(". ") }
-                    .controllerFocusable(id, onConfirm = item.action),
-                shape = RoundedCornerShape(14.dp),
-                color = if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.48f),
-                border = BorderStroke(
-                    1.dp,
-                    if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
-                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.34f),
-                ),
-            ) {
-                Row(Modifier.padding(horizontal = 13.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        item.glyph,
-                        color = item.accent ?: MaterialTheme.colorScheme.primary,
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.width(30.dp),
-                    )
-                    Text(item.title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
+    if (idPrefix == "primary") {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            actions.forEachIndexed { index, item ->
+                MenuActionRow(item, "pause.action.$idPrefix.$index", Modifier.weight(1f))
             }
+        }
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            actions.forEachIndexed { index, item -> MenuActionRow(item, "pause.action.$idPrefix.$index") }
         }
     }
 }
 
+@Composable
+private fun MenuActionRow(item: MenuAction, id: String, modifier: Modifier = Modifier) {
+    val active = com.armsx2.ui.settings.SettingsControllerNav.isSelected(id)
+    Surface(
+        onClick = item.action,
+        modifier = modifier.fillMaxWidth()
+            .semantics { contentDescription = listOf(item.title, item.detail).filter { it.isNotBlank() }.joinToString(". ") }
+            .controllerFocusable(id, onConfirm = item.action),
+        shape = RoundedCornerShape(8.dp),
+        color = if (active) NevoaPalette.Selected.copy(alpha = 0.12f) else Color.Transparent,
+        border = if (active) BorderStroke(1.dp, NevoaPalette.Selected) else null,
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(item.icon, contentDescription = null, tint = item.accent ?: NevoaPalette.TextDim, modifier = Modifier.size(18.dp))
+            Text(item.title, modifier = Modifier.weight(1f), color = NevoaPalette.Text,
+                style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
 @Composable
 internal fun SectionCard(title: String, field: String? = null, content: @Composable ColumnScope.() -> Unit) {
     val tint = com.armsx2.ui.settings.rowTint(field, fillAlpha = 0.42f, outlineAlpha = 0.34f)
@@ -1980,21 +1962,21 @@ private fun MenuCycleRow(
 }
 
 @Composable
-private fun CompactAction(title: String, glyph: String, modifier: Modifier, onClick: () -> Unit) {
+private fun CompactAction(title: String, icon: ImageVector, modifier: Modifier, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        modifier = modifier.controllerFocusable("pause.compact.$title", onConfirm = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.42f)),
+        modifier = modifier.controllerFocusable("pause.compact.$title", RoundedCornerShape(8.dp), onConfirm = onClick),
+        shape = RoundedCornerShape(8.dp),
+        color = NevoaPalette.Glass,
+        border = BorderStroke(1.dp, NevoaPalette.GlassBorder),
     ) {
         Row(
-            Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
+            Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(glyph, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Text(title, style = MaterialTheme.typography.labelLarge, maxLines = 2)
+            Icon(icon, contentDescription = null, tint = NevoaPalette.TextDim, modifier = Modifier.size(17.dp))
+            Text(title, color = NevoaPalette.Text, style = MaterialTheme.typography.labelLarge, maxLines = 2)
         }
     }
 }

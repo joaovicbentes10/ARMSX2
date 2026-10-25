@@ -1,6 +1,7 @@
 package com.armsx2.nevoa.home
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,6 +26,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -41,7 +43,8 @@ private val CaseBand = Color(0xFF0B0F1C)
 /** A PS2-style DVD case: dark top band, cover below. The selected case grows and glows. */
 @Composable
 fun DvdCase(game: GameInfo, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val height by animateDpAsState(if (selected) 176.dp else 128.dp, tween(180), label = "dvd-case")
+    val selection by animateFloatAsState(if (selected) 1f else 0f, tween(320, easing = FastOutSlowInEasing), label = "dvd-case")
+    val height = (128f + 48f * selection).dp
     val context = LocalContext.current
     val hasCover = remember(game.uri, CustomCovers.version.value) {
         game.coverUrl != null || CustomCovers.fileFor(context, game) != null
@@ -50,27 +53,18 @@ fun DvdCase(game: GameInfo, selected: Boolean, onClick: () -> Unit, modifier: Mo
         modifier
             .height(height)
             .aspectRatio(135f / 190f)
-            .then(
-                if (selected) {
-                    // Stacked translucent rings rather than Modifier.shadow: tinted shadows render
-                    // as opaque black boxes on some Adreno/Mali drivers (see controllerFocusable).
-                    Modifier
-                        .drawBehind {
-                            for (i in 1..4) {
-                                val g = (i * 3).dp.toPx()
-                                drawRoundRect(
-                                    color = NevoaPalette.Selected.copy(alpha = 0.10f),
-                                    topLeft = Offset(-g, -g),
-                                    size = Size(size.width + 2 * g, size.height + 2 * g),
-                                    cornerRadius = CornerRadius(6.dp.toPx() + g),
-                                )
-                            }
-                        }
-                        .border(2.dp, NevoaPalette.Selected, CaseShape)
-                } else {
-                    Modifier.border(1.dp, NevoaPalette.GlassBorder, CaseShape)
-                },
-            )
+            .drawBehind {
+                for (i in 1..4) {
+                    val g = (i * 3).dp.toPx()
+                    drawRoundRect(
+                        color = NevoaPalette.Selected.copy(alpha = 0.10f * selection),
+                        topLeft = Offset(-g, -g),
+                        size = Size(size.width + 2 * g, size.height + 2 * g),
+                        cornerRadius = CornerRadius(6.dp.toPx() + g),
+                    )
+                }
+            }
+            .border((1f + selection).dp, lerp(NevoaPalette.GlassBorder, NevoaPalette.Selected, selection), CaseShape)
             .clip(CaseShape)
             .background(NevoaPalette.Background)
             .clickable(onClick = onClick),

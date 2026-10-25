@@ -34,14 +34,14 @@ Uma fileira horizontal apresenta caixas de DVD. A selecionada cresce e recebe br
 
 | Ação | Resultado |
 |---|---|
-| Jogar | Dissolve a biblioteca na névoa e inicia o item |
+| Jogar | Destaca a capa selecionada e inicia o item em uma passagem suave |
 | Configurar | Abre as opções do jogo selecionado |
 | Menu | Abre a navegação lateral |
 | Buscar | Abre o teclado existente para filtrar os jogos |
 | Ordem | Alterna a ordenação |
 | Biblioteca completa | Abre a grade/lista/estante com visual Névoa e os recursos completos |
 
-Por toque, tocar em outra capa muda a seleção; tocar na selecionada inicia o jogo. Jogar também inicia o item. Arrastar para a esquerda seleciona o próximo jogo; para a direita, o anterior. Cada gesto avança um item e movimentos pequenos não mudam a seleção. Arrastar não inicia o jogo. Durante a transição, as ações ficam bloqueadas para evitar disparos duplicados.
+Por toque, tocar em outra capa muda a seleção; tocar na selecionada inicia o jogo. Jogar também inicia o item. A capa, o brilho e o painel de informações animam juntos ao trocar de jogo. Arrastar para a esquerda seleciona o próximo jogo; para a direita, o anterior. Cada gesto avança um item e movimentos pequenos não mudam a seleção. Arrastar não inicia o jogo. Durante a transição, as ações ficam bloqueadas para evitar disparos duplicados.
 
 Por controle, o direcional percorre os elementos e a fileira. Confirmar sobre a fileira inicia o item selecionado. Y/△ abre a biblioteca completa. Ações do topo também participam da navegação por controle.
 

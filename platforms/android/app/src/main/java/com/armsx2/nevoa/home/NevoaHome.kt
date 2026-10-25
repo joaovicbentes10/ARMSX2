@@ -2,6 +2,12 @@ package com.armsx2.nevoa.home
 
 import android.view.KeyEvent as AndroidKeyEvent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -38,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.nativeKeyCode
@@ -46,6 +53,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -165,10 +173,13 @@ private fun NevoaRow(
     // Every launch path goes through the gate, then the burst; the game starts when the burst ends.
     val gate = remember { LaunchGate() }
     var pending by remember { mutableStateOf<GameInfo?>(null) }
+    var selectedCoverBounds by remember { mutableStateOf<Rect?>(null) }
+    var launchCoverBounds by remember { mutableStateOf<Rect?>(null) }
     var launched by remember { mutableStateOf(false) }
     fun onPlay(g: GameInfo) {
         if (gate.tryStart()) {
             MenuSfx.play(MenuSfx.Event.SELECT)
+            launchCoverBounds = selectedCoverBounds
             pending = g
         }
     }
@@ -362,11 +373,14 @@ private fun NevoaRow(
                 Row(
                     Modifier.enter(progress, caseStart, caseStart + 0.45f, dx = 70f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    horizontalArrangement = Arrangement.Start,
                 ) {
                     DvdCase(
                         g,
                         selected = i == index,
+                        modifier = Modifier.onGloballyPositioned {
+                            if (i == index) selectedCoverBounds = it.boundsInRoot()
+                        },
                         onClick = {
                             if (busy) return@DvdCase
                             if (i == index) onPlay(g) else {
@@ -375,19 +389,23 @@ private fun NevoaRow(
                             }
                         },
                     )
-                    if (i == index) {
+                    AnimatedVisibility(
+                        visible = i == index,
+                        enter = fadeIn(tween(240)) + expandHorizontally(tween(320, easing = FastOutSlowInEasing), expandFrom = Alignment.Start),
+                        exit = fadeOut(tween(140)) + shrinkHorizontally(tween(320, easing = FastOutSlowInEasing), shrinkTowards = Alignment.Start),
+                    ) {
                         GameDetailsPanel(
                             g,
-                            modifier = Modifier.enter(progress, 0.35f, 0.8f, dx = 30f),
-                            onPlay = { onPlay(g) },
-                            onConfigure = { openSettings(g) },
-                            configureControllerId = if (drawerOpen) null else ConfigureId,
+                            modifier = Modifier.padding(start = 24.dp).enter(progress, 0.35f, 0.8f, dx = 30f),
+                            onPlay = { if (i == index) onPlay(g) },
+                            onConfigure = { if (i == index) openSettings(g) },
+                            configureControllerId = if (drawerOpen || i != index) null else ConfigureId,
                         )
                     }
                 }
             }
         }
-        LaunchBurst(active = pending != null) {
+        LaunchBurst(active = pending != null, game = pending, sourceBounds = launchCoverBounds) {
             pending?.let(onLaunch)
             pending = null
             launched = true

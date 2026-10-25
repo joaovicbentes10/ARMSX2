@@ -42,7 +42,7 @@ Busca chama `setQuery`, ordem chama `setSort`, e o teclado é `LibraryKeyboard`,
 
 ### Início de jogo
 
-`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 520 ms, com dissolução da cena, um véu azul discreto e escurecimento final. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime. A cobertura escura final permanece enquanto a inicialização assíncrona ainda deixa o runtime em STOPPED, evitando expor a biblioteca entre animação e jogo.
+`LaunchGate` aceita uma tentativa e `LaunchBurst` mostra a transição: 900 ms, com a capa partindo de seu retângulo medido até uma apresentação central, título, fundo Névoa escurecido e fechamento em preto. A camada consome toque e os callbacks bloqueiam ações concorrentes. Ao terminar, `HomeViewModel.launch` registra recentes e encaminha o item ao runtime. A cobertura escura final permanece enquanto a inicialização assíncrona ainda deixa o runtime em STOPPED, evitando expor a biblioteca entre animação e jogo.
 
 O círculo branco e as partículas da antiga explosão foram removidos. O gate usa o estado de emulação e um timeout para reabrir. A preservação integral da transição durante recriação de Activity continua pendente.
 
@@ -109,3 +109,7 @@ Jogos, permissões, configurações, histórico, conquistas e saves permanecem n
 O namespace é `com.armsx2`, mas o application ID é `com.armsx2.nevoa`. Por isso, a Activity de abertura via ADB é `com.armsx2.nevoa/com.armsx2.BootSplashActivity`.
 
 A fileira trata gestos horizontais com limiar de 48 dp. O scroll livre foi substituído por um avanço de seleção por gesto, com rolagem animada da lista para acompanhar o URI selecionado. O callback do gesto acompanha a seleção mais recente, também quando ela muda por controle.
+
+A troca de seleção anima altura, brilho e borda da caixa em 320 ms, junto com expansão/recolhimento e fade do painel. O painel que está saindo perde suas ações e seu registro de controle, evitando configuração ou início de um jogo antigo durante a troca. A animação de Jogar recebe uma cópia dos limites da capa no momento do clique; mudanças de layout posteriores não alteram a origem do movimento.
+
+O menu de emulação usa ícones Line Awesome e preserva os IDs de ações no registro de controle. Em paisagem, o conjunto de painel e abas usa até 44% da largura (máximo 520 dp) e 78% da altura. O cabeçalho mostra título, hardcore quando aplicável e atalho de amigos. Serial, CRC e presença são calculados/exibidos sob demanda em Detalhes do jogo, dentro de Mais ações.

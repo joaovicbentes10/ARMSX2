@@ -21,6 +21,19 @@ Referência: 24/10/2026. Este registro delimita a evidência disponível; implem
 | Saves no painel do jogo | Não implementados | Exigir associação confiável ao título |
 | Launcher Windows | Arquitetura planejada | Implementação não iniciada |
 
+## Seletor animado, apresentação de início e pausa contida — 24/10/2026
+
+O pedido incluiu animar a troca de jogo, dar continuidade visual ao início e retirar a aparência original/emojis da área de pausa marcada na captura.
+
+- Capa, brilho e borda animam em 320 ms. Os painéis antigo e novo usam fade e expansão/recolhimento horizontal. O espaçamento entre capa e painel faz parte da largura animada, evitando um salto quando o painel entra ou sai. As ações do painel que está saindo ficam inativas e perdem o ID de controle.
+- A partida passa a usar uma apresentação de 900 ms: a capa parte do retângulo medido no clique, cresce e se desloca até o centro sobre a cena escurecida; o título aparece e o conjunto fecha em preto antes da emulação. A origem é congelada no clique para não acompanhar mudanças posteriores do layout. O bloqueio de início duplicado e a cobertura do carregamento foram mantidos.
+- Menu em paisagem limitado a 44% da largura, com máximo de 520 dp, e 78% da altura do contêiner. Scrim externo reduzido e abas menores. Continuar/Avanço rápido ficam na mesma linha; Salvar/Carregar na seguinte. Sem capa, relógio, bateria ou CRC no cabeçalho principal.
+- Ações e amigos usam vetores Line Awesome, incluindo os atalhos das outras abas. Dados técnicos e presença continuam em Mais ações → Detalhes do jogo. Hardcore continua visível quando aplicável. Seções da sessão usam cabeçalhos compactos com seta vetorial.
+
+Validação no F6 Pro: troca de seleção por arrasto nos dois sentidos e início do Scooby gravados; apresentação da capa inspecionada. Menu conferido em paisagem, incluindo contraste de Salvar/Carregar, abas e ações principais. Direcional alternou para Renderizador e retornou à Sessão. Mais ações e Detalhes abriram; serial SLUS-21928 e CRC 38E42973 foram conferidos. Continuar voltou ao jogo e o menu reabriu. Não foi feita escrita/carregamento de saves nem teste autenticado de amigos/conquistas nesta rodada.
+
+Evidências locais não versionadas: `.superpowers/validation/selection-launch-menu/`, incluindo `selection-launch.mp4`, `motion-preview.mp4`, `launch-contact.png` e `menu.png`. A gravação final `selection-launch-final.mp4` e a prévia foram atualizadas após o ajuste do espaçamento; a instalação final foi conferida no aparelho. Release local assinado compilado e 46 testes Névoa passaram. Nenhum código nativo ou preset de renderizador foi alterado neste incremento. O print de menu corresponde à revisão compacta final, após corrigir contraste e espaçamento dos grupos.
+
 ## Paisagem na partida, seleção por gesto e áudio V6 — 24/10/2026
 
 Implementação:
